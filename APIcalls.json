@@ -1,3 +1,67 @@
 {
-  "apiCalls": []
+  "apiCalls": [
+    {
+      "url": "{{baseURL}}/users/_login",
+      "method": "POST",
+      "body": "username={{Username}}&password={{Password}}",
+      "headers": {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-Requested-With": "OpenAPI"
+      },
+      "variables": [
+        "baseURL",
+        "Username",
+        "Password"
+      ],
+      "checked": true,
+      "isLogin": true,
+      "loginVar": "sessionId"
+    },
+    {
+      "url": "{{baseURL}}/channelgroups",
+      "method": "GET",
+      "headers": {
+        "accept": "application/xml",
+        "X-Requested-With": "OpenAPI"
+      },
+      "isLogin": false,
+      "checked": false
+    },
+    {
+      "url": "{{baseURL}}/channels",
+      "method": "GET",
+      "variables": [
+        "baseURL"
+      ],
+      "headers": {
+        "accept": "application/xml",
+        "X-Requested-With": "OpenAPI"
+      },
+      "body": "",
+      "checked": true
+    },
+    {
+      "url": "{{baseURL}}/channels/portsInUse",
+      "method": "GET",
+      "variables": [
+        "baseURL"
+      ],
+      "headers": {
+        "accept": "application/xml",
+        "X-Requested-With": "OpenAPI"
+      },
+      "checked": false
+    },
+    {
+      "url": "https://localhost:8443/api/channels/_getChannels",
+      "method": "POST",
+      "headers": {
+        "accept": "application/xml",
+        "Content-Type": "application/xml",
+        "X-Requested-With": "OpenAPI"
+      },
+      "body": "<set> <string>a04a0b15-9467-4353-b585-7b2d274e4a49</string> <string>216a7b49-b65a-4a59-b000-136a8fb4f984</string></set>",
+      "checked": false
+    }
+  ]
 }

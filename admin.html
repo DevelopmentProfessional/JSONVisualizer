@@ -1,29 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Variables</title>
+    <title>Admin Variables - APIRunner</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background: #f8f9fa; }
         .var-list { max-width: 600px; margin: 2rem auto; }
-        .var-item { background: #fff; border-radius: 6px; box-shadow: 0 2px 8px #0001; margin-bottom: 1rem; padding: 1rem; }
+        .var-item { border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); margin-bottom: 1rem; padding: 1rem; }
         .drag-handle { cursor: grab; margin-right: 8px; }
     </style>
 </head>
 <body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">APIRunner</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="AddAPI.html">Add API</a></li>
+        <li class="nav-item"><a class="nav-link" href="view.html">Visualizer</a></li>
+        <li class="nav-item"><a class="nav-link active" href="admin.html">Admin</a></li>
+        <li class="nav-item"><a class="nav-link" href="Run.html">Run</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
 <div class="container var-list">
     <h2 class="mb-4">Manage Variables</h2>
     <form id="addVarForm" class="mb-3">
         <div class="input-group">
             <input type="text" class="form-control" id="varNameInput" placeholder="Variable Name" required>
             <input type="text" class="form-control" id="varValueInput" placeholder="Value" required>
-            <button class="btn btn-success" type="submit">Add Variable</button>
+            <button class="btn btn-success" type="submit" title="Save/Add Variable">
+                <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='currentColor' class='bi bi-save' viewBox='0 0 16 16'><path d='M8.5 1.5v2h-1v-2h1z'/><path d='M3 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H3zm10 1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h10z'/><path d='M7.5 10.5v-2h1v2h-1z'/></svg>
+            </button>
         </div>
     </form>
     <div id="varListContainer"></div>
-    <button class="btn btn-primary mt-3" onclick="saveVars()">Save Variables</button>
 </div>
 <script>
 const varFile = 'variables.json';
@@ -39,6 +55,8 @@ function loadVars() {
         .catch(() => { variables = []; renderVarList(); });
 }
 
+let editingVarIdx = null;
+
 function renderVarList() {
     const container = document.getElementById('varListContainer');
     if (!container) return;
@@ -48,11 +66,42 @@ function renderVarList() {
     }
     let html = '<ul class="list-group">';
     variables.forEach((v, idx) => {
-        html += `<li class="list-group-item d-flex align-items-center var-item" draggable="true" ondragstart="dragStartVar(event, ${idx})" ondragover="dragOverVar(event)" ondrop="dropVar(event, ${idx})">
-            <span class="drag-handle">&#x2630;</span>
-            <span class="flex-grow-1"><strong>${v.name}</strong>: ${v.value}</span>
-            <button class="btn btn-danger btn-sm ms-2" onclick="removeVar(${idx})">Remove</button>
-        </li>`;
+        const isVisible = v.visible === true;
+        if (editingVarIdx === idx) {
+            html += `<li class="list-group-item d-flex align-items-center var-item">
+                <span class="drag-handle">&#x2630;</span>
+                <span class="flex-grow-1"><strong>${v.name}</strong>: <input type="text" class="form-control form-control-sm d-inline-block" style="max-width:220px;" id="editVarValue_${idx}" value="${v.value}"></span>
+                <button class="btn btn-success btn-sm ms-2" onclick="saveVarEdit(${idx})" title="Save">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-save" viewBox="0 0 16 16">
+                        <path d="M8.5 1.5v2h-1v-2h1z"/><path d="M3 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H3zm10 1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h10z"/><path d="M7.5 10.5v-2h1v2h-1z"/>
+                    </svg>
+                </button>
+            </li>`;
+        } else {
+            html += `<li class="list-group-item d-flex align-items-center var-item" draggable="true" ondragstart="dragStartVar(event, ${idx})" ondragover="dragOverVar(event)" ondrop="dropVar(event, ${idx})">
+                <span class="drag-handle">&#x2630;</span>
+                <span class="flex-grow-1"><strong>${v.name}</strong>: <span id="varValue_${idx}" style="${isVisible ? '' : 'display:none;'}">${v.value}</span></span>
+                <button class="btn btn-outline-secondary btn-sm ms-2" onclick="toggleVarVisibility(${idx})" title="Show/Hide Value">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-eye${isVisible ? '' : '-slash'}" viewBox="0 0 16 16">
+                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM8 13.5c-4.478 0-7.484-4.162-7.938-4.797a.5.5 0 0 1 0-.406C.516 7.662 3.522 3.5 8 3.5c4.478 0 7.484 4.162 7.938 4.797a.5.5 0 0 1 0 .406C15.484 11.338 12.478 13.5 8 13.5z"/>
+                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/>
+                        ${isVisible ? '' : '<path d="M13.359 11.238l-1.415-1.415A5.978 5.978 0 0 0 14.5 8c0-.828-.167-1.627-.465-2.354l-1.415 1.415A4.978 4.978 0 0 1 13.5 8c0 .828-.167 1.627-.465 2.354z"/>'}
+                    </svg>
+                </button>
+                <button class="btn btn-info btn-sm ms-2" onclick="copyVarValue(${idx})" title="Copy Value">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+                        <path d="M10 1.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1A1.5 1.5 0 0 1 7.5 0h1A1.5 1.5 0 0 1 10 1.5z"/>
+                        <path d="M3.5 1A1.5 1.5 0 0 0 2 2.5v11A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 12.5 1h-9zm0 1h9A.5.5 0 0 1 13 2.5v11a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5v-11A.5.5 0 0 1 3.5 2z"/>
+                    </svg>
+                </button>
+                <button class="btn btn-secondary btn-sm ms-2" onclick="editVar(${idx})" title="Edit Variable">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                        <path d="M12.146.854a.5.5 0 0 1 .708 0l2.292 2.292a.5.5 0 0 1 0 .708l-9.193 9.193a.5.5 0 0 1-.168.11l-4 1.5a.5.5 0 0 1-.65-.65l1.5-4a.5.5 0 0 1 .11-.168l9.193-9.193zm1.415 2.121L13 2.293 13.707 3l.561-.561a.5.5 0 0 0-.707-.707zm-1.768.768L2.5 12.146V13.5h1.354l8.293-8.293-1.354-1.354z"/>
+                    </svg>
+                </button>
+                <button class="btn btn-danger btn-sm ms-2" onclick="removeVar(${idx})" title="Remove"><svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='currentColor' class='bi bi-trash' viewBox='0 0 16 16'><path d='M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5.5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6zm3 .5a.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6z'/><path fill-rule='evenodd' d='M14.5 3a1 1 0 0 1-1-1V1a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1H1v1h14V3h-1.5zm-1-1V1h-7v1h7zM1 4v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4H1zm2 10a1 1 0 0 1-1-1V4h12v9a1 1 0 0 1-1 1H3z'/></svg></button>
+            </li>`;
+        }
     });
     html += '</ul>';
     container.innerHTML = html;
@@ -61,21 +110,64 @@ function renderVarList() {
 function addVar(name, value) {
     variables.push({ name, value });
     renderVarList();
+    saveVars();
 }
+
+// Load variables on page load
+window.addEventListener('DOMContentLoaded', loadVars);
 
 function removeVar(idx) {
     variables.splice(idx, 1);
     renderVarList();
+    saveVars();
 }
 
 function saveVars() {
-    const blob = new Blob([JSON.stringify({ variables }, null, 2)], {type: 'application/json'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = varFile;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    fetch(varFile, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ variables })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Failed to save variables');
+        // Optionally show a success message
+    })
+    .catch(err => {
+        alert('Error saving variables: ' + err.message);
+    });
+}
+
+function toggleVarVisibility(idx) {
+    variables[idx].visible = !variables[idx].visible;
+    renderVarList();
+}
+
+function copyVarValue(idx) {
+    const value = variables[idx].value;
+    navigator.clipboard.writeText(value);
+}
+
+function editVar(idx) {
+    editingVarIdx = idx;
+    renderVarList();
+    
+    // Use setTimeout to ensure the input field is rendered before trying to access it
+    setTimeout(() => {
+        const editInput = document.getElementById('editVarValue_' + idx);
+        if (editInput) {
+            editInput.focus();
+            editInput.select(); // Select all text
+            // Position cursor at the end
+            editInput.setSelectionRange(editInput.value.length, editInput.value.length);
+        }
+    }, 10);
+}
+function saveVarEdit(idx) {
+    const newValue = document.getElementById('editVarValue_' + idx).value;
+    variables[idx].value = newValue;
+    editingVarIdx = null;
+    renderVarList();
+    saveVars();
 }
 
 // Drag and drop reordering
@@ -89,6 +181,7 @@ function dropVar(e, idx) {
     variables.splice(idx, 0, moved);
     dragVarIdx = null;
     renderVarList();
+    saveVars();
 }
 
 document.getElementById('addVarForm').addEventListener('submit', function(e) {
@@ -104,5 +197,6 @@ document.getElementById('addVarForm').addEventListener('submit', function(e) {
 
 loadVars();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

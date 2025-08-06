@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Run API Sequence - APIRunner</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        .api-list { max-width: 700px; margin: 2rem auto; }
+        .api-item { border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); margin-bottom: 1rem; padding: 1rem; }
+        .api-header { font-size: 1rem; font-weight: bold; margin-bottom: 0.5rem; }
+        .api-footer { font-size: 0.95rem; margin-top: 0.5rem; border-radius: 4px; padding: 0.5rem; }
+        /* Normalize accordion header font size */
+        .accordion-header h2 {
+            font-size: 1rem;
+            font-weight: 500;
+            margin: 0;
+        }
+        .accordion-header .d-flex {
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">APIRunner</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="AddAPI.html">Add API</a></li>
+        <li class="nav-item"><a class="nav-link" href="view.html">Visualizer</a></li>
+        <li class="nav-item"><a class="nav-link" href="admin.html">Admin</a></li>
+        <li class="nav-item"><a class="nav-link active" href="Run.html">Run</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<div class="container api-list"> 
+    <div class="d-flex gap-2 mb-3">
+        <button id="selectAllBtn" class="btn btn-secondary" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-globe" viewBox="0 0 16 16">
+                <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm7.5-6.923c-.67.204-1.335.82-1.887 1.855A7.97 7.97 0 0 0 5.145 4H7.5V1.077zM4.09 4a9.267 9.267 0 0 1 .64-1.539 6.7 6.7 0 0 1 .597-.933A7.025 7.025 0 0 0 2.255 4H4.09zm-.582 3.5c.03-.877.138-1.718.312-2.5H1.674a6.958 6.958 0 0 0-.656 2.5h2.49zM4.847 5a12.5 12.5 0 0 0-.338 2.5H7.5V5H4.847zM8.5 5v2.5h2.99a12.5 12.5 0 0 0-.337-2.5H8.5zM4.51 8.5a12.5 12.5 0 0 0 .337 2.5H7.5V8.5H4.51zm3.99 0V11h2.653c.187-.765.306-1.608.338-2.5H8.5zM5.145 12c.138.386.295.744.468 1.068.552 1.035 1.218 1.65 1.887 1.855V12H5.145zm.182 2.472a6.696 6.696 0 0 1-.597-.933A9.268 9.268 0 0 1 4.09 12H2.255a7.024 7.024 0 0 0 3.072 2.472zM3.82 11a13.652 13.652 0 0 1-.312-2.5h-2.49c.062.89.291 1.733.656 2.5H3.82zm6.853 3.472A7.024 7.024 0 0 0 13.745 12H11.91a9.27 9.27 0 0 1-.64 1.539 6.688 6.688 0 0 1-.597.933zM8.5 12v2.923c.67-.204 1.335-.82 1.887-1.855.173-.324.33-.682.468-1.068H8.5zm3.68-1h2.146c.365-.767.594-1.61.656-2.5h-2.49a13.65 13.65 0 0 1-.312 2.5zm2.802-3.5a6.959 6.959 0 0 0-.656-2.5H12.18c.174.782.282 1.623.312 2.5h2.49zM11.27 2.461c.247.464.462.98.64 1.539h1.835a7.024 7.024 0 0 0-3.072-2.472c.218.284.418.598.597.933zM10.855 4a7.966 7.966 0 0 0-.468-1.068C9.835 1.897 9.17 1.282 8.5 1.077V4h2.355z"/>
+            </svg>
+            Select All
+        </button>
+        <button id="runSequenceBtn" class="btn btn-primary" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-play" viewBox="0 0 16 16">
+                <path d="M10.804 8.697l-6.363 4.692A.5.5 0 0 1 4 13V3a.5.5 0 0 1 .804-.396l6.363 4.692a.5.5 0 0 1 0 .802z"/>
+            </svg>
+            Run Sequence
+        </button>
+    </div>
+    <div id="apiListContainer"></div>
+</div>
+<script>
+let apiCalls = [];
+let variables = [];
+let sessionCookie = null;
+async function loadApiCalls() {
+    try {
+        const res = await fetch('APIcalls.json');
+        const data = await res.json();
+        apiCalls = Array.isArray(data.apiCalls) ? data.apiCalls : [];
+    } catch (err) {
+        apiCalls = [];
+    }
+}
+async function loadVariables() {
+    try {
+        const res = await fetch('variables.json');
+        const data = await res.json();
+        variables = Array.isArray(data.variables) ? data.variables : [];
+    } catch (err) {
+        variables = [];
+    }
+}
+function escapeHTML(str) {
+    if (typeof str !== 'string') return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+function safeJSONStringify(obj) {
+    try {
+        return escapeHTML(JSON.stringify(obj, null, 2));
+    } catch (e) {
+        return '';
+    }
+}
+function renderApiList() {
+    const container = document.getElementById('apiListContainer');
+    if (!container) return;
+    if (apiCalls.length === 0) {
+        container.innerHTML = '<div class="alert alert-info">No API calls added.</div>';
+        return;
+    }
+    let html = '<div class="accordion" id="apiAccordion">';
+    apiCalls.forEach((api, idx) => {
+        const method = api.method || 'GET';
+        const url = api.url || '';
+        const headers = api.headers && typeof api.headers === 'object' ? api.headers : {};
+        const body = api.body || '';
+        const checked = api.checked ? 'checked' : '';
+        let statusIcon = '';
+        if (api.status === 'success') {
+            statusIcon = '<span title="Completed" style="color:green;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm3.354-8.354a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708 0l-2-2a.5.5 0 1 1 .708-.708L7 10.293l3.646-3.647a.5.5 0 0 1 .708 0z"/></svg></span>';
+        } else if (api.status === 'error') {
+            statusIcon = '<span title="Error" style="color:red;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zM4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg></span>';
+        }
+        // Login marker UI
+        const isLogin = api.isLogin || false;
+        const loginVar = api.loginVar || '';
+        
+        // Generate output HTML based on API status and results
+        let outputHtml = '';
+        if (api.output) {
+            try {
+                const outputObj = JSON.parse(api.output);
+                if (outputObj.request && outputObj.variables !== undefined && outputObj.response) {
+                    // New detailed format
+                    outputHtml = `
+                        <div class="mb-3">
+                            <h6>API Request:</h6>
+                            <div class="api-footer bg-info bg-opacity-10">
+                                <strong>Method:</strong> ${escapeHTML(outputObj.request.method)}<br>
+                                <strong>URL:</strong> ${escapeHTML(outputObj.request.interpolatedUrl || outputObj.request.originalUrl)}<br>
+                                ${outputObj.request.headers ? `<strong>Headers:</strong> <pre style="font-size:0.85em; margin:0;">${escapeHTML(JSON.stringify(outputObj.request.headers, null, 2))}</pre>` : ''}
+                                ${outputObj.request.body ? `<strong>Body:</strong> <pre style="font-size:0.85em; margin:0;">${escapeHTML(outputObj.request.body)}</pre>` : ''}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <h6>Variables Used:</h6>
+                            <div class="api-footer bg-warning bg-opacity-10">
+                                <pre style="font-size:0.85em; margin:0;">${escapeHTML(JSON.stringify(outputObj.variables, null, 2))}</pre>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <h6>API Response:</h6>
+                            <div class="api-footer ${outputObj.status === 'success' ? 'bg-success' : 'bg-danger'} bg-opacity-10">
+                                ${outputObj.response ? `
+                                    <strong>Status:</strong> ${outputObj.response.status} ${escapeHTML(outputObj.response.statusText)}<br>
+                                    <strong>Data:</strong> <pre style="font-size:0.85em; margin:0;">${escapeHTML(typeof outputObj.response.data === 'object' ? JSON.stringify(outputObj.response.data, null, 2) : outputObj.response.data)}</pre>
+                                ` : `<pre style="font-size:0.85em; margin:0;">${escapeHTML(JSON.stringify(outputObj, null, 2))}</pre>`}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Legacy format
+                    outputHtml = `<div class="api-footer ${outputObj.status === 'success' ? 'bg-success' : 'bg-danger'} bg-opacity-10"><pre style="font-size:0.85em; margin:0;">${escapeHTML(api.output)}</pre></div>`;
+                }
+            } catch (e) {
+                // Plain text output
+                outputHtml = `<div class="api-footer bg-secondary bg-opacity-10"><pre style="font-size:0.85em; margin:0;">${escapeHTML(api.output)}</pre></div>`;
+            }
+        } else {
+            outputHtml = '<div class="text-muted">No output yet.</div>';
+        }
+        
+        html += `
+        <div class="accordion-item api-item" data-idx="${idx}" ondragover="onDragOver(event)" ondrop="onDrop(event, ${idx})">
+            <h2 class="accordion-header" id="heading${idx}">
+                <div class="d-flex align-items-center w-100">
+                    <span class="me-2 drag-handle" style="cursor:grab;" draggable="true" ondragstart="onDragStart(event, ${idx})">&#x2630;</span>
+                    <input type="checkbox" class="form-check-input me-2" data-idx="${idx}" ${checked} onclick="toggleApiCheckbox(${idx})">
+                    <span class="flex-grow-1">Request: <span class="badge bg-info text-dark">${method}</span> <code>${escapeHTML(url)}</code></span>
+                    ${statusIcon}
+                    <span class="ms-2">
+                        <input type="checkbox" class="form-check-input" id="loginCheck${idx}" ${isLogin ? 'checked' : ''} onchange="toggleLoginMarker(${idx})" style="display: none;">
+                        ${isLogin ? 
+                            `<span title="Login API (Active)" style="color: #198754; cursor: pointer;" onclick="toggleLoginMarker(${idx})"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-person-check-fill" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M15.854 5.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L12.5 7.793l2.646-2.647a.5.5 0 0 1 .708 0z"/><path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg></span>` :
+                            `<span title="Mark as Login API" style="cursor: pointer;" onclick="toggleLoginMarker(${idx})"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-person" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg></span>`
+                        }
+                    </span>
+                    <button class="btn btn-outline-primary btn-sm ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${idx}" aria-expanded="false" aria-controls="collapse${idx}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div id="loginVarGroup${idx}" class="input-group mt-2" style="display:${isLogin ? 'flex' : 'none'}; max-width:300px;">
+                    <span class="input-group-text">Session Var</span>
+                    <input type="text" class="form-control" id="loginVarInput${idx}" value="${loginVar}" placeholder="sessionId">
+                    <button class="btn btn-outline-success" type="button" onclick="saveLoginVar(${idx})"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-save" viewBox="0 0 16 16"><path d="M8.5 1.5v2h-1v-2h1z"/><path d="M3 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H3zm10 1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h10z"/></svg></button>
+                </div>
+            </h2>
+            <div id="collapse${idx}" class="accordion-collapse collapse" aria-labelledby="heading${idx}" data-bs-parent="#apiAccordion">
+                <div class="accordion-body">
+                    ${outputHtml}
+                </div>
+            </div>
+        </div>
+        `;
+// Toggle login marker
+window.toggleLoginMarker = async function(idx) {
+    apiCalls[idx].isLogin = !apiCalls[idx].isLogin;
+    
+    // Save changes immediately to APIcalls.json
+    try {
+        const response = await fetch('/saveApiCalls', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apiCalls })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Save failed: ${response.status}`);
+        }
+        
+        console.log('Login marker state saved successfully');
+    } catch (error) {
+        console.error('Failed to save login marker state:', error);
+        // Revert the change if save failed
+        apiCalls[idx].isLogin = !apiCalls[idx].isLogin;
+        alert('Failed to save login marker state. Please try again.');
+    }
+    
+    renderApiList();
+};
+
+window.saveLoginVar = async function(idx) {
+    const input = document.getElementById('loginVarInput' + idx);
+    if (input) {
+        apiCalls[idx].loginVar = input.value.trim();
+        
+        // Save changes immediately to APIcalls.json
+        try {
+            const response = await fetch('/saveApiCalls', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiCalls })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Save failed: ${response.status}`);
+            }
+            
+            console.log('Login variable saved successfully');
+            renderApiList();
+        } catch (error) {
+            console.error('Failed to save login variable:', error);
+            alert('Failed to save login variable. Please try again.');
+        }
+    }
+};
+    });
+    html += '</div>';
+    container.innerHTML = html;
+// Drag and drop handlers
+let draggedIdx = null;
+window.onDragStart = function(event, idx) {
+    draggedIdx = idx;
+    event.dataTransfer.effectAllowed = 'move';
+};
+window.onDragOver = function(event) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+};
+window.onDrop = async function(event, idx) {
+    event.preventDefault();
+    if (draggedIdx === null || draggedIdx === idx) return;
+    // Move dragged item to new position
+    const moved = apiCalls.splice(draggedIdx, 1)[0];
+    apiCalls.splice(idx, 0, moved);
+    draggedIdx = null;
+    renderApiList();
+    // Save new order to APIcalls.json
+    try {
+        await fetch('/saveApiCalls', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apiCalls })
+        });
+    } catch (e) {
+        console.error('Failed to save API order:', e);
+    }
+};
+}
+window.toggleApiCheckbox = async function(idx) {
+    apiCalls[idx].checked = !apiCalls[idx].checked;
+    
+    // Save changes immediately to APIcalls.json
+    try {
+        const response = await fetch('/saveApiCalls', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apiCalls })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Save failed: ${response.status}`);
+        }
+        
+        console.log('API checkbox state saved successfully');
+    } catch (error) {
+        console.error('Failed to save checkbox state:', error);
+        // Revert the change if save failed
+        apiCalls[idx].checked = !apiCalls[idx].checked;
+        alert('Failed to save checkbox state. Please try again.');
+    }
+    
+    renderApiList();
+}
+document.getElementById('runSequenceBtn').addEventListener('click', runSelectedSequence);
+document.getElementById('selectAllBtn').addEventListener('click', selectAllApis);
+
+async function selectAllApis() {
+    let allSelected = apiCalls.every(api => api.checked);
+    
+    // Toggle all checkboxes - if all are selected, deselect all, otherwise select all
+    for (let i = 0; i < apiCalls.length; i++) {
+        apiCalls[i].checked = !allSelected;
+    }
+    
+    // Save changes to APIcalls.json
+    try {
+        const response = await fetch('/saveApiCalls', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apiCalls })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Save failed: ${response.status}`);
+        }
+        
+        console.log('Select/Deselect all state saved successfully');
+    } catch (error) {
+        console.error('Failed to save select all state:', error);
+        // Revert the changes if save failed
+        for (let i = 0; i < apiCalls.length; i++) {
+            apiCalls[i].checked = allSelected;
+        }
+        alert('Failed to save select all state. Please try again.');
+    }
+    
+    renderApiList();
+}
+
+async function runSelectedSequence() {
+    const selected = apiCalls.map((api, idx) => ({ ...api, idx })).filter(api => api.checked);
+    if (selected.length === 0) {
+        alert('No APIs selected.');
+        return;
+    }
+    // Load variables
+    const variables = {};
+    try {
+        const resVars = await fetch('variables.json');
+        const dataVars = await resVars.json();
+        if (Array.isArray(dataVars.variables)) {
+            dataVars.variables.forEach(v => {
+                variables[v.name.toLowerCase()] = v.value;
+            });
+        }
+    } catch (e) {}
+    function interpolate(str) {
+        if (typeof str !== 'string') return str;
+        return str.replace(/{{(\w+)}}/gi, (match, p1) => {
+            const key = p1.toLowerCase();
+            return variables[key] !== undefined ? variables[key] : match;
+        });
+    }
+    // Find login API and run it first if present
+    let sessionId = null;
+    const loginApiIdx = selected.findIndex(api => api.isLogin);
+    if (loginApiIdx !== -1) {
+        const loginApi = selected[loginApiIdx];
+        apiCalls[loginApi.idx].status = '';
+        renderApiList();
+        try {
+            const url = interpolate(apiCalls[loginApi.idx].url);
+            const body = interpolate(apiCalls[loginApi.idx].body);
+            let headers = apiCalls[loginApi.idx].headers || {};
+            const res = await fetch('/runApiSequence', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...apiCalls[loginApi.idx], headers })
+            });
+            const result = await res.json();
+            apiCalls[loginApi.idx].output = JSON.stringify(result, null, 2);
+            // Handle new response format with results array
+            if (result.results && result.results.length > 0) {
+                const loginResult = result.results[0];
+                apiCalls[loginApi.idx].status = loginResult.status === 'success' ? 'success' : 'error';
+                // Extract session ID from cookie if present
+                if (apiCalls[loginApi.idx].loginVar && loginResult.cookie) {
+                    sessionId = loginResult.cookie;
+                    apiCalls[loginApi.idx][apiCalls[loginApi.idx].loginVar] = sessionId;
+                }
+            } else {
+                // Fallback to old format
+                apiCalls[loginApi.idx].status = result.status === 'success' ? 'success' : 'error';
+                if (apiCalls[loginApi.idx].loginVar && result.cookie) {
+                    sessionId = result.cookie;
+                    apiCalls[loginApi.idx][apiCalls[loginApi.idx].loginVar] = sessionId;
+                }
+            }
+            // Append individual result to output.json (extract just the API result)
+            // Skip appending to output.json if this is a login API
+            if (!apiCalls[loginApi.idx].isLogin) {
+                try {
+                    let outputData;
+                    if (result.results && result.results.length > 0) {
+                        outputData = {
+                            apiCall: `LOGIN - ${apiCalls[loginApi.idx].url}`,
+                            timestamp: new Date().toISOString(),
+                            ...result.results[0]
+                        };
+                    } else {
+                        outputData = {
+                            apiCall: `LOGIN - ${apiCalls[loginApi.idx].url}`,
+                            timestamp: new Date().toISOString(),
+                            ...result
+                        };
+                    }
+                    await fetch('/appendOutput', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ result: outputData })
+                    });
+                } catch (appendErr) {
+                    console.error('Failed to append login output:', appendErr);
+                }
+            }
+        } catch (err) {
+            apiCalls[loginApi.idx].status = 'error';
+            apiCalls[loginApi.idx].output = err.message;
+        }
+        renderApiList();
+    }
+    // Run remaining APIs (excluding login API)
+    for (const api of selected) {
+        if (api.isLogin) continue;
+        apiCalls[api.idx].status = '';
+        renderApiList();
+        let lastRequest = {};
+        try {
+            const url = interpolate(apiCalls[api.idx].url);
+            const body = interpolate(apiCalls[api.idx].body);
+            let headers = apiCalls[api.idx].headers || {};
+            // Attach session cookie if available and not already present
+            if (sessionId && !headers['Cookie']) {
+                headers = { ...headers, 'Cookie': sessionId };
+            }
+            lastRequest = {
+                method: apiCalls[api.idx].method,
+                url,
+                headers,
+                body
+            };
+            apiCalls[api.idx].lastRequest = lastRequest;
+            // Send request with updated headers
+            const res = await fetch('/runApiSequence', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...apiCalls[api.idx], headers })
+            });
+            const result = await res.json();
+            apiCalls[api.idx].output = JSON.stringify(result, null, 2);
+            // Handle new response format with results array
+            if (result.results && result.results.length > 0) {
+                const apiResult = result.results[0];
+                apiCalls[api.idx].status = apiResult.status === 'success' ? 'success' : 'error';
+            } else {
+                // Fallback to old format
+                apiCalls[api.idx].status = result.status === 'success' ? 'success' : 'error';
+            }
+            // Append individual result to output.json (extract just the API result)
+            try {
+                let outputData;
+                if (result.results && result.results.length > 0) {
+                    outputData = {
+                        apiCall: `${apiCalls[api.idx].method} - ${apiCalls[api.idx].url}`,
+                        timestamp: new Date().toISOString(),
+                        ...result.results[0]
+                    };
+                } else {
+                    outputData = {
+                        apiCall: `${apiCalls[api.idx].method} - ${apiCalls[api.idx].url}`,
+                        timestamp: new Date().toISOString(),
+                        ...result
+                    };
+                }
+                await fetch('/appendOutput', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ result: outputData })
+                });
+            } catch (appendErr) {
+                console.error('Failed to append API output:', appendErr);
+            }
+        } catch (err) {
+            apiCalls[api.idx].status = 'error';
+            apiCalls[api.idx].output = err.message;
+        }
+        renderApiList();
+    }
+// Validate Login button logic
+}
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadApiCalls();
+    await loadVariables();
+    renderApiList();
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

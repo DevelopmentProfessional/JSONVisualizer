@@ -1,16 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Output JSON Visualizer</title>
+    <title>JSON Visualizer - APIRunner</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         #output-graph {
             width: 100%;
             height: 100vh;
             border: 1px solid #ccc;
-            background: #f8f9fa;
             overflow-x: auto;
             overflow-y: auto;
             position: relative;
@@ -53,10 +52,7 @@
 
         /* Make controlNav float above all other elements */
         #controlNav {
-            z-index: 9999;
-            position: fixed;
-            top: 0;
-            left: 0;
+            position: static;
             width: 100%;
         }
         .kv-row span.key {
@@ -76,9 +72,23 @@
         }
     </style>
 </head>
-<body>
-<div class="py-4">
-  
+<body> 
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">APIRunner</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="AddAPI.html">Add API</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="view.html">Visualizer</a></li>
+                    <li class="nav-item"><a class="nav-link" href="admin.html">Admin</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Run.html">Run</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
     <div id="controlNav" class="sticky-top">
          <!-- Search Box -->
     <div class=" d-flex align-items-center">
@@ -100,14 +110,14 @@
                         <!-- Text Size -->
                         <div class="input-group input-group-sm">
                             <span class="input-group-text" style="min-width: 100px;">Text Size</span>
-                            <input type="number" class="form-control" id="textSizeInput" min="8" max="32" value="12" step="1" style="width: 80px;" oninput="updateTextSize(this.value)">
-                            <input type="range" class="form-range" id="textSizeSlider" min="8" max="32" value="12" step="1" oninput="updateTextSize(this.value)">
+                            <input type="number" class="form-control" id="textSizeInput" min="8" max="48" value="12" step="1" style="width: 80px;" oninput="updateTextSize(this.value)">
+                            <input type="range" class="form-range" id="textSizeSlider" min="8" max="48" value="12" step="1" oninput="updateTextSize(this.value)">
                         </div>
                         <!-- Node Width -->
                         <div class="input-group input-group-sm">
                             <span class="input-group-text" style="min-width: 100px;">Node Width</span>
-                            <input type="number" class="form-control" id="nodeWidthInput" min="60" max="400" value="110" step="5" style="width: 80px;" oninput="updateNodeWidth(this.value)">
-                            <input type="range" class="form-range" id="nodeWidthSlider" min="60" max="400" value="110" step="5" oninput="updateNodeWidth(this.value)">
+                            <input type="number" class="form-control" id="nodeWidthInput" min="60" max="1200" value="110" step="5" style="width: 80px;" oninput="updateNodeWidth(this.value)">
+                            <input type="range" class="form-range" id="nodeWidthSlider" min="60" max="1200" value="110" step="5" oninput="updateNodeWidth(this.value)">
                         </div>
                         <!-- Node Separation -->
                         <div class="input-group input-group-sm">
@@ -125,6 +135,10 @@
                         </div>
                         <!-- Expand All -->
                         <button class="btn btn-success btn-sm ms-2" onclick="expandAllNodes()">Expand All</button>
+                        <!-- Reset Filter -->
+                        <button class="btn btn-warning btn-sm ms-2" onclick="resetFilter()">Reset Filter</button>
+                        <!-- Clear JSON Output -->
+                        <button class="btn btn-danger btn-sm ms-2" onclick="clearJsonOutput()">Clear JSON Output</button>
                     </div>
                 </div>
             </div>
@@ -138,7 +152,7 @@
     <div id="output-graph"></div>
     <!-- Filter dropdown checklist will be rendered here by ProcessFilter() -->
     <div id="filterDropdownContainer"></div>
-</div>
+ 
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -153,16 +167,30 @@ function loadJSON(path) {
     });
 }
 
-// Helper to save JSON file (download fallback only, no POST)
-function saveJSON(path, data) {
-    // Always use download fallback for .json files
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = path.split('/').pop();
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+// Helper to save JSON file to server (no download)
+async function saveJSONToServer(filename, data) {
+    try {
+        const response = await fetch(`/${filename}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to save ${filename}: ${response.status}`);
+        }
+        
+        console.log(`Successfully saved ${filename} to server`);
+        return true;
+    } catch (error) {
+        console.error(`Error saving ${filename}:`, error);
+        return false;
+    }
+}
+
+// Legacy function kept for compatibility (now uses server)
+async function saveJSON(path, data) {
+    return await saveJSONToServer(path, data);
 }
 
 let hiddenNodes = [];
@@ -385,6 +413,52 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             updateTree();
         };
 
+        // Reset filter function
+        window.resetFilter = async function() {
+            try {
+                // Clear the Filter.json file by sending an empty array
+                const response = await fetch('/Filter.json', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify([])
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to reset filter: ${response.status}`);
+                }
+
+                console.log('Filter reset successfully');
+                // Reload the page to apply the filter reset
+                location.reload();
+            } catch (error) {
+                console.error('Failed to reset filter:', error);
+                alert('Failed to reset filter. Please try again.');
+            }
+        };
+
+        // Clear JSON output function
+        window.clearJsonOutput = async function() {
+            try {
+                // Clear the output.json file by sending an empty object
+                const response = await fetch('/output.json', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to clear JSON output: ${response.status}`);
+                }
+
+                console.log('JSON output cleared successfully');
+                // Reload the page to reflect the cleared output
+                location.reload();
+            } catch (error) {
+                console.error('Failed to clear JSON output:', error);
+                alert('Failed to clear JSON output. Please try again.');
+            }
+        };
+
         // Initial flatten for rendering
         let flatNodes = [];
         let y = 20;
@@ -525,16 +599,26 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
                 .style('min-width', '50px')
                 .style('padding', '0 8px')
                 .text('Filter')
-                .on('click', function(event, d) {
+                .on('click', async function(event, d) {
                     event.stopPropagation();
-                    loadJSON('Filter.json').then(cfg => {
+                    try {
+                        const cfg = await loadJSON('Filter.json');
                         let filters = cfg.filters || [];
                         if (!filters.some(f => f.key === d.key && f.depth === d.depth)) {
                             filters.push({ key: d.key, depth: d.depth });
-                            saveJSON('Filter.json', { filters });
+                            const success = await saveJSON('Filter.json', { filters });
+                            if (success) {
+                                ProcessFilter();
+                            } else {
+                                alert('Failed to save filter. Please try again.');
+                            }
+                        } else {
+                            ProcessFilter();
                         }
-                        ProcessFilter();
-                    });
+                    } catch (error) {
+                        console.error('Error handling filter:', error);
+                        alert('Failed to process filter. Please try again.');
+                    }
                 });
             // Expand/collapse button (left)
             inputGroup.append('button')
@@ -557,12 +641,18 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
                 .style('min-width', '40px')
                 .style('padding', '0 8px')
                 .text('Hide')
-                .on('click', function(event, d) {
+                .on('click', async function(event, d) {
                     event.stopPropagation();
                     if (!hiddenNodes.some(hn => hn.key === d.key && hn.depth === d.depth)) {
                         hiddenNodes.push({ key: d.key, depth: d.depth });
-                        saveJSON('HiddenNodes.json', { hiddenNodes });
-                        updateTree();
+                        const success = await saveJSON('HiddenNodes.json', { hiddenNodes });
+                        if (success) {
+                            updateTree();
+                        } else {
+                            // Remove from hiddenNodes if save failed
+                            hiddenNodes = hiddenNodes.filter(hn => !(hn.key === d.key && hn.depth === d.depth));
+                            alert('Failed to save hidden node. Please try again.');
+                        }
                     }
                 });
 

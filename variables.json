@@ -1,3 +1,18 @@
 {
-  "variables": []
+  "variables": [
+    {
+      "name": "Username",
+      "value": "dev",
+      "visible": false
+    },
+    {
+      "name": "Password",
+      "value": "admin",
+      "visible": false
+    },
+    {
+      "name": "baseURL",
+      "value": "https://localhost:8443/api"
+    }
+  ]
 }
