@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Variables</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f8f9fa; }
+        .var-list { max-width: 600px; margin: 2rem auto; }
+        .var-item { background: #fff; border-radius: 6px; box-shadow: 0 2px 8px #0001; margin-bottom: 1rem; padding: 1rem; }
+        .drag-handle { cursor: grab; margin-right: 8px; }
+    </style>
+</head>
+<body>
+<div class="container var-list">
+    <h2 class="mb-4">Manage Variables</h2>
+    <form id="addVarForm" class="mb-3">
+        <div class="input-group">
+            <input type="text" class="form-control" id="varNameInput" placeholder="Variable Name" required>
+            <input type="text" class="form-control" id="varValueInput" placeholder="Value" required>
+            <button class="btn btn-success" type="submit">Add Variable</button>
+        </div>
+    </form>
+    <div id="varListContainer"></div>
+    <button class="btn btn-primary mt-3" onclick="saveVars()">Save Variables</button>
+</div>
+<script>
+const varFile = 'variables.json';
+let variables = [];
+
+function loadVars() {
+    fetch(varFile)
+        .then(r => r.json())
+        .then(data => {
+            variables = data.variables || [];
+            renderVarList();
+        })
+        .catch(() => { variables = []; renderVarList(); });
+}
+
+function renderVarList() {
+    const container = document.getElementById('varListContainer');
+    if (!container) return;
+    if (variables.length === 0) {
+        container.innerHTML = '<div class="alert alert-info">No variables added.</div>';
+        return;
+    }
+    let html = '<ul class="list-group">';
+    variables.forEach((v, idx) => {
+        html += `<li class="list-group-item d-flex align-items-center var-item" draggable="true" ondragstart="dragStartVar(event, ${idx})" ondragover="dragOverVar(event)" ondrop="dropVar(event, ${idx})">
+            <span class="drag-handle">&#x2630;</span>
+            <span class="flex-grow-1"><strong>${v.name}</strong>: ${v.value}</span>
+            <button class="btn btn-danger btn-sm ms-2" onclick="removeVar(${idx})">Remove</button>
+        </li>`;
+    });
+    html += '</ul>';
+    container.innerHTML = html;
+}
+
+function addVar(name, value) {
+    variables.push({ name, value });
+    renderVarList();
+}
+
+function removeVar(idx) {
+    variables.splice(idx, 1);
+    renderVarList();
+}
+
+function saveVars() {
+    const blob = new Blob([JSON.stringify({ variables }, null, 2)], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = varFile;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+// Drag and drop reordering
+let dragVarIdx = null;
+function dragStartVar(e, idx) { dragVarIdx = idx; }
+function dragOverVar(e) { e.preventDefault(); }
+function dropVar(e, idx) {
+    e.preventDefault();
+    if (dragVarIdx === null || dragVarIdx === idx) return;
+    const moved = variables.splice(dragVarIdx, 1)[0];
+    variables.splice(idx, 0, moved);
+    dragVarIdx = null;
+    renderVarList();
+}
+
+document.getElementById('addVarForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('varNameInput').value.trim();
+    const value = document.getElementById('varValueInput').value.trim();
+    if (name && value) {
+        addVar(name, value);
+        document.getElementById('varNameInput').value = '';
+        document.getElementById('varValueInput').value = '';
+    }
+});
+
+loadVars();
+</script>
+</body>
+</html>

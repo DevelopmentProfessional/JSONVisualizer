@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Output JSON Visualizer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        #output-graph {
+            width: 100%;
+            height: 100vh;
+            border: 1px solid #ccc;
+            background: #f8f9fa;
+            overflow-x: auto;
+            overflow-y: auto;
+            position: relative;
+        }
+        .tree-node {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .node-rect {
+            stroke: #333;
+            stroke-width: 2px;
+            fill: #1f77b4;
+            rx: 10;
+            ry: 10;
+        }
+        .node-label {
+            fill: #fff;
+            font-size: 13px;
+            font-weight: bold;
+            pointer-events: none;
+        }
+        .node-content {
+            font-size: 12px;
+            color: #fff;
+            line-height: 1.2;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        .kv-row {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        /* Make controlNav float above all other elements */
+        #controlNav {
+            z-index: 9999;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+        .kv-row span.key {
+            font-weight: bold;
+            margin-right: 4px;
+            white-space: nowrap;
+        }
+        /* If the key is 'name', make the value yellow and bold */
+        .kv-row span.key[data-key-name="name"] + span.value {
+            color: yellow;
+            font-weight: bold;
+        }
+        .kv-row span.value {
+            word-break: break-word;
+            flex: 1;
+            min-width: 0;
+        }
+    </style>
+</head>
+<body>
+<div class="py-4">
+  
+    <div id="controlNav" class="sticky-top">
+         <!-- Search Box -->
+    <div class=" d-flex align-items-center">
+        <input type="text" id="searchBox" class="form-control" placeholder="Search all node values..." oninput="handleSearchInput(this.value)">
+        <button class="btn btn-primary btn-sm" onclick="searchBoxSearch()">Search</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearSearchBox()">Clear</button>
+    </div>
+      <!-- Controls Accordion -->
+    <div class="accordion mb-3" id="controlsAccordion">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="controlsHeading">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#controlsCollapse" aria-expanded="true" aria-controls="controlsCollapse">
+                    Graph Controls
+                </button>
+            </h2>
+            <div id="controlsCollapse" class="accordion-collapse collapse hide" aria-labelledby="controlsHeading" data-bs-parent="#controlsAccordion">
+                <div class="accordion-body">
+                    <div class="d-flex flex-wrap gap-3">
+                        <!-- Text Size -->
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text" style="min-width: 100px;">Text Size</span>
+                            <input type="number" class="form-control" id="textSizeInput" min="8" max="32" value="12" step="1" style="width: 80px;" oninput="updateTextSize(this.value)">
+                            <input type="range" class="form-range" id="textSizeSlider" min="8" max="32" value="12" step="1" oninput="updateTextSize(this.value)">
+                        </div>
+                        <!-- Node Width -->
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text" style="min-width: 100px;">Node Width</span>
+                            <input type="number" class="form-control" id="nodeWidthInput" min="60" max="400" value="110" step="5" style="width: 80px;" oninput="updateNodeWidth(this.value)">
+                            <input type="range" class="form-range" id="nodeWidthSlider" min="60" max="400" value="110" step="5" oninput="updateNodeWidth(this.value)">
+                        </div>
+                        <!-- Node Separation -->
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text" style="min-width: 100px;">Node Separation</span>
+                            <input type="number" class="form-control" id="nodeSeparationInput" min="20" max="200" value="60" step="5" style="width: 80px;" oninput="updateNodeSeparation(this.value)">
+                            <input type="range" class="form-range" id="nodeSeparationSlider" min="20" max="200" value="60" step="5" oninput="updateNodeSeparation(this.value)">
+                        </div>
+                        <!-- Orientation -->
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text" style="min-width: 100px;">Orientation</span>
+                            <select id="treeOrientation" class="form-select" style="width: 120px;" onchange="updateTreeOrientation(this.value)">
+                                <option value="vertical">Vertical</option>
+                                <option value="horizontal">Horizontal</option>
+                            </select>
+                        </div>
+                        <!-- Expand All -->
+                        <button class="btn btn-success btn-sm ms-2" onclick="expandAllNodes()">Expand All</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+   
+    </div>
+
+
+
+    <div id="output-graph"></div>
+    <!-- Filter dropdown checklist will be rendered here by ProcessFilter() -->
+    <div id="filterDropdownContainer"></div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+// Helper to load JSON file (returns Promise)
+function loadJSON(path) {
+    // Use relative path for local file loading
+    return fetch(path).then(r => {
+        if (!r.ok) throw new Error('Failed to load ' + path);
+        return r.json();
+    });
+}
+
+// Helper to save JSON file (download fallback only, no POST)
+function saveJSON(path, data) {
+    // Always use download fallback for .json files
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = path.split('/').pop();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+let hiddenNodes = [];
+
+// Load hidden types and output.json, then render
+Promise.all([
+    loadJSON('HiddenNodes.json').then(cfg => { hiddenNodes = cfg.hiddenNodes || []; }),
+    loadJSON('output.json')
+]).then(([_, data]) => {
+        // Exclude LOGIN node and flatten segments
+        // Special handling for /Channels/{id}/Connectors
+        const connectorsMap = {};
+        Object.keys(data).forEach(key => {
+            const match = key.match(/^\/Channels\/([^/]+)\/Connectors$/);
+            if (match) {
+                connectorsMap[match[1]] = data[key];
+            }
+        });
+
+        const nodes = Object.entries(data)
+            .filter(([key]) => key !== 'LOGIN' && !key.match(/^\/Channels\/[^/]+\/Connectors$/))
+            .map(([key, value], i) => {
+                // If this is the /Channels node, inject connectors into each channel
+                if (key === '/channels' && value && value.list && value.list.channel && Array.isArray(value.list.channel)) {
+                    // For each channel, add a 'Connectors' property if available
+                    value.list.channel = value.list.channel.map(channel => {
+                        if (connectorsMap[channel.id]) {
+                            return { ...channel, Connectors: connectorsMap[channel.id] };
+                        }
+                        return channel;
+                    });
+                }
+                return {
+                    id: key,
+                    data: value,
+                    index: i
+                };
+            });
+
+        const width = document.getElementById('output-graph').clientWidth;
+        const height = document.getElementById('output-graph').clientHeight;
+        const maxNodeContentWidth = 220;
+        const maxBranchContentWidth = 180;
+        const minNodeWidth = 40;
+        const minBranchWidth = 40;
+        const nodePaddingX = 8; // minimal horizontal padding
+        const nodePaddingY = 0; // no vertical padding
+        const branchPaddingX = 6;
+        const branchPaddingY = 0;
+        const branchSpacing = 16;
+
+        // Helper to measure wrapped text height using SVG foreignObject
+        function measureWrappedText(text, fontSize, fontWeight, maxWidth) {
+            // Create a hidden div for measurement
+            let div = d3.select('body').append('div')
+                .style('position', 'absolute')
+                .style('left', '-9999px')
+                .style('top', '-9999px')
+                .style('width', maxWidth + 'px')
+                .style('font-size', fontSize + 'px')
+                .style('font-weight', fontWeight)
+                .style('font-family', 'sans-serif')
+                .style('line-height', '1.2')
+                .style('white-space', 'pre-wrap')
+                .style('word-break', 'break-word')
+                .text(text);
+            let bbox = {
+                width: div.node().offsetWidth,
+                height: div.node().offsetHeight
+            };
+            div.remove();
+            return bbox;
+        }
+
+
+
+        // (removed duplicate expanded declaration)
+
+        // Build a tree structure from the JSON for hierarchical rendering
+        // Compress chains of single-child nodes into one node
+        function buildTree(key, value, parentPath = '', depth = 0) {
+            const path = parentPath ? parentPath + '.' + key : key;
+            let node = {
+                key,
+                value,
+                path,
+                depth,
+                children: [],
+                isObject: typeof value === 'object' && value !== null,
+                isArray: Array.isArray(value),
+                mergedKeys: [key],
+                mergedValues: [value]
+            };
+            if (node.isObject) {
+                const keys = node.isArray ? value.map((_,i)=>i) : Object.keys(value);
+                const values = node.isArray ? value : keys.map(k => value[k]);
+                // Recursively build children
+                let children = keys.map((k, i) => buildTree(k, values[i], path, depth + 1));
+                // Compress chains of single-child nodes
+                while (children.length === 1 && children[0].isObject) {
+                    // Merge child into this node
+                    node.mergedKeys.push(children[0].key);
+                    node.mergedValues.push(children[0].value);
+                    children = children[0].children;
+                }
+                node.children = children;
+            }
+            return node;
+        }
+
+
+        // Build the root nodes (one for each top-level key)
+        const treeRoots = nodes.map(n => buildTree(n.id, n.data));
+
+        // Track expanded/collapsed state for each node by path
+        const expanded = {};
+        treeRoots.forEach(n => expanded[n.path] = false);
+
+        // Helper to flatten the tree for rendering, including only expanded nodes
+        // Accepts a nodeHeightMap for measured heights
+        function flattenTree(node, arr = [], parentY = 0, depth = 0, nodeHeightMap = {}) {
+            // Hide node if its key and depth match a hidden node
+            if (hiddenNodes.some(hn => hn.key === node.key && hn.depth === depth)) return parentY;
+            // If searching, only show nodes that match the search term in any key or value (case-insensitive, substring)
+            if (searchTerm && !nodeMatchesSearchInnerHTML(node, searchTerm)) return parentY;
+            const thisHeight = nodeHeightMap[node.path] || 60;
+            arr.push({
+                ...node,
+                y: parentY,
+                depth
+            });
+            let y = parentY + thisHeight + 8; // 8px gap
+            if (expanded[node.path] && node.children.length > 0) {
+                node.children.forEach(child => {
+                    y = flattenTree(child, arr, y, depth + 1, nodeHeightMap);
+                });
+            }
+            return y;
+        }
+        // Helper: does any key or value in the node (recursively) match the search term in its stringified HTML
+        function nodeMatchesSearchInnerHTML(node, term) {
+            term = term.toLowerCase();
+            // Stringify key and value as HTML
+            let html = '';
+            if (node.key) html += String(node.key);
+            if (typeof node.value === 'string' || typeof node.value === 'number') {
+                html += String(node.value);
+            } else if (Array.isArray(node.value)) {
+                html += node.value.map(v => (typeof v === 'object' ? JSON.stringify(v) : String(v))).join('');
+            } else if (typeof node.value === 'object' && node.value !== null) {
+                html += Object.entries(node.value).map(([k, v]) => k + String(v)).join('');
+            }
+            if (html.toLowerCase().includes(term)) return true;
+            // Recursively check children
+            if (node.children && node.children.length > 0) {
+                return node.children.some(child => nodeMatchesSearchInnerHTML(child, term));
+            }
+            return false;
+        }
+
+
+        // --- Controls State ---
+        // Load controls from localStorage if available
+        let nodeWidth = parseInt(localStorage.getItem('ojv_nodeWidth')) || 110;
+        let nodeSeparation = parseInt(localStorage.getItem('ojv_nodeSeparation')) || 60;
+let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
+        let textSize = parseInt(localStorage.getItem('ojv_textSize')) || 12;
+
+        // Set initial control values immediately (in case script runs after DOM is ready)
+        function setInitialControlValues() {
+            document.getElementById('nodeWidthInput').value = nodeWidth;
+            document.getElementById('nodeWidthSlider').value = nodeWidth;
+            document.getElementById('nodeSeparationInput').value = nodeSeparation;
+            document.getElementById('nodeSeparationSlider').value = nodeSeparation;
+            document.getElementById('treeOrientation').value = orientation;
+            document.getElementById('textSizeInput').value = textSize;
+            document.getElementById('textSizeSlider').value = textSize;
+        }
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', setInitialControlValues);
+        } else {
+            setInitialControlValues();
+        }
+
+        // --- Controls Handlers ---
+        window.updateNodeWidth = function(val) {
+            nodeWidth = parseInt(val);
+            document.getElementById('nodeWidthInput').value = nodeWidth;
+            document.getElementById('nodeWidthSlider').value = nodeWidth;
+            localStorage.setItem('ojv_nodeWidth', nodeWidth);
+            updateTree();
+        };
+        window.updateNodeSeparation = function(val) {
+            nodeSeparation = parseInt(val);
+            document.getElementById('nodeSeparationInput').value = nodeSeparation;
+            document.getElementById('nodeSeparationSlider').value = nodeSeparation;
+            localStorage.setItem('ojv_nodeSeparation', nodeSeparation);
+            updateTree();
+        };
+        window.updateTreeOrientation = function(val) {
+            orientation = val;
+            localStorage.setItem('ojv_orientation', orientation);
+            updateTree();
+        };
+
+        window.updateTextSize = function(val) {
+            textSize = parseInt(val);
+            document.getElementById('textSizeInput').value = textSize;
+            document.getElementById('textSizeSlider').value = textSize;
+            localStorage.setItem('ojv_textSize', textSize);
+            updateTree();
+        };
+
+        // Add this function after controls handlers
+        window.expandAllNodes = function() {
+            // Expand all nodes in the tree
+            Object.keys(expanded).forEach(function(key) {
+                expanded[key] = true;
+            });
+            updateTree();
+        };
+
+        // Initial flatten for rendering
+        let flatNodes = [];
+        let y = 20;
+        let searchTerm = '';
+        treeRoots.forEach(root => {
+            y = flattenTree(root, flatNodes, y, 0);
+        });
+
+        // Calculate SVG size
+        let svgHeight = Math.max(height, y + 40);
+        let svgWidth = Math.max(width, 600);
+        let svg, contentGroup, zoomBehavior, lastTransform = null;
+        function createSVG() {
+            d3.select('#output-graph').selectAll('svg').remove();
+            svg = d3.select('#output-graph')
+                .append('svg')
+                .attr('width', svgWidth)
+                .attr('height', svgHeight);
+            // Add a group for links (background) and a group for nodes (foreground)
+            contentGroup = svg.append('g').attr('class', 'content-group');
+            contentGroup.append('g').attr('class', 'links-group');
+            contentGroup.append('g').attr('class', 'nodes-group');
+            zoomBehavior = d3.zoom()
+                .scaleExtent([0.2, 5])
+                .on('zoom', (event) => {
+                    contentGroup.attr('transform', event.transform);
+                    lastTransform = event.transform;
+                });
+            svg.call(zoomBehavior);
+            // If we have a previous transform, reapply it
+            if (lastTransform) {
+                svg.call(zoomBehavior.transform, lastTransform);
+            }
+        }
+        createSVG();
+
+        function getPath(parentPath, key) {
+            return parentPath ? parentPath + '.' + key : key;
+        }
+        nodes.forEach(n => expanded[n.id] = false);
+
+        // Render the flat node list as a tree
+
+        function renderTree() {
+            // Remove previous nodes and links
+            contentGroup.select('g.links-group').selectAll('.tree-link').remove();
+            contentGroup.select('g.nodes-group').selectAll('.tree-node').remove();
+
+            // Layout: vertical or horizontal (initial y, will update after measuring height)
+            const initialNodeHeight = 2;
+            // Restore original horizontal layout: all nodes expand to the right of parent
+            let xMap = {};
+            let yMap = {};
+            let maxDepth = Math.max(...flatNodes.map(n => n.depth));
+            let y = 20;
+            flatNodes.forEach((d, i) => {
+                d.x = 40 + d.depth * (nodeWidth + nodeSeparation);
+                if (!yMap[d.depth]) yMap[d.depth] = 20;
+                d.y = yMap[d.depth];
+                yMap[d.depth] += (d.measuredHeight || 60) + 8;
+            });
+
+            // --- Draw links (lines) between parent and child nodes in the background links-group ---
+            const linksGroup = contentGroup.select('g.links-group');
+            flatNodes.forEach((d, i) => {
+                if (d.depth > 0) {
+                    const parentPath = d.path.substring(0, d.path.lastIndexOf('.'));
+                    const parent = flatNodes.find(n => n.path === parentPath);
+                    if (parent) {
+                        // Use measured heights if available
+                        const dHeight = d.measuredHeight || initialNodeHeight;
+                        const parentHeight = parent.measuredHeight || initialNodeHeight;
+                        if (orientation === 'horizontal') {
+                            linksGroup.append('line')
+                                .attr('class', 'tree-link')
+                                .attr('x1', parent.x + nodeWidth)
+                                .attr('y1', parent.y + parentHeight/2)
+                                .attr('x2', d.x)
+                                .attr('y2', d.y + dHeight/2)
+                                .attr('stroke', '#888')
+                                .attr('stroke-width', 2)
+                                .attr('marker-end', 'url(#arrow)');
+                        } else {
+                            linksGroup.append('line')
+                                .attr('class', 'tree-link')
+                                .attr('x1', parent.x + nodeWidth)
+                                .attr('y1', parent.y + parentHeight/2)
+                                .attr('x2', d.x)
+                                .attr('y2', d.y + dHeight/2)
+                                .attr('stroke', '#888')
+                                .attr('stroke-width', 2)
+                                .attr('marker-end', 'url(#arrow)');
+                        }
+                    }
+                }
+            });
+
+            // --- Draw nodes in the foreground nodes-group ---
+            const nodeGroup = contentGroup.select('g.nodes-group')
+                .selectAll('g.tree-node')
+                .data(flatNodes, d => d.path)
+                .enter()
+                .append('g')
+                .attr('class', 'tree-node')
+                .attr('transform', d => `translate(${d.x}, ${d.y})`)
+                .style('cursor', d => d.isObject ? 'pointer' : 'default')
+                .on('click', function(event, d) {
+                    if (!d.isObject) return;
+                    expanded[d.path] = !expanded[d.path];
+                    updateTree();
+                });
+
+            nodeGroup.append('rect')
+                .attr('width', nodeWidth)
+                .attr('height', initialNodeHeight)
+                .attr('rx', 8)
+                .attr('ry', 8)
+                .attr('fill', '#1f77b4');
+
+            // Flex container for label, value, and controls
+            const contentContainer = nodeGroup.append('foreignObject')
+                .attr('x', 0)
+                .attr('y', 0)
+                .attr('width', nodeWidth)
+                .attr('height', 10) // will update after measuring
+                .append('xhtml:div')
+                .attr('class', 'd-flex flex-column justify-content-center align-items-start node-foreign-content')
+                .style('width', '100%');
+
+            // Input group for expand/collapse and hide
+            const inputGroup = contentContainer.append('div')
+                .attr('class', 'input-group input-group-sm mb-1')
+                .style('width', '100%');
+
+            // Filter button
+            inputGroup.append('button')
+                .attr('class', 'btn btn-warning btn-filter-node')
+                .style('min-width', '50px')
+                .style('padding', '0 8px')
+                .text('Filter')
+                .on('click', function(event, d) {
+                    event.stopPropagation();
+                    loadJSON('Filter.json').then(cfg => {
+                        let filters = cfg.filters || [];
+                        if (!filters.some(f => f.key === d.key && f.depth === d.depth)) {
+                            filters.push({ key: d.key, depth: d.depth });
+                            saveJSON('Filter.json', { filters });
+                        }
+                        ProcessFilter();
+                    });
+                });
+            // Expand/collapse button (left)
+            inputGroup.append('button')
+                .attr('class', 'btn btn-outline-light btn-expand-collapse')
+                .style('min-width', '32px')
+                .style('padding', '0 8px')
+                .style('font-size', Math.max(18, textSize * 1.5) + 'px')
+                .style('font-weight', 'bold')
+                .text(d => d.isObject ? (expanded[d.path] ? '−' : '+') : '')
+                .on('click', function(event, d) {
+                    event.stopPropagation();
+                    if (!d.isObject) return;
+                    expanded[d.path] = !expanded[d.path];
+                    updateTree();
+                });
+
+            // Hide button (right)
+            inputGroup.append('button')
+                .attr('class', 'btn btn-danger btn-hide-node')
+                .style('min-width', '40px')
+                .style('padding', '0 8px')
+                .text('Hide')
+                .on('click', function(event, d) {
+                    event.stopPropagation();
+                    if (!hiddenNodes.some(hn => hn.key === d.key && hn.depth === d.depth)) {
+                        hiddenNodes.push({ key: d.key, depth: d.depth });
+                        saveJSON('HiddenNodes.json', { hiddenNodes });
+                        updateTree();
+                    }
+                });
+
+            // Node label: show merged keys joined by ' / '
+            contentContainer.append('div')
+                .attr('class', 'node-label')
+                .style('margin', '2px 0 0 10px')
+                .style('font-size', textSize + 'px')
+                .style('font-weight', 'bold')
+                .style('color', '#fff')
+                .text(d => d.mergedKeys ? d.mergedKeys.join(' / ') : d.key);
+
+            // Node value summary: show merged values for each merged key
+            const valueDiv = contentContainer.append('div')
+                .attr('class', 'node-content')
+                .style('margin', '2px 0 0 10px')
+                .style('width', (nodeWidth - 20) + 'px')
+                .style('font-size', textSize + 'px');
+
+            valueDiv.selectAll('div.kv-row')
+                .data(d => {
+                    // If merged, show all merged values
+                    if (d.mergedKeys && d.mergedKeys.length > 1) {
+                        return d.mergedKeys.map((k, i) => {
+                            const v = d.mergedValues[i];
+                            if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
+                                // Show up to 2 key-value pairs for each merged object
+                                return Object.entries(v).slice(0, 2).map(([kk, vv]) => ({k: k + '.' + kk, v: (typeof vv === 'object' ? (Array.isArray(vv) ? 'Array' : 'Object') : vv)}));
+                            } else if (Array.isArray(v)) {
+                                return [{k: k, v: `Array[${v.length}]`}];
+                            } else {
+                                return [{k: k, v: String(v)}];
+                            }
+                        }).flat();
+                    }
+                    // Otherwise, show as before
+                    if (d.isObject && d.value && typeof d.value === 'object' && !Array.isArray(d.value)) {
+                        return Object.entries(d.value)
+                            .slice(0, 4)
+                            .map(([k, v]) => ({k, v: (typeof v === 'object' ? (Array.isArray(v) ? 'Array' : 'Object') : v)}));
+                    } else if (!d.isObject) {
+                        return [{k: '', v: String(d.value)}];
+                    } else if (Array.isArray(d.value)) {
+                        return [{k: '', v: `Array[${d.value.length}]`}];
+                    }
+                    return [];
+                })
+                .enter()
+                .append('div')
+                .attr('class', 'kv-row')
+                .html(d => {
+                    if (d.k) {
+                        // If key is 'name', add a data attribute for CSS
+                        const keyAttr = d.k.trim().toLowerCase() === 'name' ? ' data-key-name="name"' : '';
+                        return `<span class="key"${keyAttr}>${d.k} :</span><span class="value">${d.v}</span>`;
+                    } else {
+                        return `<span class="value">${d.v}</span>`;
+                    }
+                });
+
+            // After rendering, measure and update node heights
+            setTimeout(() => {
+                // Measure all node heights
+                const nodeHeightMap = {};
+                nodeGroup.each(function(d, i) {
+                    const fo = d3.select(this).select('foreignObject').node();
+                    if (fo) {
+                        // Get the height of the HTML content inside the foreignObject
+                        const htmlDiv = fo.querySelector('.node-foreign-content');
+                        if (htmlDiv) {
+                            const contentHeight = htmlDiv.scrollHeight;
+                            // Update rect and foreignObject height
+                            d3.select(this).select('rect').attr('height', contentHeight + 8); // add some padding
+                            d3.select(this).select('foreignObject').attr('height', contentHeight + 8);
+                            d.measuredHeight = contentHeight + 8;
+                            nodeHeightMap[d.path] = contentHeight + 8;
+                        } else {
+                            d.measuredHeight = 60;
+                            nodeHeightMap[d.path] = 60;
+                        }
+                    } else {
+                        d.measuredHeight = 60;
+                        nodeHeightMap[d.path] = 60;
+                    }
+                });
+                // Re-layout nodes with measured heights
+                let y = 20;
+                flatNodes.forEach((d, i) => {
+                    if (orientation === 'vertical') {
+                        d.x = 40 + d.depth * nodeSeparation;
+                        d.y = y;
+                        y += (d.measuredHeight || 60) + 8;
+                    } else {
+                        d.x = 40 + i * nodeWidth * 1.2;
+                        d.y = 20 + d.depth * nodeSeparation;
+                    }
+                });
+                // Update node positions
+                nodeGroup.attr('transform', d => `translate(${d.x}, ${d.y})`);
+                // Update link positions in the background links-group
+                const linksGroup = contentGroup.select('g.links-group');
+                linksGroup.selectAll('.tree-link').remove();
+                flatNodes.forEach((d, i) => {
+                    if (d.depth > 0) {
+                        const parentPath = d.path.substring(0, d.path.lastIndexOf('.'));
+                        const parent = flatNodes.find(n => n.path === parentPath);
+                        if (parent) {
+                            const dHeight = d.measuredHeight || 60;
+                            const parentHeight = parent.measuredHeight || 60;
+                            linksGroup.append('line')
+                                .attr('class', 'tree-link')
+                                .attr('x1', orientation === 'vertical' ? parent.x + nodeWidth : parent.x + nodeWidth/2)
+                                .attr('y1', orientation === 'vertical' ? parent.y + parentHeight/2 : parent.y + parentHeight)
+                                .attr('x2', orientation === 'vertical' ? d.x : d.x + nodeWidth/2)
+                                .attr('y2', orientation === 'vertical' ? d.y + dHeight/2 : d.y)
+                                .attr('stroke', '#888')
+                                .attr('stroke-width', 2)
+                                .attr('marker-end', 'url(#arrow)');
+                        }
+                    }
+                });
+            }, 0);
+
+            // (Expand/collapse indicator moved to input group)
+        }
+
+
+        function updateTree() {
+            // Save current transform before update
+            if (svg && zoomBehavior) {
+                const t = d3.zoomTransform(svg.node());
+                lastTransform = t;
+            }
+            flatNodes = [];
+            let y = 20;
+            treeRoots.forEach(root => {
+                y = flattenTree(root, flatNodes, y, 0);
+            });
+            // Recompute SVG size for new layout (use estimated 60px per node, will be auto after render)
+            // Restore original horizontal layout for SVG size
+            svgHeight = Math.max(height, (Math.max(...flatNodes.map(n => n.depth)) + 1) * nodeSeparation + 60);
+            svgWidth = Math.max(width, flatNodes.length * nodeWidth * 1.2 + 60);
+            createSVG();
+            renderTree();
+        }
+        // Search input handler
+        window.handleSearchInput = function(val) {
+            searchTerm = val.trim();
+            updateTree();
+        };
+        window.searchBoxSearch = function() {
+            var val = document.getElementById('searchBox').value;
+            handleSearchInput(val);
+        };
+        window.clearSearchBox = function() {
+            document.getElementById('searchBox').value = '';
+            handleSearchInput('');
+        };
+        renderTree();
+
+
+        // Add arrow marker for branch connectors
+        svg.append('defs').append('marker')
+            .attr('id', 'arrow')
+            .attr('viewBox', '0 0 10 10')
+            .attr('refX', 10)
+            .attr('refY', 5)
+            .attr('markerWidth', 6)
+            .attr('markerHeight', 6)
+            .attr('orient', 'auto-start-reverse')
+            .append('path')
+            .attr('d', 'M 0 0 L 10 5 L 0 10 z')
+            .attr('fill', '#888');
+    })
+    .catch(err => {
+        d3.select('#output-graph').append('div').text('Failed to load output.json: ' + err);
+    });
+
+// Add this function to define ProcessFilter
+function ProcessFilter() {
+    // Load filters and render dropdown checklist
+    loadJSON('Filter.json').then(cfg => {
+        const filterNodes = cfg.filters || [];
+        const container = document.getElementById('filterDropdownContainer');
+        if (!container) return;
+        if (filterNodes.length === 0) {
+            container.innerHTML = '<div class="alert alert-info">No filters added.</div>';
+            return;
+        }
+        let html = '<div class="dropdown-menu show" style="position:relative;display:block;max-width:300px;">';
+        filterNodes.forEach((f, i) => {
+            html += `<div class="form-check">
+                <input class="form-check-input" type="checkbox" value="${f.key}-${f.depth}" id="filterCheck${i}" checked>
+                <label class="form-check-label" for="filterCheck${i}">${f.key} (depth ${f.depth})</label>
+                <button class="btn btn-sm btn-outline-secondary ms-2" onclick="sortFilter('${f.key}', ${f.depth})">Sort</button>
+            </div>`;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    });
+}
+
+function sortFilter(key, depth) {
+    alert('Sort by ' + key + ' at depth ' + depth);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add API Calls</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f8f9fa; }
+        .api-list { max-width: 600px; margin: 2rem auto; }
+        .api-item { background: #fff; border-radius: 6px; box-shadow: 0 2px 8px #0001; margin-bottom: 1rem; padding: 1rem; }
+        .drag-handle { cursor: grab; margin-right: 8px; }
+    </style>
+</head>
+<body>
+<div class="container api-list">
+    <h2 class="mb-4">Manage API Calls</h2>
+    <form id="addApiForm" class="mb-3">
+        <div class="input-group">
+            <input type="text" class="form-control" id="apiUrlInput" placeholder="Enter API URL" required>
+            <button class="btn btn-success" type="submit">Add API</button>
+        </div>
+    </form>
+    <div id="apiListContainer"></div>
+    <button class="btn btn-primary mt-3" onclick="saveApiCalls()">Save Sequence</button>
+</div>
+<script>
+const apiFile = 'APIcalls.json';
+let apiCalls = [];
+
+function loadApiCalls() {
+    fetch(apiFile)
+        .then(r => r.json())
+        .then(data => {
+            apiCalls = data.apiCalls || [];
+            renderApiList();
+        })
+        .catch(() => { apiCalls = []; renderApiList(); });
+}
+
+function renderApiList() {
+    const container = document.getElementById('apiListContainer');
+    if (!container) return;
+    if (apiCalls.length === 0) {
+        container.innerHTML = '<div class="alert alert-info">No API calls added.</div>';
+        return;
+    }
+    let html = '<ul class="list-group">';
+    apiCalls.forEach((api, idx) => {
+        html += `<li class="list-group-item d-flex align-items-center api-item" draggable="true" ondragstart="dragStart(event, ${idx})" ondragover="dragOver(event)" ondrop="dropApi(event, ${idx})">
+            <span class="drag-handle">&#x2630;</span>
+            <span class="flex-grow-1">${api.url}</span>
+            <button class="btn btn-danger btn-sm ms-2" onclick="removeApi(${idx})">Remove</button>
+        </li>`;
+    });
+    html += '</ul>';
+    container.innerHTML = html;
+}
+
+function addApi(url) {
+    apiCalls.push({ url });
+    renderApiList();
+}
+
+function removeApi(idx) {
+    apiCalls.splice(idx, 1);
+    renderApiList();
+}
+
+function saveApiCalls() {
+    const blob = new Blob([JSON.stringify({ apiCalls }, null, 2)], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = apiFile;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+// Drag and drop reordering
+let dragIdx = null;
+function dragStart(e, idx) { dragIdx = idx; }
+function dragOver(e) { e.preventDefault(); }
+function dropApi(e, idx) {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === idx) return;
+    const moved = apiCalls.splice(dragIdx, 1)[0];
+    apiCalls.splice(idx, 0, moved);
+    dragIdx = null;
+    renderApiList();
+}
+
+document.getElementById('addApiForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const url = document.getElementById('apiUrlInput').value.trim();
+    if (url) {
+        addApi(url);
+        document.getElementById('apiUrlInput').value = '';
+    }
+});
+
+loadApiCalls();
+</script>
+</body>
+</html>

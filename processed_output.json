@@ -1,0 +1,24 @@
+{
+  "DefaultGroup": {
+    "channels": [
+      {
+        "id": "list",
+        "name": "Unnamed",
+        "ports": [],
+        "connectors": []
+      },
+      {
+        "id": "channel",
+        "name": "Unnamed",
+        "ports": [],
+        "connectors": []
+      },
+      {
+        "id": "portsInUse",
+        "name": "Unnamed",
+        "ports": [],
+        "connectors": []
+      }
+    ]
+  }
+}
