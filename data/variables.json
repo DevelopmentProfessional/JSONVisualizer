@@ -1,0 +1,22 @@
+{
+  "variables": [
+    {
+      "name": "MirthBaseURL",
+      "value": "https://localhost:8443/api",
+      "visible": false
+    },
+    {
+      "name": "MirthDevUsername",
+      "value": "dev"
+    },
+    {
+      "name": "MirthDevPassword",
+      "value": "admin"
+    },
+    {
+      "name": "NewsAPI",
+      "value": "pub_ba5cc484e4974aa9a80aefebf4008b99",
+      "visible": false
+    }
+  ]
+}

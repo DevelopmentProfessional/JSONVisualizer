@@ -1,0 +1,33 @@
+{
+  "filters": [
+    {
+      "key": "LOGIN",
+      "depth": 0,
+      "description": "Exact match - hides entries with key exactly 'LOGIN'"
+    },
+    {
+      "key": "/Channels/*/Connectors",
+      "depth": 0,
+      "description": "Wildcard match - hides entries matching pattern (e.g., '/Channels/ABC123/Connectors')"
+    },
+    {
+      "key": "temp/",
+      "depth": 0,
+      "description": "Prefix match - hides entries starting with 'temp/'"
+    },
+    {
+      "key": "*debug*",
+      "depth": 0,
+      "description": "Contains match - hides entries containing 'debug' anywhere in the key"
+    }
+  ],
+  "_documentation": {
+    "filterTypes": {
+      "exact": "Use exact key name to match (e.g., 'LOGIN')",
+      "wildcard": "Use * as wildcard in patterns (e.g., '/api/*/temp')",
+      "prefix": "End with / to match prefixes (e.g., 'temp/')",
+      "contains": "Wrap with * to match anywhere (e.g., '*debug*')"
+    },
+    "note": "Only depth 0 filters are applied to top-level entries. Higher depth filters are for future use."
+  }
+}

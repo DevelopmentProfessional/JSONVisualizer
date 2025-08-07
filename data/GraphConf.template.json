@@ -1,0 +1,52 @@
+{
+  "selectedVariables": [
+    {
+      "id": "var1",
+      "path": "$.data.wb:countries.wb:country[0].wb:name[0]",
+      "displayName": "Country Name",
+      "originalKey": "wb:name"
+    },
+    {
+      "id": "var2", 
+      "path": "$.data.wb:countries.wb:country[0].wb:region[0].content",
+      "displayName": "Region",
+      "originalKey": "content"
+    }
+  ],
+  "activeGraphType": "tree",
+  "graphMappings": {
+    "tree": {
+      "label": "var1",
+      "value": "var2",
+      "parent": null,
+      "children": null
+    },
+    "force-directed": {
+      "source": null,
+      "target": null,
+      "value": null,
+      "group": null
+    },
+    "bar-chart": {
+      "x": "var1",
+      "y": "var2",
+      "label": "var1",
+      "value": "var2"
+    },
+    "sunburst": {
+      "label": "var1",
+      "value": "var2",
+      "parent": null,
+      "children": null
+    }
+  },
+  "graphControls": {
+    "expandAll": false,
+    "collapseAll": false,
+    "nodeWidth": 110,
+    "nodeSeparation": 60,
+    "orientation": "horizontal",
+    "textSize": 12
+  },
+  "nodePositions": {}
+}
