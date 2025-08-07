@@ -10,7 +10,7 @@ const PASSWORD = process.env.API_PASSWORD;
 const BASE_URL = process.env.BASE_URL || 'https://localhost:8443/api';
 
 if (!USERNAME || !PASSWORD) {
-  fs.writeFileSync('output.json', JSON.stringify({ error: 'Missing API_USERNAME or API_PASSWORD in .env' }, null, 2));
+  fs.writeFileSync('data/output.json', JSON.stringify({ error: 'Missing API_USERNAME or API_PASSWORD in .env' }, null, 2));
   process.exit(1);
 }
 
@@ -100,13 +100,13 @@ async function dumpAllResponses() {
     }
   }
 
-  // === 3. Write ALL data to output.json ===
+  // === 3. Write ALL data to data/output.json ===
   try {
-    fs.writeFileSync('output.json', JSON.stringify(output, null, 2));
+    fs.writeFileSync('data/output.json', JSON.stringify(output, null, 2));
   } catch (writeError) {
     // Final fallback if writing fails
     try {
-      fs.writeFileSync('output.json', '{\n  "FATAL": "Could not write output.json - filesystem error"\n}');
+      fs.writeFileSync('data/output.json', '{\n  "FATAL": "Could not write data/output.json - filesystem error"\n}');
     } catch {
       // If all else fails, do nothing
     }
@@ -125,7 +125,7 @@ try {
     }
   };
   try {
-    fs.writeFileSync('output.json', JSON.stringify(fallback, null, 2));
+    fs.writeFileSync('data/output.json', JSON.stringify(fallback, null, 2));
   } catch {
     // Do nothing if we can't write
   }

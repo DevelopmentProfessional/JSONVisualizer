@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage API - APIRunner</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Navigation -->
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="#"><i class="bi bi-api"></i> API Runner</a>
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link active" href="ManageAPI.html">Manage API</a></li>
+                        <li class="nav-item"><a class="nav-link" href="view.html">Visualizer</a></li>
+                        <li class="nav-item"><a class="nav-link" href="Variables.html">Variables</a></li>
+                        <li class="nav-item"><a class="nav-link" href="Run.html">Run</a></li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-12 ms-sm-auto px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Manage API Calls</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addApiModal">
+                            <i class="bi bi-plus-circle"></i> Add API
+                        </button>
+                    </div>
+                </div>
+
+                <!-- API List Container -->
+                <div id="apiListContainer">
+                    <div class="alert alert-info">Loading API calls...</div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add API Modal -->
+    <div class="modal fade" id="addApiModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New API Call</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addApiForm">
+                        <!-- Name Input -->
+                        <div class="mb-3">
+                            <label for="apiNameInput" class="form-label">Name:</label>
+                            <input type="text" id="apiNameInput" class="form-control" placeholder="API Call Name" 
+                                   title="Descriptive name for this API call">
+                        </div>
+
+                        <!-- URL Input -->
+                        <div class="mb-3">
+                            <label for="apiUrlInput" class="form-label">URL:</label>
+                            <input type="text" id="apiUrlInput" class="form-control" placeholder="https://api.example.com/endpoint" 
+                                   ondrop="handleVariableDrop(event)" ondragover="allowDrop(event)">
+                        </div>
+
+                        <!-- Method Input -->
+                        <div class="mb-3">
+                            <label for="apiMethodInput" class="form-label">Method:</label>
+                            <select id="apiMethodInput" class="form-select">
+                                <option value="GET">GET</option>
+                                <option value="POST">POST</option>
+                                <option value="PUT">PUT</option>
+                                <option value="DELETE">DELETE</option>
+                                <option value="PATCH">PATCH</option>
+                            </select>
+                        </div>
+
+                        <!-- Output File Name Input -->
+                        <div class="mb-3">
+                            <label for="apiOutputFileInput" class="form-label">Output File Name:</label>
+                            <div class="input-group">
+                                <input type="text" id="apiOutputFileInput" class="form-control" 
+                                       placeholder="my-api-response" 
+                                       title="File name without extension (will be saved as .json in data/ApiResponse/ directory)">
+                                <span class="input-group-text">.json</span>
+                            </div>
+                            <div class="form-text">
+                                Response will be saved to <code>data/ApiResponse/{filename}.json</code>. 
+                                If empty, will default to <code>api-{timestamp}.json</code>
+                            </div>
+                        </div>
+
+                        <!-- Body Input -->
+                        <div class="mb-3" id="bodyInputSection">
+                            <label for="apiBodyInput" class="form-label">Body (for POST/PUT/PATCH):</label>
+                            <textarea class="form-control" id="apiBodyInput" rows="3" placeholder="Request body (optional)"></textarea>
+                        </div>
+
+                        <!-- Headers Input -->
+                        <div class="mb-3" id="headersInputSection">
+                            <label class="form-label">Headers:</label>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text">Content-Type</span>
+                                <select class="form-select" id="apiContentTypeInput" style="max-width: 220px;">
+                                    <option value="">None</option>
+                                    <option value="application/json">application/json</option>
+                                    <option value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</option>
+                                    <option value="text/plain">text/plain</option>
+                                    <option value="multipart/form-data">multipart/form-data</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Custom Headers -->
+                            <div class="mb-2">
+                                <label for="apiCustomHeadersInput" class="form-label">Custom Headers:</label>
+                                <textarea class="form-control" id="apiCustomHeadersInput" rows="3" 
+                                          placeholder="X-Requested-With: OpenAPI&#10;Authorization: Bearer token&#10;X-Custom-Header: value"></textarea>
+                            </div>
+                            
+                            <!-- Common Headers Shortcuts -->
+                            <div class="mb-2">
+                                <label class="form-label">Quick Add:</label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addQuickHeader('X-Requested-With: OpenAPI')">+ X-Requested-With</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addQuickHeader('Accept: application/json')">+ Accept JSON</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addQuickHeader('User-Agent: APIRunner/1.0')">+ User-Agent</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Variables Section -->
+                        <div class="mb-3">
+                            <label class="form-label">Available Variables (Drag to URL field):</label>
+                            <div id="modalVariablesContainer">
+                                <div class="text-muted small">Loading variables...</div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="addApiFromModal()" title="Save API">
+                        <i class="bi bi-save me-2"></i>
+                        Save API
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        let editingIdx = null;
+        let apiCalls = [];
+        let variables = [];
+        let draggedVariable = null;
+        const apiFile = '../data/APIcalls.json';
+        const variablesFile = '/variables.json';
+
+        // --- Initialize ---
+        document.addEventListener('DOMContentLoaded', function() {
+            loadApiCalls();
+            loadVariables();
+            
+            // Modal event listeners
+            const addApiModal = document.getElementById('addApiModal');
+            addApiModal.addEventListener('shown.bs.modal', function () {
+                // Reset form when modal is opened
+                resetModalForm();
+                // Refresh variables in modal
+                loadVariables();
+                // Focus on URL input
+                document.getElementById('apiUrlInput').focus();
+            });
+
+            // Handle Enter key in modal form
+            addApiModal.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (e.target.tagName !== 'TEXTAREA') {
+                        addApiFromModal();
+                    }
+                }
+            });
+
+            // Method change listener to show/hide body input
+            document.getElementById('apiMethodInput').addEventListener('change', toggleBodyInput);
+            toggleBodyInput(); // Initial state
+        });
+
+        // Toggle body input visibility based on method
+        function toggleBodyInput() {
+            const method = document.getElementById('apiMethodInput').value;
+            const bodySection = document.getElementById('bodyInputSection');
+            if (['POST', 'PUT', 'PATCH'].includes(method)) {
+                bodySection.style.display = 'block';
+            } else {
+                bodySection.style.display = 'none';
+            }
+        }
+
+        // --- Variable Drag and Drop ---
+        function variableDragStart(event, varName) {
+            event.dataTransfer.setData('text/plain', varName);
+            draggedVariable = varName;
+        }
+
+        function allowDrop(e) {
+            e.preventDefault();
+        }
+
+        function handleVariableDrop(e) {
+            e.preventDefault();
+            const input = document.getElementById('apiUrlInput');
+            const varName = e.dataTransfer.getData('text/plain');
+            if (varName) {
+                const ref = `{{${varName}}}`;
+                const start = input.selectionStart || 0;
+                const end = input.selectionEnd || 0;
+                const value = input.value;
+                input.value = value.slice(0, start) + ref + value.slice(end);
+                input.focus();
+                input.setSelectionRange(start + ref.length, start + ref.length);
+            }
+            draggedVariable = null;
+        }
+
+        // --- Add API from Modal ---
+        function addApiFromModal() {
+            const name = document.getElementById('apiNameInput').value.trim();
+            const url = document.getElementById('apiUrlInput').value.trim();
+            const method = document.getElementById('apiMethodInput').value;
+            const body = document.getElementById('apiBodyInput').value.trim();
+            const contentType = document.getElementById('apiContentTypeInput').value;
+            const customHeaders = document.getElementById('apiCustomHeadersInput').value.trim();
+            const outputFileName = document.getElementById('apiOutputFileInput').value.trim();
+
+            if (!name) {
+                alert('Name is required.');
+                return;
+            }
+
+            if (!url) {
+                alert('URL is required.');
+                return;
+            }
+
+            // Build headers object
+            const headers = {};
+            
+            // Add Content-Type if selected
+            if (contentType) {
+                headers['Content-Type'] = contentType;
+            }
+            
+            // Parse and add custom headers
+            if (customHeaders) {
+                const headerLines = customHeaders.split('\n');
+                headerLines.forEach(line => {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine && trimmedLine.includes(':')) {
+                        const [key, ...valueParts] = trimmedLine.split(':');
+                        const value = valueParts.join(':').trim(); // Rejoin in case value contains colons
+                        if (key.trim() && value) {
+                            headers[key.trim()] = value;
+                        }
+                    }
+                });
+            }
+
+            // Generate default output filename if not provided
+            const finalOutputFileName = outputFileName || `api-${Date.now()}`;
+
+            // Create the API object
+            const newApi = {
+                name,
+                url,
+                method,
+                body: body || '',
+                headers,
+                outputFileName: finalOutputFileName
+            };
+
+            // Add to array and save
+            apiCalls.push(newApi);
+            saveApiCalls();
+            renderApiList();
+
+            // Reset form and close modal
+            resetModalForm();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addApiModal'));
+            modal.hide();
+        }
+
+        // --- Reset Modal Form ---
+        function resetModalForm() {
+            document.getElementById('apiNameInput').value = '';
+            document.getElementById('apiUrlInput').value = '';
+            document.getElementById('apiMethodInput').value = 'GET';
+            document.getElementById('apiBodyInput').value = '';
+            document.getElementById('apiContentTypeInput').value = '';
+            document.getElementById('apiCustomHeadersInput').value = '';
+            document.getElementById('apiOutputFileInput').value = '';
+            toggleBodyInput(); // Reset visibility
+        }
+
+        // --- Quick Header Addition ---
+        function addQuickHeader(headerText) {
+            const customHeadersInput = document.getElementById('apiCustomHeadersInput');
+            const currentValue = customHeadersInput.value;
+            const newValue = currentValue ? currentValue + '\n' + headerText : headerText;
+            customHeadersInput.value = newValue;
+        }
+
+        // --- HTML Templates ---
+        function getApiItemTemplate(api, idx) {
+            const method = api.method || 'GET';
+            const url = api.url || '';
+            const headers = api.headers && typeof api.headers === 'object' ? api.headers : {};
+            const body = api.body || '';
+            const outputFileName = api.outputFileName || `api-${idx}`;
+            const apiName = api.name || `API Call ${idx + 1}`;
+            
+            return `
+                <li class="list-group-item d-flex align-items-center api-item">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-1">
+                            <h6 class="mb-0 me-2 text-light">${escapeHtml(apiName)}</h6>
+                            <span class="badge bg-${getMethodColor(method)} me-2">${method}</span>
+                            <span class="badge bg-secondary me-2">→ ${outputFileName}.json</span>
+                            <button class="btn btn-outline-secondary btn-sm ms-auto" onclick="editApi(${idx})" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm me-2 ms-1" onclick="removeApi(${idx})" title="Remove">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        <div class="small text-muted">
+                            <div><strong>URL:</strong> ${escapeHtml(url)}</div>
+                            ${Object.keys(headers).length > 0 ? `<div><strong>Headers:</strong> ${Object.keys(headers).length} item(s)</div>` : ''}
+                            ${body ? `<div><strong>Body:</strong> ${body.length} characters</div>` : ''}
+                        </div>
+                    </div>
+                </li>
+            `;
+        }
+
+        function getApiEditTemplate(api, idx) {
+            const method = api.method || 'GET';
+            const url = api.url || '';
+            const headers = api.headers && typeof api.headers === 'object' ? api.headers : {};
+            const body = api.body || '';
+            const outputFileName = api.outputFileName || `api-${idx}`;
+            const apiName = api.name || `API Call ${idx + 1}`;
+            const contentType = headers['Content-Type'] || '';
+            
+            // Build custom headers string (excluding Content-Type)
+            const customHeadersArray = [];
+            Object.entries(headers).forEach(([key, value]) => {
+                if (key !== 'Content-Type') {
+                    customHeadersArray.push(`${key}: ${value}`);
+                }
+            });
+            const customHeadersStr = customHeadersArray.join('\n');
+            
+            return `
+                <li class="list-group-item api-item-editing">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Name:</label>
+                            <input type="text" id="editApiName_${idx}" class="form-control" value="${escapeHtml(apiName)}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">URL:</label>
+                            <input type="text" id="editApiUrl_${idx}" class="form-control" value="${escapeHtml(url)}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Method:</label>
+                            <select id="editApiMethod_${idx}" class="form-select">
+                                <option value="GET" ${method === 'GET' ? 'selected' : ''}>GET</option>
+                                <option value="POST" ${method === 'POST' ? 'selected' : ''}>POST</option>
+                                <option value="PUT" ${method === 'PUT' ? 'selected' : ''}>PUT</option>
+                                <option value="DELETE" ${method === 'DELETE' ? 'selected' : ''}>DELETE</option>
+                                <option value="PATCH" ${method === 'PATCH' ? 'selected' : ''}>PATCH</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Output File Name:</label>
+                            <div class="input-group">
+                                <input type="text" id="editApiOutputFile_${idx}" class="form-control" value="${escapeHtml(outputFileName)}">
+                                <span class="input-group-text">.json</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Content-Type:</label>
+                            <select id="editApiContentType_${idx}" class="form-select">
+                                <option value="">None</option>
+                                <option value="application/json" ${contentType === 'application/json' ? 'selected' : ''}>application/json</option>
+                                <option value="application/x-www-form-urlencoded" ${contentType === 'application/x-www-form-urlencoded' ? 'selected' : ''}>application/x-www-form-urlencoded</option>
+                                <option value="text/plain" ${contentType === 'text/plain' ? 'selected' : ''}>text/plain</option>
+                                <option value="multipart/form-data" ${contentType === 'multipart/form-data' ? 'selected' : ''}>multipart/form-data</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Custom Headers:</label>
+                            <textarea id="editApiCustomHeaders_${idx}" class="form-control" rows="3">${escapeHtml(customHeadersStr)}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Body:</label>
+                            <textarea id="editApiBody_${idx}" class="form-control" rows="3">${escapeHtml(body)}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-success me-2" onclick="saveEdit(${idx})">
+                                <i class="bi bi-check-lg"></i> Save
+                            </button>
+                            <button class="btn btn-secondary" onclick="cancelEdit()">
+                                <i class="bi bi-x-lg"></i> Cancel
+                            </button>
+                        </div>
+                    </div>
+                </li>
+            `;
+        }
+
+        // --- Utility Functions ---
+        function getMethodColor(method) {
+            const colors = {
+                'GET': 'success',
+                'POST': 'primary',
+                'PUT': 'warning',
+                'DELETE': 'danger',
+                'PATCH': 'info'
+            };
+            return colors[method] || 'secondary';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // --- API Management Functions ---
+        function removeApi(idx) {
+            if (confirm('Are you sure you want to remove this API call?')) {
+                apiCalls.splice(idx, 1);
+                saveApiCalls();
+                renderApiList();
+            }
+        }
+
+        function editApi(idx) {
+            editingIdx = idx;
+            renderApiList();
+        }
+
+        function cancelEdit() {
+            editingIdx = null;
+            renderApiList();
+        }
+
+        function saveEdit(idx) {
+            const name = document.getElementById(`editApiName_${idx}`).value.trim();
+            const url = document.getElementById(`editApiUrl_${idx}`).value.trim();
+            const method = document.getElementById(`editApiMethod_${idx}`).value;
+            const body = document.getElementById(`editApiBody_${idx}`).value.trim();
+            const contentType = document.getElementById(`editApiContentType_${idx}`).value;
+            const customHeaders = document.getElementById(`editApiCustomHeaders_${idx}`).value.trim();
+            const outputFileName = document.getElementById(`editApiOutputFile_${idx}`).value.trim();
+
+            if (!name) {
+                alert('Name is required.');
+                return;
+            }
+
+            if (!url) {
+                alert('URL is required.');
+                return;
+            }
+
+            // Build headers object
+            const headers = {};
+            
+            // Add Content-Type if selected
+            if (contentType) {
+                headers['Content-Type'] = contentType;
+            }
+            
+            // Parse and add custom headers
+            if (customHeaders) {
+                const headerLines = customHeaders.split('\n');
+                headerLines.forEach(line => {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine && trimmedLine.includes(':')) {
+                        const [key, ...valueParts] = trimmedLine.split(':');
+                        const value = valueParts.join(':').trim();
+                        if (key.trim() && value) {
+                            headers[key.trim()] = value;
+                        }
+                    }
+                });
+            }
+
+            // Update the API
+            apiCalls[idx] = {
+                ...apiCalls[idx],
+                name,
+                url,
+                method,
+                body: body || '',
+                headers,
+                outputFileName: outputFileName || `api-${idx}`
+            };
+
+            saveApiCalls();
+            editingIdx = null;
+            renderApiList();
+        }
+
+        // --- Data Loading and Saving ---
+        async function loadApiCalls() {
+            try {
+                const res = await fetch(apiFile);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                apiCalls = Array.isArray(data.apiCalls) ? data.apiCalls : [];
+            } catch (err) {
+                console.error('Failed to load API calls:', err);
+                apiCalls = [];
+            } finally {
+                renderApiList();
+            }
+        }
+
+        async function loadVariables() {
+            try {
+                const res = await fetch(variablesFile);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                variables = Array.isArray(data.variables) ? data.variables : [];
+            } catch (err) {
+                console.error('Failed to load variables:', err);
+                variables = [];
+            } finally {
+                renderVariables();
+            }
+        }
+
+        async function saveApiCalls() {
+            try {
+                const res = await fetch('/saveApiCalls', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ apiCalls }),
+                });
+                
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+                    throw new Error(`Save failed (${res.status}): ${errorData.error || res.statusText}`);
+                }
+                
+                const result = await res.json();
+                console.log('API calls saved successfully');
+                
+            } catch (err) {
+                console.error('Failed to save API calls:', err);
+                alert('Failed to save API calls: ' + err.message);
+            }
+        }
+
+        // --- Rendering ---
+        function renderVariables() {
+            const container = document.getElementById('modalVariablesContainer');
+            if (!container) return;
+
+            if (variables.length === 0) {
+                container.innerHTML = '<div class="text-muted small">No variables available. Add variables in Variables page.</div>';
+                return;
+            }
+
+            const html = `
+                <div class="d-flex flex-wrap gap-2">
+                    ${variables.map(v => `
+                        <span
+                            class="badge bg-secondary"
+                            draggable="true"
+                            ondragstart="variableDragStart(event, '${escapeHtml(v.name)}')"
+                            style="cursor:grab; user-select:none;"
+                            title="Drag this variable into the URL field"
+                        >
+                            ${escapeHtml(v.name)}
+                        </span>
+                    `).join('')}
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function renderApiList() {
+            const container = document.getElementById('apiListContainer');
+            if (!container) return;
+
+            if (apiCalls.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">No API calls added yet. Click "Add API" to get started.</div>';
+                return;
+            }
+
+            const listItems = apiCalls.map((api, idx) => {
+                if (editingIdx === idx) {
+                    return getApiEditTemplate(api, idx);
+                } else {
+                    return getApiItemTemplate(api, idx);
+                }
+            }).join('');
+
+            container.innerHTML = `<ul class="list-group">${listItems}</ul>`;
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

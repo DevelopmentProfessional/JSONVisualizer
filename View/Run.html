@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Run APIs - APIRunner</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .api-log {
+            max-height: 400px;
+            overflow-y: auto;
+            background-color: #212529;
+            border: 1px solid #495057;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+        .log-entry {
+            padding: 0.25rem 0.5rem;
+            border-bottom: 1px solid #495057;
+        }
+        .log-success { color: #198754; }
+        .log-error { color: #dc3545; }
+        .log-info { color: #0dcaf0; }
+        .log-warning { color: #ffc107; }
+        .api-card {
+            transition: all 0.2s ease;
+        }
+        .api-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .output-file-badge {
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Navigation -->
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="#"><i class="bi bi-play-circle"></i> API Runner</a>
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="ManageAPI.html">Manage API</a></li>
+                        <li class="nav-item"><a class="nav-link" href="view.html">Visualizer</a></li>
+                        <li class="nav-item"><a class="nav-link" href="Variables.html">Variables</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="Run.html">Run</a></li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-12 ms-sm-auto px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Run API Calls</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-success" onclick="runSelectedApis()" id="runBtn">
+                                <i class="bi bi-play-fill"></i> Run Selected APIs
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="selectAll()">
+                                <i class="bi bi-check-all"></i> Select All
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="selectNone()">
+                                <i class="bi bi-square"></i> Select None
+                            </button>
+                        </div>
+                        <button type="button" class="btn btn-outline-info" onclick="viewApiResponses()">
+                            <i class="bi bi-folder-open"></i> View Responses
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- API Selection Panel -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-list-check"></i> Available API Calls
+                                    <span class="badge bg-secondary" id="apiCount">0</span>
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="apiListContainer">
+                                    <div class="text-center py-4">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <div class="mt-2">Loading API calls...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Execution Log Panel -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-terminal"></i> Execution Log
+                                </h5>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearLog()">
+                                    <i class="bi bi-trash"></i> Clear
+                                </button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="apiLog" class="api-log">
+                                    <div class="log-entry log-info">Ready to run API calls...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Execution Summary -->
+                        <div class="card mt-3" id="summaryCard" style="display: none;">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    <i class="bi bi-graph-up"></i> Execution Summary
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-3">
+                                        <div class="h4 text-success mb-1" id="successCount">0</div>
+                                        <div class="small text-muted">Success</div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="h4 text-danger mb-1" id="errorCount">0</div>
+                                        <div class="small text-muted">Errors</div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="h4 text-primary mb-1" id="totalCount">0</div>
+                                        <div class="small text-muted">Total</div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="h4 text-info mb-1" id="executionTime">0s</div>
+                                        <div class="small text-muted">Time</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- API Response Modal -->
+    <div class="modal fade" id="responseModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">API Response Files</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="responseFilesContainer">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <div class="mt-2">Loading response files...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        let apiCalls = [];
+        let executionStartTime = null;
+        let executionResults = {
+            success: 0,
+            error: 0,
+            total: 0
+        };
+        let currentExecution = {
+            type: null, // 'selected' or 'test'
+            apiIndex: null // for test mode
+        };
+
+        // --- Initialize ---
+        document.addEventListener('DOMContentLoaded', function() {
+            loadApiCalls();
+        });
+
+        // --- Data Loading ---
+        async function loadApiCalls() {
+            try {
+                const res = await fetch('/APIcalls.json');
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                apiCalls = Array.isArray(data.apiCalls) ? data.apiCalls : [];
+                renderApiList();
+            } catch (err) {
+                console.error('Failed to load API calls:', err);
+                logMessage('error', `Failed to load API calls: ${err.message}`);
+                apiCalls = [];
+                renderApiList();
+            }
+        }
+
+        // --- Rendering ---
+        function renderApiList() {
+            const container = document.getElementById('apiListContainer');
+            const countBadge = document.getElementById('apiCount');
+            
+            countBadge.textContent = apiCalls.length;
+
+            if (apiCalls.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                        <div class="mt-2">No API calls available</div>
+                        <div class="small">Go to <a href="ManageAPI.html">Manage API</a> to add some API calls</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = apiCalls.map((api, idx) => {
+                const method = api.method || 'GET';
+                const url = api.url || '';
+                const outputFileName = api.outputFileName || `api-${idx}`;
+                const apiName = api.name || `API Call ${idx + 1}`;
+                const isChecked = api.checked === true;
+                
+                return `
+                    <div class="card api-card mb-2 ${isChecked ? 'border-primary' : ''}">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-start">
+                                <div class="form-check me-3">
+                                    <input class="form-check-input" type="checkbox" id="api_${idx}" 
+                                           ${isChecked ? 'checked' : ''} onchange="toggleApiSelection(${idx}, this.checked)">
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <h6 class="mb-0 me-2 text-light">${escapeHtml(apiName)}</h6>
+                                        <span class="badge bg-${getMethodColor(method)} me-2">${method}</span>
+                                        <span class="badge bg-secondary output-file-badge me-2">
+                                            <i class="bi bi-file-earmark-text"></i> ${outputFileName}.json
+                                        </span>
+                                        <div class="ms-auto">
+                                            <button class="btn btn-outline-primary btn-sm" onclick="testSingleApi(${idx})" title="Test this API">
+                                                <i class="bi bi-play"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="small text-muted mb-1">
+                                        <strong>URL:</strong> ${escapeHtml(url)}
+                                    </div>
+                                    ${api.headers && Object.keys(api.headers).length > 0 ? 
+                                        `<div class="small text-muted mb-1">
+                                            <strong>Headers:</strong> ${Object.keys(api.headers).length} item(s)
+                                        </div>` : ''
+                                    }
+                                    ${api.body ? 
+                                        `<div class="small text-muted">
+                                            <strong>Body:</strong> ${api.body.length} characters
+                                        </div>` : ''
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        // --- Utility Functions ---
+        function getMethodColor(method) {
+            const colors = {
+                'GET': 'success',
+                'POST': 'primary',
+                'PUT': 'warning',
+                'DELETE': 'danger',
+                'PATCH': 'info'
+            };
+            return colors[method] || 'secondary';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatTimestamp() {
+            return new Date().toLocaleTimeString();
+        }
+
+        // --- Selection Management ---
+        function toggleApiSelection(idx, checked) {
+            apiCalls[idx].checked = checked;
+            saveApiSelection();
+            renderApiList();
+        }
+
+        function selectAll() {
+            apiCalls.forEach(api => api.checked = true);
+            saveApiSelection();
+            renderApiList();
+        }
+
+        function selectNone() {
+            apiCalls.forEach(api => api.checked = false);
+            saveApiSelection();
+            renderApiList();
+        }
+
+        async function saveApiSelection() {
+            try {
+                const res = await fetch('/saveApiCalls', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ apiCalls }),
+                });
+                
+                if (!res.ok) {
+                    throw new Error(`Save failed (${res.status})`);
+                }
+            } catch (err) {
+                console.error('Failed to save API selection:', err);
+            }
+        }
+
+        // --- Logging ---
+        function logMessage(type, message) {
+            const logContainer = document.getElementById('apiLog');
+            const timestamp = formatTimestamp();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function clearLog() {
+            const logContainer = document.getElementById('apiLog');
+            logContainer.innerHTML = '<div class="log-entry log-info">Log cleared...</div>';
+            
+            // Hide summary
+            document.getElementById('summaryCard').style.display = 'none';
+            
+            // Reset execution results and state
+            executionResults = { success: 0, error: 0, total: 0 };
+            currentExecution = { type: null, apiIndex: null };
+        }
+
+        // --- API Execution ---
+        async function runSelectedApis() {
+            const selectedApis = apiCalls.filter(api => api.checked);
+            
+            if (selectedApis.length === 0) {
+                alert('Please select at least one API to run.');
+                return;
+            }
+
+            currentExecution = {
+                type: 'selected',
+                apiIndex: null
+            };
+
+            await runAPI(selectedApis);
+        }
+
+        async function testSingleApi(idx) {
+            const api = apiCalls[idx];
+            
+            currentExecution = {
+                type: 'test',
+                apiIndex: idx
+            };
+
+            await runAPI([api]);
+        }
+
+        async function runAPI(apisToRun) {
+            // Reset execution state
+            executionResults = { success: 0, error: 0, total: apisToRun.length };
+            executionStartTime = Date.now();
+            
+            // Update UI based on execution type
+            const runBtn = document.getElementById('runBtn');
+            runBtn.disabled = true;
+            
+            if (currentExecution.type === 'selected') {
+                runBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Running...';
+                logMessage('info', `Starting execution of ${apisToRun.length} selected API(s)...`);
+            } else {
+                const api = apisToRun[0];
+                logMessage('info', `Testing single API: ${api.name || 'Unnamed API'} - ${api.method} ${api.url}...`);
+            }
+            
+            try {
+                // Send API sequence to server
+                const response = await fetch('/runApiSequence', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(apisToRun)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const results = data.results || [];
+
+                // Process results
+                for (let i = 0; i < results.length; i++) {
+                    const result = results[i];
+                    const api = apisToRun[i];
+                    
+                    if (result.status === 'success') {
+                        executionResults.success++;
+                        const interpolatedUrl = result.request?.interpolatedUrl || 'Unknown URL';
+                        
+                        if (currentExecution.type === 'test') {
+                            logMessage('success', 
+                                `✓ Test successful: ${api.name || 'Unnamed API'} → ${api.outputFileName}.json (${result.response?.status || 'OK'})`
+                            );
+                        } else {
+                            logMessage('success', 
+                                `✓ ${api.name || 'Unnamed API'} → ${api.outputFileName}.json (${result.response?.status || 'OK'})`
+                            );
+                        }
+                        logMessage('info', `  URL: ${interpolatedUrl}`);
+                    } else {
+                        executionResults.error++;
+                        const interpolatedUrl = result.request?.interpolatedUrl || 'Unknown URL';
+                        
+                        if (currentExecution.type === 'test') {
+                            logMessage('error', 
+                                `✗ Test failed: ${api.name || 'Unnamed API'} → Error: ${result.error || 'Unknown error'}`
+                            );
+                        } else {
+                            logMessage('error', 
+                                `✗ ${api.name || 'Unnamed API'} → Error: ${result.error || 'Unknown error'}`
+                            );
+                        }
+                        logMessage('info', `  Original URL: ${api.url}`);
+                        logMessage('info', `  Interpolated URL: ${interpolatedUrl}`);
+                        if (result.errorDetails) {
+                            logMessage('error', `  Status: ${result.errorDetails.status}, Response: ${result.errorDetails.responseData || 'No response data'}`);
+                        }
+                    }
+                }
+
+                // Show summary
+                showExecutionSummary();
+                
+                // Final log message based on execution type
+                if (currentExecution.type === 'test') {
+                    if (executionResults.success > 0) {
+                        logMessage('info', `Test completed successfully.`);
+                    } else {
+                        logMessage('info', `Test failed.`);
+                    }
+                } else {
+                    logMessage('info', `Execution completed. ${executionResults.success} successful, ${executionResults.error} failed.`);
+                }
+
+            } catch (err) {
+                if (currentExecution.type === 'test') {
+                    logMessage('error', `Test failed: ${err.message}`);
+                } else {
+                    logMessage('error', `Execution failed: ${err.message}`);
+                }
+                console.error('API execution error:', err);
+            } finally {
+                // Reset button
+                runBtn.disabled = false;
+                runBtn.innerHTML = '<i class="bi bi-play-fill"></i> Run Selected APIs';
+                
+                // Clear execution state
+                currentExecution = { type: null, apiIndex: null };
+            }
+        }
+
+        // --- Summary and Results ---
+        function showExecutionSummary() {
+            const summaryCard = document.getElementById('summaryCard');
+            const executionTime = Math.round((Date.now() - executionStartTime) / 1000);
+            
+            // Unique output based on execution type
+            const summaryTitle = summaryCard.querySelector('.card-title');
+            if (currentExecution.type === 'test') {
+                const api = apiCalls[currentExecution.apiIndex];
+                summaryTitle.innerHTML = `<i class="bi bi-flask"></i> Test Results - ${api.name || 'Unnamed API'}`;
+                
+                // Add test-specific information
+                const cardBody = summaryCard.querySelector('.card-body');
+                const testInfo = cardBody.querySelector('.test-info') || document.createElement('div');
+                testInfo.className = 'test-info alert alert-info mb-3';
+                testInfo.innerHTML = `
+                    <small>
+                        <strong>API:</strong> ${api.name || 'Unnamed API'}<br>
+                        <strong>Method:</strong> ${api.method || 'GET'}<br>
+                        <strong>Output File:</strong> ${api.outputFileName}.json
+                    </small>
+                `;
+                
+                if (!cardBody.querySelector('.test-info')) {
+                    cardBody.insertBefore(testInfo, cardBody.firstChild);
+                }
+            } else {
+                summaryTitle.innerHTML = `<i class="bi bi-graph-up"></i> Execution Summary`;
+                
+                // Remove test info if it exists
+                const testInfo = summaryCard.querySelector('.test-info');
+                if (testInfo) {
+                    testInfo.remove();
+                }
+            }
+            
+            // General output shared between both modes
+            document.getElementById('successCount').textContent = executionResults.success;
+            document.getElementById('errorCount').textContent = executionResults.error;
+            document.getElementById('totalCount').textContent = executionResults.total;
+            document.getElementById('executionTime').textContent = `${executionTime}s`;
+            
+            summaryCard.style.display = 'block';
+        }
+
+        async function viewApiResponses() {
+            const modal = new bootstrap.Modal(document.getElementById('responseModal'));
+            const container = document.getElementById('responseFilesContainer');
+            
+            container.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <div class="mt-2">Loading response files...</div>
+                </div>
+            `;
+            
+            modal.show();
+            
+            try {
+                // This would need a server endpoint to list files in the ApiResponse directory
+                // For now, show the expected structure
+                container.innerHTML = `
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle"></i> API Response Files</h6>
+                        <p>API responses are saved to individual files in <code>data/ApiResponse/</code> directory:</p>
+                        <ul class="mb-0">
+                            ${apiCalls.map(api => 
+                                `<li><code>${api.outputFileName || 'api-default'}.json</code> - ${api.method} ${api.url}</li>`
+                            ).join('')}
+                        </ul>
+                    </div>
+                    <div class="text-muted">
+                        <small>
+                            <i class="bi bi-lightbulb"></i> 
+                            <strong>Tip:</strong> You can access these files directly from the file system or through the Visualizer.
+                        </small>
+                    </div>
+                `;
+            } catch (err) {
+                container.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h6><i class="bi bi-exclamation-triangle"></i> Error</h6>
+                        <p>Failed to load response files: ${err.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -529,7 +529,7 @@ window.clearSearchBox = function() {
 window.clearJsonOutput = async function() {
     try {
         // Clear the output.json file by sending an empty array
-        const response = await fetch('/output.json', {
+        const response = await fetch('/data/output.json', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify([])
@@ -552,7 +552,7 @@ window.clearJsonOutput = async function() {
 window.showAllNodes = async function() {
     try {
         // Clear the HiddenNodes.json file by sending an empty hiddenNodes array
-        const response = await fetch('/HiddenNodes.json', {
+        const response = await fetch('/data/HiddenNodes.json', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ hiddenNodes: [] })
@@ -705,8 +705,8 @@ console.log('D3 available:', typeof d3);
 console.log('Output graph element:', document.getElementById('output-graph'));
 
 Promise.all([
-    loadJSON('HiddenNodes.json').then(cfg => { hiddenNodes = cfg.hiddenNodes || []; }),
-    loadJSON('Graphconf.json').then(cfg => { 
+    loadJSON('data/HiddenNodes.json').then(cfg => { hiddenNodes = cfg.hiddenNodes || []; }),
+    loadJSON('data/Graphconf.json').then(cfg => { 
         nodePositions = cfg.nodePositions || {}; 
         graphControls = cfg.graphControls || { 
             expandAll: false, 
@@ -746,12 +746,13 @@ Promise.all([
         initializeButtonStates();
         setInitialControlValues();
     }),
-    loadJSON('output.json').then(data => {
+    loadJSON('data/output.json').then(data => {
         updateDebugInfo('Output.json loaded: ' + (data ? data.length : 'null') + ' items');
         console.log('output.json loaded successfully:', data);
         console.log('Data type:', typeof data);
         console.log('Is array:', Array.isArray(data));
         console.log('Data length:', data ? data.length : 'undefined');
+        
         return data;
     }).catch(err => {
         updateDebugInfo('Error loading output.json: ' + err.message);
@@ -761,6 +762,8 @@ Promise.all([
 ]).then(async ([_, __, data]) => {
         updateDebugInfo('Promise chain executing with data...');
         console.log('Promise chain executing. Data loaded:', data);
+        console.log('Data is array:', Array.isArray(data));
+        console.log('Data length:', data ? data.length : 'undefined');
         
         // Check and set starting position if needed
         await checkAndSetStartingPosition();
@@ -775,11 +778,16 @@ Promise.all([
                     // Use a meaningful key if available, otherwise use index
                     const key = item.apiCall || item.name || item.id || `Item ${index}`;
                     processedData[key] = item;
+                    console.log('Added to processedData:', key, item);
                 } else {
                     processedData[`Item ${index}`] = item;
+                    console.log('Added to processedData (non-object):', `Item ${index}`, item);
                 }
             });
         }
+        
+        console.log('ProcessedData keys:', Object.keys(processedData));
+        console.log('ProcessedData:', processedData);
         
         // Special handling for /Channels/{id}/Connectors
         const connectorsMap = {};
@@ -790,9 +798,68 @@ Promise.all([
             }
         });
 
-        const nodes = Object.entries(processedData)
-            .filter(([key]) => key !== 'LOGIN' && !key.match(/^\/Channels\/[^/]+\/Connectors$/))
-            .map(([key, value], i) => {
+        console.log('DEBUG: About to create nodes from processedData');
+        console.log('DEBUG: processedData keys:', Object.keys(processedData));
+        console.log('DEBUG: processedData entries count:', Object.entries(processedData).length);
+        
+        const allEntries = Object.entries(processedData);
+        console.log('DEBUG: All entries before filtering:', allEntries);
+        
+        // Dynamic filtering based on Filter.json configuration
+        let filteredEntries = allEntries;
+        try {
+            const filterConfig = await loadJSON('data/Filter.json');
+            const filters = filterConfig?.filters || [];
+            console.log('DEBUG: Loaded filters from data/Filter.json:', filters);
+            
+            if (filters.length > 0) {
+                // Apply dynamic filtering - exclude entries that match any filter at depth 0 (top-level)
+                filteredEntries = allEntries.filter(([key]) => {
+                    const shouldExclude = filters.some(filter => {
+                        // Only apply filters at depth 0 for top-level entries
+                        if (filter.depth !== 0) return false;
+                        
+                        // Support different filter types:
+                        // 1. Exact match
+                        if (filter.key === key) return true;
+                        
+                        // 2. Wildcard matching (* becomes .* regex)
+                        if (filter.key.includes('*')) {
+                            const regexPattern = filter.key.replace(/\*/g, '.*');
+                            return new RegExp(`^${regexPattern}$`, 'i').test(key);
+                        }
+                        
+                        // 3. Prefix matching (if filter ends with /)
+                        if (filter.key.endsWith('/')) {
+                            return key.startsWith(filter.key);
+                        }
+                        
+                        // 4. Contains matching (if filter is wrapped in *...*)
+                        if (filter.key.startsWith('*') && filter.key.endsWith('*') && filter.key.length > 2) {
+                            const searchTerm = filter.key.slice(1, -1);
+                            return key.toLowerCase().includes(searchTerm.toLowerCase());
+                        }
+                        
+                        return false;
+                    });
+                    
+                    if (shouldExclude) {
+                        console.log(`DEBUG: Excluding entry "${key}" due to filter match`);
+                    }
+                    return !shouldExclude;
+                });
+                
+                console.log(`DEBUG: Applied ${filters.length} filters, ${allEntries.length - filteredEntries.length} entries filtered out`);
+            }
+        } catch (error) {
+            console.log('DEBUG: No filters applied (data/Filter.json not found or error):', error.message);
+            // If data/Filter.json doesn't exist or has errors, don't filter anything
+            filteredEntries = allEntries;
+        }
+        
+        console.log('DEBUG: Entries after dynamic filtering:', filteredEntries);
+        
+        const nodes = filteredEntries.map(([key, value], i) => {
                 console.log('Processing node:', key, value);
                 // If this is the /Channels node, inject connectors into each channel
                 if (key === '/channels' && value && value.list && value.list.channel && Array.isArray(value.list.channel)) {
@@ -810,6 +877,9 @@ Promise.all([
                     index: i
                 };
             });
+
+        console.log('Total nodes created:', nodes.length);
+        console.log('Nodes:', nodes);
 
         // Get screen resolution and viewport dimensions
         const screenWidth = window.screen.width;
@@ -1107,7 +1177,14 @@ Promise.all([
 
         // Build the root nodes (one for each top-level key)
         console.log('Building tree roots from nodes:', nodes);
-        const treeRoots = nodes.map(n => buildTree(n.id, n.data));
+        const treeRoots = nodes.map(n => {
+            console.log('Creating tree root for node:', n.id);
+            console.log('Node data structure:', n.data);
+            // Use n.data.data (the actual API response) instead of n.data (the whole array item)
+            const actualData = n.data.data || n.data;
+            console.log('Actual data being passed to buildTree:', actualData);
+            return buildTree(n.id, actualData);
+        });
         console.log('Tree roots created:', treeRoots);
 
         // Track expanded/collapsed state for each node by path
@@ -1778,11 +1855,11 @@ Promise.all([
         // Reset filter function
         window.resetFilter = async function() {
             try {
-                // Clear the Filter.json file by sending an empty array
+                // Clear the Filter.json file by sending an empty filters array
                 const response = await fetch('/Filter.json', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify([])
+                    body: JSON.stringify({ filters: [] })
                 });
 
                 if (!response.ok) {
@@ -1795,6 +1872,79 @@ Promise.all([
             } catch (error) {
                 console.error('Failed to reset filter:', error);
                 alert('Failed to reset filter. Please try again.');
+            }
+        };
+
+        // Add filter function for programmatic filter management
+        window.addFilter = async function(key, depth = 0, description = '') {
+            try {
+                const filterConfig = await loadJSON('data/Filter.json');
+                const filters = filterConfig?.filters || [];
+                
+                // Check if filter already exists
+                if (filters.some(f => f.key === key && f.depth === depth)) {
+                    console.log(`Filter already exists: ${key} at depth ${depth}`);
+                    return { success: false, message: 'Filter already exists' };
+                }
+                
+                // Add new filter
+                filters.push({ 
+                    key: key, 
+                    depth: depth,
+                    description: description || `Filter for ${key}`
+                });
+                
+                const response = await fetch('/Filter.json', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filters })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to add filter: ${response.status}`);
+                }
+
+                console.log(`Filter added successfully: ${key}`);
+                // Reload the page to apply the new filter
+                location.reload();
+                return { success: true, message: 'Filter added successfully' };
+            } catch (error) {
+                console.error('Failed to add filter:', error);
+                return { success: false, message: error.message };
+            }
+        };
+
+        // Remove filter function
+        window.removeFilter = async function(key, depth = 0) {
+            try {
+                const filterConfig = await loadJSON('data/Filter.json');
+                const filters = filterConfig?.filters || [];
+                
+                // Remove the filter
+                const updatedFilters = filters.filter(f => !(f.key === key && f.depth === depth));
+                
+                if (updatedFilters.length === filters.length) {
+                    console.log(`Filter not found: ${key} at depth ${depth}`);
+                    return { success: false, message: 'Filter not found' };
+                }
+                
+                const response = await fetch('/Filter.json', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filters: updatedFilters })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to remove filter: ${response.status}`);
+                }
+
+                console.log(`Filter removed successfully: ${key}`);
+                // Reload the page to apply the filter removal
+                location.reload();
+                return { success: true, message: 'Filter removed successfully' };
+            } catch (error) {
+                console.error('Failed to remove filter:', error);
+                return { success: false, message: error.message };
             }
         };
 
@@ -1848,12 +1998,20 @@ Promise.all([
         };
 
         // Initial flatten for rendering
+        console.log('DEBUG: About to flatten tree for rendering');
+        console.log('DEBUG: treeRoots:', treeRoots);
+        console.log('DEBUG: treeRoots length:', treeRoots.length);
+        
         let flatNodes = [];
         let y = 20;
         let searchTerm = '';
-        treeRoots.forEach(root => {
+        treeRoots.forEach((root, index) => {
+            console.log(`DEBUG: Processing tree root ${index}:`, root);
             y = flattenTree(root, flatNodes, y, 0);
         });
+        
+        console.log('DEBUG: flatNodes after flattening:', flatNodes);
+        console.log('DEBUG: flatNodes length:', flatNodes.length);
 
         // Calculate SVG size to fill the entire screen/viewport for proper centering
         const maxX = flatNodes.length > 0 ? Math.max(...flatNodes.map(n => n.x + nodeWidth), 0) : nodeWidth;
@@ -2402,7 +2560,7 @@ Promise.all([
                 .on('click', async function(event, d) {
                     event.stopPropagation();
                     try {
-                        const cfg = await loadJSON('Filter.json');
+                        const cfg = await loadJSON('data/Filter.json');
                         let filters = cfg.filters || [];
                         if (!filters.some(f => f.key === d.key && f.depth === d.depth)) {
                             filters.push({ key: d.key, depth: d.depth });
@@ -2718,7 +2876,7 @@ Promise.all([
 // Add this function to define ProcessFilter
 function ProcessFilter() {
     // Load filters and render dropdown checklist
-    loadJSON('Filter.json').then(cfg => {
+    loadJSON('data/Filter.json').then(cfg => {
         const filterNodes = cfg.filters || [];
         const container = document.getElementById('filterDropdownContainer');
         if (!container) return;

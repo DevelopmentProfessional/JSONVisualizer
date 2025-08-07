@@ -11,6 +11,7 @@ app.use(express.static(__dirname)); // Serve static files (HTML, JS, etc.)
 //const path = require('path');
 const axios = require('axios');
 const https = require('https');
+const xml2js = require('xml2js');
 
 
 // Run API Sequence endpoint
@@ -21,10 +22,10 @@ app.post('/runApiSequence', async (req, res) => {
         return res.status(400).json({ status: 'error', error: 'No API calls provided' });
     }
 
-    // Load variables from variables.json (case-insensitive)
+    // Load variables from data/variables.json (case-insensitive)
     let variables = {};
     try {
-        const varsRaw = fs.readFileSync(path.join(__dirname, 'variables.json'), 'utf8');
+        const varsRaw = fs.readFileSync(path.join(__dirname, 'data', 'variables.json'), 'utf8');
         const varsObj = JSON.parse(varsRaw);
         if (Array.isArray(varsObj.variables)) {
             varsObj.variables.forEach(v => {
@@ -167,6 +168,29 @@ app.post('/runApiSequence', async (req, res) => {
                 } : null
             });
         }
+    }
+
+    // 3. Save each API result to its individual file in ApiResponse directory
+    let resultIndex = 0;
+    for (let i = 0; i < apiSequence.length; i++) {
+        const api = apiSequence[i];
+        const result = results[resultIndex];
+        
+        if (result) {
+            // Get output filename from API configuration
+            const outputFileName = api.outputFileName || `api-${Date.now()}-${i}`;
+            const filePath = path.join(__dirname, 'data', 'ApiResponse', `${outputFileName}.json`);
+            
+            try {
+                // Save the complete result to the individual file
+                fs.writeFileSync(filePath, JSON.stringify(result, null, 2));
+                console.log(`API response saved to: ${filePath}`);
+            } catch (err) {
+                console.error(`Failed to save API response to ${filePath}:`, err);
+            }
+        }
+        
+        resultIndex++;
     }
 
     // Return all results in order
@@ -413,7 +437,7 @@ app.post('/saveApiCalls', (req, res) => {
         return cleaned;
     });
     
-    const filePath = path.join(__dirname, 'APIcalls.json');
+    const filePath = path.join(__dirname, 'data', 'APIcalls.json');
     const dataToSave = { apiCalls: cleanedApiCalls };
     
     console.log(`Saving ${cleanedApiCalls.length} API calls to:`, filePath); // Debug log
@@ -430,7 +454,7 @@ app.post('/saveApiCalls', (req, res) => {
 
 // Serve APIcalls.json for GET requests
 app.get('/APIcalls.json', (req, res) => {
-    const filePath = path.join(__dirname, 'APIcalls.json');
+    const filePath = path.join(__dirname, 'data', 'APIcalls.json');
     fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) {
             return res.status(404).json({ error: 'APIcalls.json not found' });
@@ -439,9 +463,80 @@ app.get('/APIcalls.json', (req, res) => {
     });
 });
 
+// Serve other JSON files from data directory
+app.get('/variables.json', (req, res) => {
+    const filePath = path.join(__dirname, 'data', 'variables.json');
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            return res.status(404).json({ error: 'variables.json not found' });
+        }
+        res.type('application/json').send(data);
+    });
+});
+
+app.get('/output.json', (req, res) => {
+    const filePath = path.join(__dirname, 'data', 'output.json');
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            return res.status(404).json({ error: 'output.json not found' });
+        }
+        res.type('application/json').send(data);
+    });
+});
+
+app.get('/HiddenNodes.json', (req, res) => {
+    const filePath = path.join(__dirname, 'data', 'HiddenNodes.json');
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            return res.status(404).json({ error: 'HiddenNodes.json not found' });
+        }
+        res.type('application/json').send(data);
+    });
+});
+
+app.get('/Graphconf.json', (req, res) => {
+    const filePath = path.join(__dirname, 'data', 'Graphconf.json');
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            return res.status(404).json({ error: 'Graphconf.json not found' });
+        }
+        res.type('application/json').send(data);
+    });
+});
+
+app.get('/GraphConf.json', (req, res) => {
+    const filePath = path.join(__dirname, 'data', 'GraphConf.json');
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            return res.status(404).json({ error: 'GraphConf.json not found' });
+        }
+        res.type('application/json').send(data);
+    });
+});
+
+app.get('/Filter.json', (req, res) => {
+    const filePath = path.join(__dirname, 'data', 'Filter.json');
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            return res.status(404).json({ error: 'Filter.json not found' });
+        }
+        res.type('application/json').send(data);
+    });
+});
+
+app.get('/NodePosition.json', (req, res) => {
+    const filePath = path.join(__dirname, 'data', 'NodePosition.json');
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            return res.status(404).json({ error: 'NodePosition.json not found' });
+        }
+        res.type('application/json').send(data);
+    });
+});
+
 // Endpoint to update variables.json
 app.post('/variables.json', (req, res) => {
-  fs.writeFile(path.join(__dirname, 'variables.json'), JSON.stringify(req.body, null, 2), err => {
+  fs.writeFile(path.join(__dirname, 'data', 'variables.json'), JSON.stringify(req.body, null, 2), err => {
     if (err) {
       res.status(500).send('Write failed');
     } else {
@@ -452,7 +547,7 @@ app.post('/variables.json', (req, res) => {
 
 // Endpoint to update HiddenNodes.json
 app.post('/HiddenNodes.json', (req, res) => {
-  fs.writeFile(path.join(__dirname, 'HiddenNodes.json'), JSON.stringify(req.body, null, 2), err => {
+  fs.writeFile(path.join(__dirname, 'data', 'HiddenNodes.json'), JSON.stringify(req.body, null, 2), err => {
     if (err) {
       res.status(500).send('Write failed');
     } else {
@@ -473,7 +568,7 @@ app.post('/ShowNode', (req, res) => {
   
   console.log(`Showing node: key="${key}", depth=${depth}`);
   
-  const hiddenNodesPath = path.join(__dirname, 'HiddenNodes.json');
+  const hiddenNodesPath = path.join(__dirname, 'data', 'HiddenNodes.json');
   
   // Read current hidden nodes
   fs.readFile(hiddenNodesPath, 'utf8', (err, data) => {
@@ -521,12 +616,12 @@ app.post('/ShowNode', (req, res) => {
 });
 
 // Smart parsing function to handle different data formats
-function smartParse(data, headers = {}) {
+async function smartParse(data, headers = {}) {
   // If data is already an object, return as is
   if (typeof data === 'object' && data !== null) {
     // Check if it has a 'data' property that might need parsing
     if (data.data && typeof data.data === 'string') {
-      const parsedData = smartParse(data.data, headers);
+      const parsedData = await smartParse(data.data, headers);
       return { ...data, data: parsedData };
     }
     return data;
@@ -550,7 +645,7 @@ function smartParse(data, headers = {}) {
   }
   
   if (contentType.includes('application/xml') || contentType.includes('text/xml')) {
-    return parseXmlToJson(data);
+    return await parseXmlToJson(data);
   }
   
   if (contentType.includes('text/html')) {
@@ -572,48 +667,34 @@ function smartParse(data, headers = {}) {
   
   // Try XML
   if (trimmedData.startsWith('<') && trimmedData.includes('>')) {
-    return parseXmlToJson(data);
+    return await parseXmlToJson(data);
   }
   
   // If all else fails, return as string
   return data;
 }
 
-// Helper function to parse XML to JSON
-function parseXmlToJson(xmlString) {
+// Helper function to parse XML to JSON using xml2js
+async function parseXmlToJson(xmlString) {
   try {
-    // Simple XML to JSON converter
-    // This is a basic implementation - for production, consider using a library like xml2js
-    const result = {};
+    const parser = new xml2js.Parser({ 
+      explicitArray: true,
+      ignoreAttrs: false,
+      mergeAttrs: true,
+      explicitCharkey: false,
+      charkey: 'content'
+    });
     
-    // Remove XML declaration and comments
-    let cleaned = xmlString.replace(/<\?xml[^>]*\?>/gi, '').replace(/<!--[\s\S]*?-->/g, '').trim();
-    
-    // Handle simple XML structures
-    const tagRegex = /<([^\/\s>]+)([^>]*)>([\s\S]*?)<\/\1>/g;
-    let match;
-    
-    while ((match = tagRegex.exec(cleaned)) !== null) {
-      const tagName = match[1];
-      const content = match[3].trim();
-      
-      // If content contains more XML tags, parse recursively
-      if (content.includes('<') && content.includes('>')) {
-        result[tagName] = parseXmlToJson(content);
-      } else {
-        // Try to parse as number or boolean, otherwise keep as string
-        if (content === 'true' || content === 'false') {
-          result[tagName] = content === 'true';
-        } else if (!isNaN(content) && content !== '') {
-          result[tagName] = Number(content);
+    return new Promise((resolve, reject) => {
+      parser.parseString(xmlString, (err, result) => {
+        if (err) {
+          console.error('XML parsing error:', err);
+          reject(err);
         } else {
-          result[tagName] = content;
+          resolve(result);
         }
-      }
-    }
-    
-    // If no tags found, return the original content
-    return Object.keys(result).length > 0 ? result : { content: xmlString };
+      });
+    });
   } catch (e) {
     console.error('Error parsing XML:', e);
     return { content: xmlString, parseError: 'Failed to parse XML' };
@@ -665,7 +746,7 @@ function parseHtmlToJson(htmlString) {
 }
 
 // Append output to output.json
-app.post('/appendOutput', (req, res) => {
+app.post('/appendOutput', async (req, res) => {
   const result = req.body.result;
   if (!result) {
     return res.status(400).json({ error: 'Missing result data' });
@@ -678,17 +759,17 @@ app.post('/appendOutput', (req, res) => {
   try {
     // If there's a response body/data, parse it intelligently
     if (outputResult.response) {
-      outputResult.response = smartParse(outputResult.response, outputResult.headers || {});
+      outputResult.response = await smartParse(outputResult.response, outputResult.headers || {});
     }
     
     // If there's a data property specifically, parse it
     if (outputResult.data) {
-      outputResult.data = smartParse(outputResult.data, outputResult.headers || {});
+      outputResult.data = await smartParse(outputResult.data, outputResult.headers || {});
     }
     
     // If there's a body property, parse it
     if (outputResult.body) {
-      outputResult.body = smartParse(outputResult.body, outputResult.headers || {});
+      outputResult.body = await smartParse(outputResult.body, outputResult.headers || {});
     }
   } catch (parseErr) {
     console.error('Error during smart parsing:', parseErr);
@@ -699,7 +780,7 @@ app.post('/appendOutput', (req, res) => {
   if (outputResult.variables) {
     try {
       // Read variables.json to get visibility settings
-      const variablesPath = path.join(__dirname, 'variables.json');
+      const variablesPath = path.join(__dirname, 'data', 'variables.json');
       const variablesData = fs.readFileSync(variablesPath, 'utf8');
       const variablesConfig = JSON.parse(variablesData);
       
@@ -725,7 +806,7 @@ app.post('/appendOutput', (req, res) => {
     }
   }
 
-  const filePath = path.join(__dirname, 'output.json');
+  const filePath = path.join(__dirname, 'data', 'output.json');
   fs.readFile(filePath, 'utf8', (err, data) => {
     let outputArr = [];
     if (err) {
@@ -752,7 +833,7 @@ app.post('/appendOutput', (req, res) => {
 // Endpoint to update NodePosition.json
 app.post('/NodePosition.json', (req, res) => {
   console.log('Received NodePosition.json save request:', req.body); // Debug log
-  fs.writeFile(path.join(__dirname, 'NodePosition.json'), JSON.stringify(req.body, null, 2), err => {
+  fs.writeFile(path.join(__dirname, 'data', 'NodePosition.json'), JSON.stringify(req.body, null, 2), err => {
     if (err) {
       console.error('Failed to save NodePosition.json:', err);
       res.status(500).send('Write failed');
@@ -766,7 +847,7 @@ app.post('/NodePosition.json', (req, res) => {
 // Endpoint to update Graphconf.json (replaces NodePosition.json)
 app.post('/Graphconf.json', (req, res) => {
   console.log('Received Graphconf.json save request:', req.body); // Debug log
-  fs.writeFile(path.join(__dirname, 'Graphconf.json'), JSON.stringify(req.body, null, 2), err => {
+  fs.writeFile(path.join(__dirname, 'data', 'Graphconf.json'), JSON.stringify(req.body, null, 2), err => {
     if (err) {
       console.error('Failed to save Graphconf.json:', err);
       res.status(500).send('Write failed');
@@ -781,7 +862,7 @@ app.post('/Graphconf.json', (req, res) => {
 app.post('/UpdateGraphConfiguration', (req, res) => {
   console.log('Received UpdateGraphConfiguration request:', req.body);
   
-  const graphConfigPath = path.join(__dirname, 'Graphconf.json');
+  const graphConfigPath = path.join(__dirname, 'data', 'Graphconf.json');
   
   // Read existing configuration
   fs.readFile(graphConfigPath, 'utf8', (err, data) => {
@@ -882,7 +963,7 @@ app.post('/SetStartNodePosition', (req, res) => {
   const startingNodeLeft = Math.floor(screenWidth / 2);
   const startingNodeTop = Math.floor(screenHeight / 2);
   
-  const nodePositionPath = path.join(__dirname, 'Graphconf.json');
+  const nodePositionPath = path.join(__dirname, 'data', 'Graphconf.json');
   
   // Read existing Graphconf.json or create new structure
   fs.readFile(nodePositionPath, 'utf8', (err, data) => {
@@ -953,7 +1034,7 @@ app.post('/SetStartNodePosition', (req, res) => {
 
 // Endpoint to update Filter.json
 app.post('/Filter.json', (req, res) => {
-  fs.writeFile(path.join(__dirname, 'Filter.json'), JSON.stringify(req.body, null, 2), err => {
+  fs.writeFile(path.join(__dirname, 'data', 'Filter.json'), JSON.stringify(req.body, null, 2), err => {
     if (err) {
       res.status(500).send('Write failed');
     } else {
@@ -964,7 +1045,7 @@ app.post('/Filter.json', (req, res) => {
 
 // Endpoint to update output.json
 app.post('/output.json', (req, res) => {
-  fs.writeFile(path.join(__dirname, 'output.json'), JSON.stringify(req.body, null, 2), err => {
+  fs.writeFile(path.join(__dirname, 'data', 'output.json'), JSON.stringify(req.body, null, 2), err => {
     if (err) {
       res.status(500).send('Write failed');
     } else {
@@ -977,7 +1058,7 @@ app.post('/output.json', (req, res) => {
 app.post('/UpdateRunConfiguration', (req, res) => {
   console.log('Received UpdateRunConfiguration request:', req.body);
   
-  const runConfigPath = path.join(__dirname, 'RunConf.json');
+  const runConfigPath = path.join(__dirname, 'data', 'RunConf.json');
   
   // Validate request body
   if (!req.body.applications || !Array.isArray(req.body.applications)) {
@@ -1043,7 +1124,7 @@ app.post('/UpdateRunConfiguration', (req, res) => {
 
 // Serve RunConf.json for GET requests
 app.get('/RunConf.json', (req, res) => {
-  const filePath = path.join(__dirname, 'RunConf.json');
+  const filePath = path.join(__dirname, 'data', 'RunConf.json');
   fs.readFile(filePath, 'utf8', (err, data) => {
     if (err) {
       // If file doesn't exist, return default configuration
@@ -1067,7 +1148,7 @@ app.get('/RunConf.json', (req, res) => {
 app.post('/CreateApplication', (req, res) => {
   console.log('Received CreateApplication request:', req.body);
   
-  const runConfigPath = path.join(__dirname, 'RunConf.json');
+  const runConfigPath = path.join(__dirname, 'data', 'RunConf.json');
   
   // Read existing configuration
   fs.readFile(runConfigPath, 'utf8', (err, data) => {

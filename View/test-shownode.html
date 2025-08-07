@@ -39,7 +39,7 @@
 
         async function getCurrentHiddenNodes() {
             try {
-                const response = await fetch('/HiddenNodes.json');
+                const response = await fetch('/data/HiddenNodes.json');
                 const result = await response.json();
                 document.getElementById('result').innerHTML = '<h3>Current Hidden Nodes:</h3><pre>' + JSON.stringify(result, null, 2) + '</pre>';
             } catch (error) {

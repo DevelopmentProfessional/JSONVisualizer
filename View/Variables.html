@@ -74,19 +74,22 @@
             <form id="addVarForm">
                 <div class="row g-3">
                     <div class="col-md-5">
-                        <input type="text" class="form-control" id="varNameInput" placeholder="Variable Name" required>
+                        <input type="text" class="form-control" id="varNameInput" placeholder="Variable Name (No Spaces)" required>
                     </div>
                     <div class="col-md-5">
                         <input type="text" class="form-control" id="varValueInput" placeholder="Value" required>
                     </div>
                     <div class="col-md-2">
                         <button class="btn btn-success w-100" type="submit" title="Save/Add Variable">
-                            <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='currentColor' class='bi bi-plus-circle' viewBox='0 0 16 16'>
-                                <path d='M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z'/>
-                                <path d='M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z'/>
-                            </svg>
+                           <i class="bi bi-plus-circle"></i>
                             Add
                         </button>
+
+                                            <!-- Clear Button --> 
+                        <button class="btn btn-outline-danger" onclick="clearVariable()" id="clearAllBtn" style="display: none;">
+                        <i class="bi bi-x-circle"></i>
+                            Clear
+                        </button> 
                     </div>
                 </div>
             </form>
@@ -96,20 +99,11 @@
     <!-- Variables List -->
     <div id="varListContainer"></div>
     
-    <!-- Clear All Button -->
-    <div class="text-center mt-4">
-        <button class="btn btn-outline-danger" onclick="clearAllVariables()" id="clearAllBtn" style="display: none;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5.5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6zm3 .5a.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6z"/>
-                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1-1V1a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1H1v1h14V3h-1.5zm-1-1V1h-7v1h7zM1 4v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4H1zm2 10a1 1 0 0 1-1-1V4h12v9a1 1 0 0 1-1 1H3z"/>
-            </svg>
-            Clear All Variables
-        </button>
-    </div>
+
 </div>
 
 <script>
-const varFile = 'variables.json';
+const varFile = '/variables.json';
 let variables = [];
 let editingVarIdx = null;
 let currentSearchTerm = '';
@@ -178,7 +172,7 @@ function clearSearch() {
 
 // --- Variable Management Functions ---
 function loadVars() {
-    fetch(varFile)
+    fetch('/variables.json')
         .then(r => r.json())
         .then(data => {
             variables = data.variables || [];
@@ -316,7 +310,7 @@ function removeVar(idx) {
 }
 
 function saveVars() {
-    fetch(varFile, {
+    fetch('/variables.json', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ variables })
@@ -380,16 +374,15 @@ function cancelEdit() {
     renderVarList();
 }
 
-function clearAllVariables() {
-    if (variables.length === 0) return;
-    
-    if (confirm(`Are you sure you want to delete all ${variables.length} variables? This action cannot be undone.`)) {
-        variables = [];
-        renderVarList();
-        updateVariableCount();
-        saveVars();
-        clearSearch();
-    }
+function clearVariable() {
+    varNameInput = document.getElementById('varNameInput');
+    varValueInput = document.getElementById('varValueInput');
+    varNameInput.value = '';
+    varValueInput.value = '';
+    editingVarIdx = null;
+    renderVarList();
+    saveVars();
+
 }
 
 // Drag and drop reordering
