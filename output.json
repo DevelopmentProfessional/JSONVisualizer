@@ -1,36 +1,121 @@
 [
   {
-    "apiCall": "GET - {{baseURL}}/channelgroups",
-    "timestamp": "2025-08-06T19:23:46.891Z",
+    "apiCall": "GET - https://api.restful-api.dev/objects",
+    "timestamp": "2025-08-07T03:15:40.073Z",
     "status": "success",
-    "data": {
-      "list": {
-        "channelGroup": {
-          "id": "9480165f-85fa-414e-ac25-21640511b353",
-          "name": "Cerner_MILN_SIU",
-          "revision": 2,
-          "lastModified": {
-            "time": 1753732571036,
-            "timezone": "America/Halifax"
-          },
-          "description": "",
-          "channels": {
-            "channel": {
-              "id": "8cc28343-6a19-4f77-9805-bf08b37b359e",
-              "revision": 0
-            }
-          }
+    "data": [
+      {
+        "id": "1",
+        "name": "Google Pixel 6 Pro",
+        "data": {
+          "color": "Cloudy White",
+          "capacity": "128 GB"
+        }
+      },
+      {
+        "id": "2",
+        "name": "Apple iPhone 12 Mini, 256GB, Blue",
+        "data": null
+      },
+      {
+        "id": "3",
+        "name": "Apple iPhone 12 Pro Max",
+        "data": {
+          "color": "Cloudy White",
+          "capacity GB": 512
+        }
+      },
+      {
+        "id": "4",
+        "name": "Apple iPhone 11, 64GB",
+        "data": {
+          "price": 389.99,
+          "color": "Purple"
+        }
+      },
+      {
+        "id": "5",
+        "name": "Samsung Galaxy Z Fold2",
+        "data": {
+          "price": 689.99,
+          "color": "Brown"
+        }
+      },
+      {
+        "id": "6",
+        "name": "Apple AirPods",
+        "data": {
+          "generation": "3rd",
+          "price": 120
+        }
+      },
+      {
+        "id": "7",
+        "name": "Apple MacBook Pro 16",
+        "data": {
+          "year": 2019,
+          "price": 1849.99,
+          "CPU model": "Intel Core i9",
+          "Hard disk size": "1 TB"
+        }
+      },
+      {
+        "id": "8",
+        "name": "Apple Watch Series 8",
+        "data": {
+          "Strap Colour": "Elderberry",
+          "Case Size": "41mm"
+        }
+      },
+      {
+        "id": "9",
+        "name": "Beats Studio3 Wireless",
+        "data": {
+          "Color": "Red",
+          "Description": "High-performance wireless noise cancelling headphones"
+        }
+      },
+      {
+        "id": "10",
+        "name": "Apple iPad Mini 5th Gen",
+        "data": {
+          "Capacity": "64 GB",
+          "Screen size": 7.9
+        }
+      },
+      {
+        "id": "11",
+        "name": "Apple iPad Mini 5th Gen",
+        "data": {
+          "Capacity": "254 GB",
+          "Screen size": 7.9
+        }
+      },
+      {
+        "id": "12",
+        "name": "Apple iPad Air",
+        "data": {
+          "Generation": "4th",
+          "Price": "419.99",
+          "Capacity": "64 GB"
+        }
+      },
+      {
+        "id": "13",
+        "name": "Apple iPad Air",
+        "data": {
+          "Generation": "4th",
+          "Price": "519.99",
+          "Capacity": "256 GB"
         }
       }
-    },
+    ],
     "request": {
       "method": "GET",
-      "originalUrl": "{{baseURL}}/channelgroups",
-      "interpolatedUrl": "https://localhost:8443/api/channelgroups",
+      "originalUrl": "https://api.restful-api.dev/objects",
+      "interpolatedUrl": "https://api.restful-api.dev/objects",
       "headers": {
-        "accept": "application/xml",
-        "X-Requested-With": "OpenAPI",
-        "Cookie": "JSESSIONID=node0lhqhy8ozzd4fo7crbag328yz926.node0"
+        "Accept": "application/json"
       }
     },
     "variables": {
@@ -42,835 +127,125 @@
       "status": 200,
       "statusText": "OK",
       "headers": {
+        "date": "Thu, 07 Aug 2025 03:15:39 GMT",
+        "content-type": "application/json",
+        "transfer-encoding": "chunked",
         "connection": "close",
-        "date": "Wed, 06 Aug 2025 19:23:46 GMT",
-        "access-control-allow-origin": "*",
-        "access-control-allow-credentials": "false",
-        "access-control-allow-methods": "GET, POST, DELETE, PUT",
-        "access-control-allow-headers": "Content-Type",
-        "content-security-policy": "frame-ancestors 'none'",
-        "x-frame-options": "DENY",
-        "x-content-type-options": "nosniff",
-        "strict-transport-security": "max-age=31536000; includeSubDomains",
-        "content-type": "application/xml",
-        "content-length": "8180"
+        "server": "cloudflare",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+        "cf-cache-status": "DYNAMIC",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=f4yhYa8BlOZWBJEI1ek3R7GtHEZumzWei6CWtwWMx2YVbgS5T1zuqRVGZZz3lMby%2FdIaO5KbPfXJX3ZPpIvVH3ZPiWd513X%2FoA9h%2FtoLWT8F0zk%3D\"}]}",
+        "cf-ray": "96b39c58cfb14238-EWR",
+        "alt-svc": "h3=\":443\"; ma=86400"
       },
-      "data": {
-        "list": {
-          "channelGroup": {
-            "id": "9480165f-85fa-414e-ac25-21640511b353",
-            "name": "Cerner_MILN_SIU",
-            "revision": 2,
-            "lastModified": {
-              "time": 1753732571036,
-              "timezone": "America/Halifax"
-            },
-            "description": "",
-            "channels": {
-              "channel": {
-                "id": "8cc28343-6a19-4f77-9805-bf08b37b359e",
-                "revision": 0
-              }
-            }
+      "data": [
+        {
+          "id": "1",
+          "name": "Google Pixel 6 Pro",
+          "data": {
+            "color": "Cloudy White",
+            "capacity": "128 GB"
+          }
+        },
+        {
+          "id": "2",
+          "name": "Apple iPhone 12 Mini, 256GB, Blue",
+          "data": null
+        },
+        {
+          "id": "3",
+          "name": "Apple iPhone 12 Pro Max",
+          "data": {
+            "color": "Cloudy White",
+            "capacity GB": 512
+          }
+        },
+        {
+          "id": "4",
+          "name": "Apple iPhone 11, 64GB",
+          "data": {
+            "price": 389.99,
+            "color": "Purple"
+          }
+        },
+        {
+          "id": "5",
+          "name": "Samsung Galaxy Z Fold2",
+          "data": {
+            "price": 689.99,
+            "color": "Brown"
+          }
+        },
+        {
+          "id": "6",
+          "name": "Apple AirPods",
+          "data": {
+            "generation": "3rd",
+            "price": 120
+          }
+        },
+        {
+          "id": "7",
+          "name": "Apple MacBook Pro 16",
+          "data": {
+            "year": 2019,
+            "price": 1849.99,
+            "CPU model": "Intel Core i9",
+            "Hard disk size": "1 TB"
+          }
+        },
+        {
+          "id": "8",
+          "name": "Apple Watch Series 8",
+          "data": {
+            "Strap Colour": "Elderberry",
+            "Case Size": "41mm"
+          }
+        },
+        {
+          "id": "9",
+          "name": "Beats Studio3 Wireless",
+          "data": {
+            "Color": "Red",
+            "Description": "High-performance wireless noise cancelling headphones"
+          }
+        },
+        {
+          "id": "10",
+          "name": "Apple iPad Mini 5th Gen",
+          "data": {
+            "Capacity": "64 GB",
+            "Screen size": 7.9
+          }
+        },
+        {
+          "id": "11",
+          "name": "Apple iPad Mini 5th Gen",
+          "data": {
+            "Capacity": "254 GB",
+            "Screen size": 7.9
+          }
+        },
+        {
+          "id": "12",
+          "name": "Apple iPad Air",
+          "data": {
+            "Generation": "4th",
+            "Price": "419.99",
+            "Capacity": "64 GB"
+          }
+        },
+        {
+          "id": "13",
+          "name": "Apple iPad Air",
+          "data": {
+            "Generation": "4th",
+            "Price": "519.99",
+            "Capacity": "256 GB"
           }
         }
-      }
-    }
-  },
-  {
-    "apiCall": "GET - {{baseURL}}/channels/portsInUse",
-    "timestamp": "2025-08-06T19:24:42.855Z",
-    "status": "success",
-    "data": {
-      "list": {
-        "com.mirth.connect.donkey.model.channel.Ports": {
-          "name": "RELAYTEST",
-          "id": "7b3f2d75-176a-4013-a539-a19fa1bf5e19",
-          "port": 6661
-        }
-      }
-    },
-    "request": {
-      "method": "GET",
-      "originalUrl": "{{baseURL}}/channels/portsInUse",
-      "interpolatedUrl": "https://localhost:8443/api/channels/portsInUse",
-      "headers": {
-        "accept": "application/xml",
-        "X-Requested-With": "OpenAPI",
-        "Cookie": "JSESSIONID=node0uweewuy71skx12fmb1n9gess0927.node0"
-      }
-    },
-    "variables": {
-      "username": "dev",
-      "password": "admin",
-      "baseurl": "https://localhost:8443/api"
-    },
-    "response": {
-      "status": 200,
-      "statusText": "OK",
-      "headers": {
-        "connection": "close",
-        "date": "Wed, 06 Aug 2025 19:24:42 GMT",
-        "access-control-allow-origin": "*",
-        "access-control-allow-credentials": "false",
-        "access-control-allow-methods": "GET, POST, DELETE, PUT",
-        "access-control-allow-headers": "Content-Type",
-        "content-security-policy": "frame-ancestors 'none'",
-        "x-frame-options": "DENY",
-        "x-content-type-options": "nosniff",
-        "strict-transport-security": "max-age=31536000; includeSubDomains",
-        "content-type": "application/xml",
-        "content-length": "804"
-      },
-      "data": {
-        "list": {
-          "com.mirth.connect.donkey.model.channel.Ports": {
-            "name": "RELAYTEST",
-            "id": "7b3f2d75-176a-4013-a539-a19fa1bf5e19",
-            "port": 6661
-          }
-        }
-      }
-    }
-  },
-  {
-    "apiCall": "GET - {{baseURL}}/channels",
-    "timestamp": "2025-08-06T19:30:55.398Z",
-    "status": "success",
-    "data": {
-      "list": {
-        "channel": {
-          "id": "68b0e90f-cf1c-4303-a457-21762b868839",
-          "nextMetaDataId": 2,
-          "name": "one time cerner workflows csv to LeanIX",
-          "description": "Single use import/transformer to take cerner Evita inventory .csv and trasform it for use as the process meta data to import into LeanIX processes. AW",
-          "revision": 1,
-          "sourceConnector": {
-            "metaDataId": 0,
-            "name": "sourceConnector",
-            "properties": {
-              "sourceConnectorProperties": {
-                "responseVariable": "None",
-                "respondAfterProcessing": true,
-                "processBatch": false,
-                "firstResponse": false,
-                "processingThreads": 1,
-                "resourceIds": {
-                  "entry": {
-                    "string": "[Default Resource]"
-                  }
-                },
-                "queueBufferSize": 1000
-              }
-            },
-            "transformer": {
-              "elements": {
-                "com.mirth.connect.model.IteratorStep": {
-                  "name": "For each tmp[&apos;row&apos;]",
-                  "sequenceNumber": 0,
-                  "enabled": true,
-                  "properties": {
-                    "target": "tmp[&apos;row&apos;]",
-                    "indexVariable": "i",
-                    "prefixSubstitutions": {
-                      "string": "tmp[&apos;row&apos;]"
-                    },
-                    "children": {
-                      "com.mirth.connect.plugins.messagebuilder.MessageBuilderStep": {
-                        "name": "row - column24 (out)",
-                        "sequenceNumber": "0-6",
-                        "enabled": true,
-                        "messageSegment": "tmp[&apos;row&apos;][i][&apos;column24&apos;]",
-                        "mapping": "",
-                        "defaultValue": "&quot;Cerner Workflows&quot;"
-                      }
-                    }
-                  }
-                }
-              },
-              "inboundTemplate": "77u/V29ya2Zsb3cgTmFtZSxXb3JrZmxvdyBTdGF0ZSxTdGFuZGFyZCxSZWxhdGVkV29ya2Zsb3dzLEZhY2lsaXRpZXMsV29ya3N0cmVhbSxWZW51ZSxTdGF0dXMsQ3JlYXRlZCBCeSxDcmVhdGVkIERhdGUsVXBkYXRlZCBCeSxVcGRhdGVkIERhdGUsQnVsayBVcGRhdGUgTG9jayBCeSxCdWxrIFVwZGF0ZSBMb2NrIERhdGUsVGFncyxDZXJuZXIgV29ya2Zsb3cgSUQsQ2VybmVyIFdvcmtmbG93IFZlcnNpb24sQ2xpZW50IFdvcmtmbG93IElELE9mZiBQYWdlIFJlZmVyZW5jZSBXb3JrZmxvdyBJRCxPZmYgUGFnZSBSZWZlcmVuY2UgV29ya2Zsb3cgTmFtZSxSb2xlcyxTZWN1cml0eSBQb3NpdGlvbnMsRGVwYXJ0bWVudHMsVmFsdWUgSW1wYWN0LFN0ZXAgSW1wYWN0LFdhc3RlIC0gTnVtYmVyIG9mIFN0ZXBzLFdhc3RlIFR5cGUsV29ya2Zsb3cgTm90ZXMsU29sdXRpb25zLFByb2plY3QgTmFtZSxTZXJ2aWNlIExpbmUsQ2xpZW50IFRlc3QgU2NyaXB0cyBBc3NpZ25lZCxDZXJuZXIgUmVjb21tZW5kZWQgVGVzdCBTY3JpcHRzLENlcm5lciBPd25lcixDbGllbnQgT3duZXIsSW50cm9kdWNlZCBCeSxJbnRyb2R1Y2VkIEJ5IC0gT3RoZXIgVmFsdWUsVmFsaWRhdGVkIEJ5LFZhbGlkYXRlZCBCeSAtIE90aGVyIFZhbHVlLFJlZ3VsYXRvcnlEZXRhaWwsUmVndWxhdG9yeURldGFpbE90aGVyCg==",
-              "outboundTemplate": "SUQsVHlwZSxOYW1lLERpc3BsYXkgTmFtZSxEZXNjcmlwdGlvbixTdWJ0eXBlLENvbXBsZXRpb24sRnVsbCBOYW1lLFN0YXR1cyxMZXZlbCxDcmVhdGVkIEF0LFVwZGF0ZWQgQXQsUXVhbGl0eSBTZWFsLEFsaWFzLEV4dGVybmFsIElELExpZmVjeWNsZTogQ3VycmVudCBMaWZlY3ljbGUsTGlmZWN5Y2xlOiBQbGFuLExpZmVjeWNsZTogUGhhc2UgSW4sTGlmZWN5Y2xlOiBBY3RpdmUsTGlmZWN5Y2xlOiBQaGFzZSBPdXQsTGlmZWN5Y2xlOiBFbmQgb2YgTGlmZSxTdWNjZXNzb3JzLFByZWRlY2Vzc29ycyxQYXJlbnQsQ2hpbGRyZW4sUmVxdWlyZXMsUmVxdWlyZWQgYnksQXBwbGljYXRpb25zLEJ1c2luZXNzIENhcGFiaWxpdGllcyxQcm9qZWN0cyxPYnNlcnZlcixSZXNwb25zaWJsZSxSZXNwb25zaWJsZTogVGVjaG5pY2FsIE93bmVyLFJlc3BvbnNpYmxlOiBTcG9uc29yLEFtYXpvbiBXZWIgU2VydmljZXMsT3RoZXIgdGFncwo=",
-              "inboundDataType": "DELIMITED",
-              "outboundDataType": "DELIMITED",
-              "inboundProperties": {
-                "serializationProperties": {
-                  "columnDelimiter": ",",
-                  "recordDelimiter": "\\n",
-                  "quoteToken": "&quot;",
-                  "escapeWithDoubleQuote": true,
-                  "quoteEscapeToken": "\\",
-                  "numberedRows": false,
-                  "ignoreCR": true
-                },
-                "deserializationProperties": {
-                  "columnDelimiter": ",",
-                  "recordDelimiter": "\\n",
-                  "quoteToken": "&quot;",
-                  "escapeWithDoubleQuote": true,
-                  "quoteEscapeToken": "\\"
-                },
-                "batchProperties": {
-                  "splitType": "Record",
-                  "batchSkipRecords": 1,
-                  "batchMessageDelimiter": "",
-                  "batchMessageDelimiterIncluded": false,
-                  "batchGroupingColumn": "",
-                  "batchScript": ""
-                }
-              },
-              "outboundProperties": {
-                "serializationProperties": {
-                  "columnDelimiter": ",",
-                  "recordDelimiter": "\\n",
-                  "quoteToken": "&quot;",
-                  "escapeWithDoubleQuote": true,
-                  "quoteEscapeToken": "\\",
-                  "numberedRows": false,
-                  "ignoreCR": true
-                },
-                "deserializationProperties": {
-                  "columnDelimiter": ",",
-                  "recordDelimiter": "\\n",
-                  "quoteToken": "&quot;",
-                  "escapeWithDoubleQuote": true,
-                  "quoteEscapeToken": "\\"
-                },
-                "batchProperties": {
-                  "splitType": "Record",
-                  "batchSkipRecords": 0,
-                  "batchMessageDelimiter": "",
-                  "batchMessageDelimiterIncluded": false,
-                  "batchGroupingColumn": "",
-                  "batchScript": ""
-                }
-              }
-            },
-            "filter": {
-              "content": "<elements/>"
-            },
-            "transportName": "Channel Reader",
-            "mode": "SOURCE",
-            "enabled": true,
-            "waitForPrevious": true
-          },
-          "destinationConnectors": {
-            "connector": {
-              "metaDataId": 1,
-              "name": "for LeanIX import, csv",
-              "properties": {
-                "pluginProperties": {
-                  "com.mirth.connect.plugins.ssl.model.SSLConnectorPluginProperties": {
-                    "enabled": false,
-                    "clientAuthentication": "DISABLED",
-                    "hostnameVerificationEnabled": true,
-                    "trustAllCertificates": false,
-                    "trustedCertificates": {
-                      "trustCACerts": true
-                    },
-                    "ocspEnabled": false,
-                    "ocspHardFail": false,
-                    "crlEnabled": false,
-                    "crlHardFail": false,
-                    "subjectDNValidationEnabled": false,
-                    "hideIssuerDNs": false,
-                    "allowExpiredCertificates": false,
-                    "implicitFTPS": true,
-                    "useSTARTTLS": false
-                  }
-                },
-                "destinationConnectorProperties": {
-                  "queueEnabled": false,
-                  "sendFirst": false,
-                  "retryIntervalMillis": 10000,
-                  "regenerateTemplate": false,
-                  "retryCount": 0,
-                  "rotate": false,
-                  "includeFilterTransformer": false,
-                  "threadCount": 1,
-                  "threadAssignmentVariable": "",
-                  "validateResponse": false,
-                  "resourceIds": {
-                    "entry": {
-                      "string": "[Default Resource]"
-                    }
-                  },
-                  "queueBufferSize": 1000,
-                  "reattachAttachments": true
-                },
-                "scheme": "FILE",
-                "host": "/",
-                "outputPattern": "process_import.csv",
-                "anonymous": true,
-                "username": "anonymous",
-                "password": "anonymous",
-                "timeout": 10000,
-                "keepConnectionOpen": true,
-                "maxIdleTime": 0,
-                "secure": true,
-                "passive": true,
-                "validateConnection": true,
-                "outputAppend": true,
-                "errorOnExists": false,
-                "temporary": false,
-                "binary": false,
-                "charsetEncoding": "DEFAULT_ENCODING",
-                "template": "${message.encodedData}"
-              },
-              "transformer": {
-                "inboundTemplate": "77u/V29ya2Zsb3cgTmFtZSxXb3JrZmxvdyBTdGF0ZSxTdGFuZGFyZCxSZWxhdGVkV29ya2Zsb3dzLEZhY2lsaXRpZXMsV29ya3N0cmVhbSxWZW51ZSxTdGF0dXMsQ3JlYXRlZCBCeSxDcmVhdGVkIERhdGUsVXBkYXRlZCBCeSxVcGRhdGVkIERhdGUsQnVsayBVcGRhdGUgTG9jayBCeSxCdWxrIFVwZGF0ZSBMb2NrIERhdGUsVGFncyxDZXJuZXIgV29ya2Zsb3cgSUQsQ2VybmVyIFdvcmtmbG93IFZlcnNpb24sQ2xpZW50IFdvcmtmbG93IElELE9mZiBQYWdlIFJlZmVyZW5jZSBXb3JrZmxvdyBJRCxPZmYgUGFnZSBSZWZlcmVuY2UgV29ya2Zsb3cgTmFtZSxSb2xlcyxTZWN1cml0eSBQb3NpdGlvbnMsRGVwYXJ0bWVudHMsVmFsdWUgSW1wYWN0LFN0ZXAgSW1wYWN0LFdhc3RlIC0gTnVtYmVyIG9mIFN0ZXBzLFdhc3RlIFR5cGUsV29ya2Zsb3cgTm90ZXMsU29sdXRpb25zLFByb2plY3QgTmFtZSxTZXJ2aWNlIExpbmUsQ2xpZW50IFRlc3QgU2NyaXB0cyBBc3NpZ25lZCxDZXJuZXIgUmVjb21tZW5kZWQgVGVzdCBTY3JpcHRzLENlcm5lciBPd25lcixDbGllbnQgT3duZXIsSW50cm9kdWNlZCBCeSxJbnRyb2R1Y2VkIEJ5IC0gT3RoZXIgVmFsdWUsVmFsaWRhdGVkIEJ5LFZhbGlkYXRlZCBCeSAtIE90aGVyIFZhbHVlLFJlZ3VsYXRvcnlEZXRhaWwsUmVndWxhdG9yeURldGFpbE90aGVyCg==",
-                "outboundTemplate": "SUQsVHlwZSxOYW1lLERpc3BsYXkgTmFtZSxEZXNjcmlwdGlvbixTdWJ0eXBlLENvbXBsZXRpb24sRnVsbCBOYW1lLFN0YXR1cyxMZXZlbCxDcmVhdGVkIEF0LFVwZGF0ZWQgQXQsUXVhbGl0eSBTZWFsLEFsaWFzLEV4dGVybmFsIElELExpZmVjeWNsZTogQ3VycmVudCBMaWZlY3ljbGUsTGlmZWN5Y2xlOiBQbGFuLExpZmVjeWNsZTogUGhhc2UgSW4sTGlmZWN5Y2xlOiBBY3RpdmUsTGlmZWN5Y2xlOiBQaGFzZSBPdXQsTGlmZWN5Y2xlOiBFbmQgb2YgTGlmZSxTdWNjZXNzb3JzLFByZWRlY2Vzc29ycyxQYXJlbnQsQ2hpbGRyZW4sUmVxdWlyZXMsUmVxdWlyZWQgYnksQXBwbGljYXRpb25zLEJ1c2luZXNzIENhcGFiaWxpdGllcyxQcm9qZWN0cyxPYnNlcnZlcixSZXNwb25zaWJsZSxSZXNwb25zaWJsZTogVGVjaG5pY2FsIE93bmVyLFJlc3BvbnNpYmxlOiBTcG9uc29yLEFtYXpvbiBXZWIgU2VydmljZXMsT3RoZXIgdGFncw==",
-                "inboundDataType": "DELIMITED",
-                "outboundDataType": "DELIMITED",
-                "inboundProperties": {
-                  "serializationProperties": {
-                    "columnDelimiter": ",",
-                    "recordDelimiter": "\\n",
-                    "quoteToken": "&quot;",
-                    "escapeWithDoubleQuote": true,
-                    "quoteEscapeToken": "\\",
-                    "numberedRows": false,
-                    "ignoreCR": true
-                  },
-                  "deserializationProperties": {
-                    "columnDelimiter": ",",
-                    "recordDelimiter": "\\n",
-                    "quoteToken": "&quot;",
-                    "escapeWithDoubleQuote": true,
-                    "quoteEscapeToken": "\\"
-                  },
-                  "batchProperties": {
-                    "splitType": "Record",
-                    "batchSkipRecords": 0,
-                    "batchMessageDelimiter": "",
-                    "batchMessageDelimiterIncluded": false,
-                    "batchGroupingColumn": "",
-                    "batchScript": ""
-                  }
-                },
-                "outboundProperties": {
-                  "serializationProperties": {
-                    "columnDelimiter": ",",
-                    "recordDelimiter": "\\n",
-                    "quoteToken": "&quot;",
-                    "escapeWithDoubleQuote": true,
-                    "quoteEscapeToken": "\\",
-                    "numberedRows": false,
-                    "ignoreCR": true
-                  },
-                  "deserializationProperties": {
-                    "columnDelimiter": ",",
-                    "recordDelimiter": "\\n",
-                    "quoteToken": "&quot;",
-                    "escapeWithDoubleQuote": true,
-                    "quoteEscapeToken": "\\"
-                  },
-                  "batchProperties": {
-                    "splitType": "Record",
-                    "batchSkipRecords": 0,
-                    "batchMessageDelimiter": "",
-                    "batchMessageDelimiterIncluded": false,
-                    "batchGroupingColumn": "",
-                    "batchScript": ""
-                  }
-                }
-              },
-              "responseTransformer": {
-                "inboundDataType": "DELIMITED",
-                "outboundDataType": "DELIMITED",
-                "inboundProperties": {
-                  "serializationProperties": {
-                    "columnDelimiter": ",",
-                    "recordDelimiter": "\\n",
-                    "quoteToken": "&quot;",
-                    "escapeWithDoubleQuote": true,
-                    "quoteEscapeToken": "\\",
-                    "numberedRows": false,
-                    "ignoreCR": true
-                  },
-                  "deserializationProperties": {
-                    "columnDelimiter": ",",
-                    "recordDelimiter": "\\n",
-                    "quoteToken": "&quot;",
-                    "escapeWithDoubleQuote": true,
-                    "quoteEscapeToken": "\\"
-                  },
-                  "batchProperties": {
-                    "splitType": "Record",
-                    "batchSkipRecords": 0,
-                    "batchMessageDelimiter": "",
-                    "batchMessageDelimiterIncluded": false,
-                    "batchGroupingColumn": "",
-                    "batchScript": ""
-                  }
-                },
-                "outboundProperties": {
-                  "serializationProperties": {
-                    "columnDelimiter": ",",
-                    "recordDelimiter": "\\n",
-                    "quoteToken": "&quot;",
-                    "escapeWithDoubleQuote": true,
-                    "quoteEscapeToken": "\\",
-                    "numberedRows": false,
-                    "ignoreCR": true
-                  },
-                  "deserializationProperties": {
-                    "columnDelimiter": ",",
-                    "recordDelimiter": "\\n",
-                    "quoteToken": "&quot;",
-                    "escapeWithDoubleQuote": true,
-                    "quoteEscapeToken": "\\"
-                  },
-                  "batchProperties": {
-                    "splitType": "Record",
-                    "batchSkipRecords": 0,
-                    "batchMessageDelimiter": "",
-                    "batchMessageDelimiterIncluded": false,
-                    "batchGroupingColumn": "",
-                    "batchScript": ""
-                  }
-                }
-              },
-              "filter": {
-                "content": "<elements/>"
-              },
-              "transportName": "File Writer",
-              "mode": "DESTINATION",
-              "enabled": true,
-              "waitForPrevious": true
-            }
-          },
-          "preprocessingScript": "// Modify the message variable below to pre process data\nreturn message;",
-          "postprocessingScript": "// This script executes once after a message has been processed\n// Responses returned from here will be stored as &quot;Postprocessor&quot; in the response map\nreturn;",
-          "deployScript": "// This script executes once when the channel is deployed\n// You only have access to the globalMap and globalChannelMap here to persist data\nreturn;",
-          "undeployScript": "// This script executes once when the channel is undeployed\n// You only have access to the globalMap and globalChannelMap here to persist data\nreturn;",
-          "properties": {
-            "clearGlobalChannelMap": true,
-            "messageStorageMode": "DEVELOPMENT",
-            "encryptData": false,
-            "encryptAttachments": false,
-            "encryptCustomMetaData": false,
-            "removeContentOnCompletion": false,
-            "removeOnlyFilteredOnCompletion": false,
-            "removeAttachmentsOnCompletion": false,
-            "initialState": "STOPPED",
-            "storeAttachments": false,
-            "metaDataColumns": {
-              "metaDataColumn": {
-                "name": "TYPE",
-                "type": "STRING",
-                "mappingName": "mirth_type"
-              }
-            },
-            "attachmentProperties": {
-              "type": "None"
-            },
-            "resourceIds": {
-              "entry": {
-                "string": "[Default Resource]"
-              }
-            }
-          },
-          "exportData": {
-            "metadata": {
-              "enabled": true,
-              "lastModified": {
-                "time": 1748611152694,
-                "timezone": "America/Halifax"
-              },
-              "pruningSettings": {
-                "pruneMetaDataDays": 10,
-                "archiveEnabled": true,
-                "pruneErroredMessages": false
-              },
-              "userId": 6
-            }
-          }
-        }
-      }
-    },
-    "request": {
-      "method": "GET",
-      "originalUrl": "{{baseURL}}/channels",
-      "interpolatedUrl": "https://localhost:8443/api/channels",
-      "headers": {
-        "accept": "application/xml",
-        "X-Requested-With": "OpenAPI",
-        "Cookie": "JSESSIONID=node0uvzno52d6may1rwmzp3hrng8f928.node0"
-      },
-      "body": ""
-    },
-    "variables": {
-      "username": "dev",
-      "password": "admin",
-      "baseurl": "https://localhost:8443/api"
-    },
-    "response": {
-      "status": 200,
-      "statusText": "OK",
-      "headers": {
-        "connection": "close",
-        "date": "Wed, 06 Aug 2025 19:30:54 GMT",
-        "access-control-allow-origin": "*",
-        "access-control-allow-credentials": "false",
-        "access-control-allow-methods": "GET, POST, DELETE, PUT",
-        "access-control-allow-headers": "Content-Type",
-        "content-security-policy": "frame-ancestors 'none'",
-        "x-frame-options": "DENY",
-        "x-content-type-options": "nosniff",
-        "strict-transport-security": "max-age=31536000; includeSubDomains",
-        "content-type": "application/xml"
-      },
-      "data": {
-        "list": {
-          "channel": {
-            "id": "68b0e90f-cf1c-4303-a457-21762b868839",
-            "nextMetaDataId": 2,
-            "name": "one time cerner workflows csv to LeanIX",
-            "description": "Single use import/transformer to take cerner Evita inventory .csv and trasform it for use as the process meta data to import into LeanIX processes. AW",
-            "revision": 1,
-            "sourceConnector": {
-              "metaDataId": 0,
-              "name": "sourceConnector",
-              "properties": {
-                "sourceConnectorProperties": {
-                  "responseVariable": "None",
-                  "respondAfterProcessing": true,
-                  "processBatch": false,
-                  "firstResponse": false,
-                  "processingThreads": 1,
-                  "resourceIds": {
-                    "entry": {
-                      "string": "[Default Resource]"
-                    }
-                  },
-                  "queueBufferSize": 1000
-                }
-              },
-              "transformer": {
-                "elements": {
-                  "com.mirth.connect.model.IteratorStep": {
-                    "name": "For each tmp[&apos;row&apos;]",
-                    "sequenceNumber": 0,
-                    "enabled": true,
-                    "properties": {
-                      "target": "tmp[&apos;row&apos;]",
-                      "indexVariable": "i",
-                      "prefixSubstitutions": {
-                        "string": "tmp[&apos;row&apos;]"
-                      },
-                      "children": {
-                        "com.mirth.connect.plugins.messagebuilder.MessageBuilderStep": {
-                          "name": "row - column24 (out)",
-                          "sequenceNumber": "0-6",
-                          "enabled": true,
-                          "messageSegment": "tmp[&apos;row&apos;][i][&apos;column24&apos;]",
-                          "mapping": "",
-                          "defaultValue": "&quot;Cerner Workflows&quot;"
-                        }
-                      }
-                    }
-                  }
-                },
-                "inboundTemplate": "77u/V29ya2Zsb3cgTmFtZSxXb3JrZmxvdyBTdGF0ZSxTdGFuZGFyZCxSZWxhdGVkV29ya2Zsb3dzLEZhY2lsaXRpZXMsV29ya3N0cmVhbSxWZW51ZSxTdGF0dXMsQ3JlYXRlZCBCeSxDcmVhdGVkIERhdGUsVXBkYXRlZCBCeSxVcGRhdGVkIERhdGUsQnVsayBVcGRhdGUgTG9jayBCeSxCdWxrIFVwZGF0ZSBMb2NrIERhdGUsVGFncyxDZXJuZXIgV29ya2Zsb3cgSUQsQ2VybmVyIFdvcmtmbG93IFZlcnNpb24sQ2xpZW50IFdvcmtmbG93IElELE9mZiBQYWdlIFJlZmVyZW5jZSBXb3JrZmxvdyBJRCxPZmYgUGFnZSBSZWZlcmVuY2UgV29ya2Zsb3cgTmFtZSxSb2xlcyxTZWN1cml0eSBQb3NpdGlvbnMsRGVwYXJ0bWVudHMsVmFsdWUgSW1wYWN0LFN0ZXAgSW1wYWN0LFdhc3RlIC0gTnVtYmVyIG9mIFN0ZXBzLFdhc3RlIFR5cGUsV29ya2Zsb3cgTm90ZXMsU29sdXRpb25zLFByb2plY3QgTmFtZSxTZXJ2aWNlIExpbmUsQ2xpZW50IFRlc3QgU2NyaXB0cyBBc3NpZ25lZCxDZXJuZXIgUmVjb21tZW5kZWQgVGVzdCBTY3JpcHRzLENlcm5lciBPd25lcixDbGllbnQgT3duZXIsSW50cm9kdWNlZCBCeSxJbnRyb2R1Y2VkIEJ5IC0gT3RoZXIgVmFsdWUsVmFsaWRhdGVkIEJ5LFZhbGlkYXRlZCBCeSAtIE90aGVyIFZhbHVlLFJlZ3VsYXRvcnlEZXRhaWwsUmVndWxhdG9yeURldGFpbE90aGVyCg==",
-                "outboundTemplate": "SUQsVHlwZSxOYW1lLERpc3BsYXkgTmFtZSxEZXNjcmlwdGlvbixTdWJ0eXBlLENvbXBsZXRpb24sRnVsbCBOYW1lLFN0YXR1cyxMZXZlbCxDcmVhdGVkIEF0LFVwZGF0ZWQgQXQsUXVhbGl0eSBTZWFsLEFsaWFzLEV4dGVybmFsIElELExpZmVjeWNsZTogQ3VycmVudCBMaWZlY3ljbGUsTGlmZWN5Y2xlOiBQbGFuLExpZmVjeWNsZTogUGhhc2UgSW4sTGlmZWN5Y2xlOiBBY3RpdmUsTGlmZWN5Y2xlOiBQaGFzZSBPdXQsTGlmZWN5Y2xlOiBFbmQgb2YgTGlmZSxTdWNjZXNzb3JzLFByZWRlY2Vzc29ycyxQYXJlbnQsQ2hpbGRyZW4sUmVxdWlyZXMsUmVxdWlyZWQgYnksQXBwbGljYXRpb25zLEJ1c2luZXNzIENhcGFiaWxpdGllcyxQcm9qZWN0cyxPYnNlcnZlcixSZXNwb25zaWJsZSxSZXNwb25zaWJsZTogVGVjaG5pY2FsIE93bmVyLFJlc3BvbnNpYmxlOiBTcG9uc29yLEFtYXpvbiBXZWIgU2VydmljZXMsT3RoZXIgdGFncwo=",
-                "inboundDataType": "DELIMITED",
-                "outboundDataType": "DELIMITED",
-                "inboundProperties": {
-                  "serializationProperties": {
-                    "columnDelimiter": ",",
-                    "recordDelimiter": "\\n",
-                    "quoteToken": "&quot;",
-                    "escapeWithDoubleQuote": true,
-                    "quoteEscapeToken": "\\",
-                    "numberedRows": false,
-                    "ignoreCR": true
-                  },
-                  "deserializationProperties": {
-                    "columnDelimiter": ",",
-                    "recordDelimiter": "\\n",
-                    "quoteToken": "&quot;",
-                    "escapeWithDoubleQuote": true,
-                    "quoteEscapeToken": "\\"
-                  },
-                  "batchProperties": {
-                    "splitType": "Record",
-                    "batchSkipRecords": 1,
-                    "batchMessageDelimiter": "",
-                    "batchMessageDelimiterIncluded": false,
-                    "batchGroupingColumn": "",
-                    "batchScript": ""
-                  }
-                },
-                "outboundProperties": {
-                  "serializationProperties": {
-                    "columnDelimiter": ",",
-                    "recordDelimiter": "\\n",
-                    "quoteToken": "&quot;",
-                    "escapeWithDoubleQuote": true,
-                    "quoteEscapeToken": "\\",
-                    "numberedRows": false,
-                    "ignoreCR": true
-                  },
-                  "deserializationProperties": {
-                    "columnDelimiter": ",",
-                    "recordDelimiter": "\\n",
-                    "quoteToken": "&quot;",
-                    "escapeWithDoubleQuote": true,
-                    "quoteEscapeToken": "\\"
-                  },
-                  "batchProperties": {
-                    "splitType": "Record",
-                    "batchSkipRecords": 0,
-                    "batchMessageDelimiter": "",
-                    "batchMessageDelimiterIncluded": false,
-                    "batchGroupingColumn": "",
-                    "batchScript": ""
-                  }
-                }
-              },
-              "filter": {
-                "content": "<elements/>"
-              },
-              "transportName": "Channel Reader",
-              "mode": "SOURCE",
-              "enabled": true,
-              "waitForPrevious": true
-            },
-            "destinationConnectors": {
-              "connector": {
-                "metaDataId": 1,
-                "name": "for LeanIX import, csv",
-                "properties": {
-                  "pluginProperties": {
-                    "com.mirth.connect.plugins.ssl.model.SSLConnectorPluginProperties": {
-                      "enabled": false,
-                      "clientAuthentication": "DISABLED",
-                      "hostnameVerificationEnabled": true,
-                      "trustAllCertificates": false,
-                      "trustedCertificates": {
-                        "trustCACerts": true
-                      },
-                      "ocspEnabled": false,
-                      "ocspHardFail": false,
-                      "crlEnabled": false,
-                      "crlHardFail": false,
-                      "subjectDNValidationEnabled": false,
-                      "hideIssuerDNs": false,
-                      "allowExpiredCertificates": false,
-                      "implicitFTPS": true,
-                      "useSTARTTLS": false
-                    }
-                  },
-                  "destinationConnectorProperties": {
-                    "queueEnabled": false,
-                    "sendFirst": false,
-                    "retryIntervalMillis": 10000,
-                    "regenerateTemplate": false,
-                    "retryCount": 0,
-                    "rotate": false,
-                    "includeFilterTransformer": false,
-                    "threadCount": 1,
-                    "threadAssignmentVariable": "",
-                    "validateResponse": false,
-                    "resourceIds": {
-                      "entry": {
-                        "string": "[Default Resource]"
-                      }
-                    },
-                    "queueBufferSize": 1000,
-                    "reattachAttachments": true
-                  },
-                  "scheme": "FILE",
-                  "host": "/",
-                  "outputPattern": "process_import.csv",
-                  "anonymous": true,
-                  "username": "anonymous",
-                  "password": "anonymous",
-                  "timeout": 10000,
-                  "keepConnectionOpen": true,
-                  "maxIdleTime": 0,
-                  "secure": true,
-                  "passive": true,
-                  "validateConnection": true,
-                  "outputAppend": true,
-                  "errorOnExists": false,
-                  "temporary": false,
-                  "binary": false,
-                  "charsetEncoding": "DEFAULT_ENCODING",
-                  "template": "${message.encodedData}"
-                },
-                "transformer": {
-                  "inboundTemplate": "77u/V29ya2Zsb3cgTmFtZSxXb3JrZmxvdyBTdGF0ZSxTdGFuZGFyZCxSZWxhdGVkV29ya2Zsb3dzLEZhY2lsaXRpZXMsV29ya3N0cmVhbSxWZW51ZSxTdGF0dXMsQ3JlYXRlZCBCeSxDcmVhdGVkIERhdGUsVXBkYXRlZCBCeSxVcGRhdGVkIERhdGUsQnVsayBVcGRhdGUgTG9jayBCeSxCdWxrIFVwZGF0ZSBMb2NrIERhdGUsVGFncyxDZXJuZXIgV29ya2Zsb3cgSUQsQ2VybmVyIFdvcmtmbG93IFZlcnNpb24sQ2xpZW50IFdvcmtmbG93IElELE9mZiBQYWdlIFJlZmVyZW5jZSBXb3JrZmxvdyBJRCxPZmYgUGFnZSBSZWZlcmVuY2UgV29ya2Zsb3cgTmFtZSxSb2xlcyxTZWN1cml0eSBQb3NpdGlvbnMsRGVwYXJ0bWVudHMsVmFsdWUgSW1wYWN0LFN0ZXAgSW1wYWN0LFdhc3RlIC0gTnVtYmVyIG9mIFN0ZXBzLFdhc3RlIFR5cGUsV29ya2Zsb3cgTm90ZXMsU29sdXRpb25zLFByb2plY3QgTmFtZSxTZXJ2aWNlIExpbmUsQ2xpZW50IFRlc3QgU2NyaXB0cyBBc3NpZ25lZCxDZXJuZXIgUmVjb21tZW5kZWQgVGVzdCBTY3JpcHRzLENlcm5lciBPd25lcixDbGllbnQgT3duZXIsSW50cm9kdWNlZCBCeSxJbnRyb2R1Y2VkIEJ5IC0gT3RoZXIgVmFsdWUsVmFsaWRhdGVkIEJ5LFZhbGlkYXRlZCBCeSAtIE90aGVyIFZhbHVlLFJlZ3VsYXRvcnlEZXRhaWwsUmVndWxhdG9yeURldGFpbE90aGVyCg==",
-                  "outboundTemplate": "SUQsVHlwZSxOYW1lLERpc3BsYXkgTmFtZSxEZXNjcmlwdGlvbixTdWJ0eXBlLENvbXBsZXRpb24sRnVsbCBOYW1lLFN0YXR1cyxMZXZlbCxDcmVhdGVkIEF0LFVwZGF0ZWQgQXQsUXVhbGl0eSBTZWFsLEFsaWFzLEV4dGVybmFsIElELExpZmVjeWNsZTogQ3VycmVudCBMaWZlY3ljbGUsTGlmZWN5Y2xlOiBQbGFuLExpZmVjeWNsZTogUGhhc2UgSW4sTGlmZWN5Y2xlOiBBY3RpdmUsTGlmZWN5Y2xlOiBQaGFzZSBPdXQsTGlmZWN5Y2xlOiBFbmQgb2YgTGlmZSxTdWNjZXNzb3JzLFByZWRlY2Vzc29ycyxQYXJlbnQsQ2hpbGRyZW4sUmVxdWlyZXMsUmVxdWlyZWQgYnksQXBwbGljYXRpb25zLEJ1c2luZXNzIENhcGFiaWxpdGllcyxQcm9qZWN0cyxPYnNlcnZlcixSZXNwb25zaWJsZSxSZXNwb25zaWJsZTogVGVjaG5pY2FsIE93bmVyLFJlc3BvbnNpYmxlOiBTcG9uc29yLEFtYXpvbiBXZWIgU2VydmljZXMsT3RoZXIgdGFncw==",
-                  "inboundDataType": "DELIMITED",
-                  "outboundDataType": "DELIMITED",
-                  "inboundProperties": {
-                    "serializationProperties": {
-                      "columnDelimiter": ",",
-                      "recordDelimiter": "\\n",
-                      "quoteToken": "&quot;",
-                      "escapeWithDoubleQuote": true,
-                      "quoteEscapeToken": "\\",
-                      "numberedRows": false,
-                      "ignoreCR": true
-                    },
-                    "deserializationProperties": {
-                      "columnDelimiter": ",",
-                      "recordDelimiter": "\\n",
-                      "quoteToken": "&quot;",
-                      "escapeWithDoubleQuote": true,
-                      "quoteEscapeToken": "\\"
-                    },
-                    "batchProperties": {
-                      "splitType": "Record",
-                      "batchSkipRecords": 0,
-                      "batchMessageDelimiter": "",
-                      "batchMessageDelimiterIncluded": false,
-                      "batchGroupingColumn": "",
-                      "batchScript": ""
-                    }
-                  },
-                  "outboundProperties": {
-                    "serializationProperties": {
-                      "columnDelimiter": ",",
-                      "recordDelimiter": "\\n",
-                      "quoteToken": "&quot;",
-                      "escapeWithDoubleQuote": true,
-                      "quoteEscapeToken": "\\",
-                      "numberedRows": false,
-                      "ignoreCR": true
-                    },
-                    "deserializationProperties": {
-                      "columnDelimiter": ",",
-                      "recordDelimiter": "\\n",
-                      "quoteToken": "&quot;",
-                      "escapeWithDoubleQuote": true,
-                      "quoteEscapeToken": "\\"
-                    },
-                    "batchProperties": {
-                      "splitType": "Record",
-                      "batchSkipRecords": 0,
-                      "batchMessageDelimiter": "",
-                      "batchMessageDelimiterIncluded": false,
-                      "batchGroupingColumn": "",
-                      "batchScript": ""
-                    }
-                  }
-                },
-                "responseTransformer": {
-                  "inboundDataType": "DELIMITED",
-                  "outboundDataType": "DELIMITED",
-                  "inboundProperties": {
-                    "serializationProperties": {
-                      "columnDelimiter": ",",
-                      "recordDelimiter": "\\n",
-                      "quoteToken": "&quot;",
-                      "escapeWithDoubleQuote": true,
-                      "quoteEscapeToken": "\\",
-                      "numberedRows": false,
-                      "ignoreCR": true
-                    },
-                    "deserializationProperties": {
-                      "columnDelimiter": ",",
-                      "recordDelimiter": "\\n",
-                      "quoteToken": "&quot;",
-                      "escapeWithDoubleQuote": true,
-                      "quoteEscapeToken": "\\"
-                    },
-                    "batchProperties": {
-                      "splitType": "Record",
-                      "batchSkipRecords": 0,
-                      "batchMessageDelimiter": "",
-                      "batchMessageDelimiterIncluded": false,
-                      "batchGroupingColumn": "",
-                      "batchScript": ""
-                    }
-                  },
-                  "outboundProperties": {
-                    "serializationProperties": {
-                      "columnDelimiter": ",",
-                      "recordDelimiter": "\\n",
-                      "quoteToken": "&quot;",
-                      "escapeWithDoubleQuote": true,
-                      "quoteEscapeToken": "\\",
-                      "numberedRows": false,
-                      "ignoreCR": true
-                    },
-                    "deserializationProperties": {
-                      "columnDelimiter": ",",
-                      "recordDelimiter": "\\n",
-                      "quoteToken": "&quot;",
-                      "escapeWithDoubleQuote": true,
-                      "quoteEscapeToken": "\\"
-                    },
-                    "batchProperties": {
-                      "splitType": "Record",
-                      "batchSkipRecords": 0,
-                      "batchMessageDelimiter": "",
-                      "batchMessageDelimiterIncluded": false,
-                      "batchGroupingColumn": "",
-                      "batchScript": ""
-                    }
-                  }
-                },
-                "filter": {
-                  "content": "<elements/>"
-                },
-                "transportName": "File Writer",
-                "mode": "DESTINATION",
-                "enabled": true,
-                "waitForPrevious": true
-              }
-            },
-            "preprocessingScript": "// Modify the message variable below to pre process data\nreturn message;",
-            "postprocessingScript": "// This script executes once after a message has been processed\n// Responses returned from here will be stored as &quot;Postprocessor&quot; in the response map\nreturn;",
-            "deployScript": "// This script executes once when the channel is deployed\n// You only have access to the globalMap and globalChannelMap here to persist data\nreturn;",
-            "undeployScript": "// This script executes once when the channel is undeployed\n// You only have access to the globalMap and globalChannelMap here to persist data\nreturn;",
-            "properties": {
-              "clearGlobalChannelMap": true,
-              "messageStorageMode": "DEVELOPMENT",
-              "encryptData": false,
-              "encryptAttachments": false,
-              "encryptCustomMetaData": false,
-              "removeContentOnCompletion": false,
-              "removeOnlyFilteredOnCompletion": false,
-              "removeAttachmentsOnCompletion": false,
-              "initialState": "STOPPED",
-              "storeAttachments": false,
-              "metaDataColumns": {
-                "metaDataColumn": {
-                  "name": "TYPE",
-                  "type": "STRING",
-                  "mappingName": "mirth_type"
-                }
-              },
-              "attachmentProperties": {
-                "type": "None"
-              },
-              "resourceIds": {
-                "entry": {
-                  "string": "[Default Resource]"
-                }
-              }
-            },
-            "exportData": {
-              "metadata": {
-                "enabled": true,
-                "lastModified": {
-                  "time": 1748611152694,
-                  "timezone": "America/Halifax"
-                },
-                "pruningSettings": {
-                  "pruneMetaDataDays": 10,
-                  "archiveEnabled": true,
-                  "pruneErroredMessages": false
-                },
-                "userId": 6
-              }
-            }
-          }
-        }
-      }
+      ]
     }
   }
 ]

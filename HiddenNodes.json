@@ -143,6 +143,22 @@
     {
       "key": "transformer",
       "depth": 4
+    },
+    {
+      "key": "apiCall",
+      "depth": 1
+    },
+    {
+      "key": "status",
+      "depth": 1
+    },
+    {
+      "key": "variables",
+      "depth": 1
+    },
+    {
+      "key": "timestamp",
+      "depth": 1
     }
   ]
 }
