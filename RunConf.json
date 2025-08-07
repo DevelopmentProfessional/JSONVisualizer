@@ -1,0 +1,35 @@
+{
+  "applications": [
+    {
+      "id": "app_1754576123402",
+      "name": "Mirth Connect",
+      "checked": false,
+      "apiIds": [
+        0,
+        3,
+        4,
+        1,
+        2
+      ],
+      "expanded": true
+    },
+    {
+      "id": "app_1754576786518",
+      "name": "Test APIs",
+      "checked": false,
+      "apiIds": [
+        5
+      ],
+      "expanded": false
+    },
+    {
+      "id": "app_default",
+      "name": "Default Application",
+      "checked": false,
+      "apiIds": [
+        6
+      ],
+      "expanded": true
+    }
+  ]
+}
