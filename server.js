@@ -690,6 +690,88 @@ app.post('/appendOutput', (req, res) => {
   });
 });
 
+// Endpoint to update NodePosition.json
+app.post('/NodePosition.json', (req, res) => {
+  console.log('Received NodePosition.json save request:', req.body); // Debug log
+  fs.writeFile(path.join(__dirname, 'NodePosition.json'), JSON.stringify(req.body, null, 2), err => {
+    if (err) {
+      console.error('Failed to save NodePosition.json:', err);
+      res.status(500).send('Write failed');
+    } else {
+      console.log('NodePosition.json saved successfully');
+      res.send('OK');
+    }
+  });
+});
+
+// Endpoint to set starting node position based on monitor resolution
+app.post('/SetStartNodePosition', (req, res) => {
+  console.log('Received SetStartNodePosition request:', req.body);
+  
+  const { screenWidth, screenHeight } = req.body;
+  
+  if (!screenWidth || !screenHeight) {
+    return res.status(400).json({ 
+      error: 'Missing screen dimensions', 
+      required: ['screenWidth', 'screenHeight'] 
+    });
+  }
+  
+  // Calculate center position based on screen resolution
+  const startingNodeLeft = Math.floor(screenWidth / 2);
+  const startingNodeTop = Math.floor(screenHeight / 2);
+  
+  const nodePositionPath = path.join(__dirname, 'NodePosition.json');
+  
+  // Read existing NodePosition.json or create new structure
+  fs.readFile(nodePositionPath, 'utf8', (err, data) => {
+    let nodePositions = { nodePositions: {} };
+    
+    if (!err && data) {
+      try {
+        nodePositions = JSON.parse(data);
+        if (!nodePositions.nodePositions) {
+          nodePositions.nodePositions = {};
+        }
+      } catch (parseErr) {
+        console.error('Error parsing existing NodePosition.json:', parseErr);
+        nodePositions = { nodePositions: {} };
+      }
+    }
+    
+    // Set the starting node position values
+    nodePositions.nodePositions.StartingNodeLeft = startingNodeLeft;
+    nodePositions.nodePositions.StartingNodeTop = startingNodeTop;
+    
+    // Save the updated file
+    fs.writeFile(nodePositionPath, JSON.stringify(nodePositions, null, 2), writeErr => {
+      if (writeErr) {
+        console.error('Failed to save starting node position:', writeErr);
+        return res.status(500).json({ 
+          error: 'Failed to save starting node position', 
+          details: writeErr.message 
+        });
+      }
+      
+      console.log('Starting node position saved successfully:', {
+        StartingNodeLeft: startingNodeLeft,
+        StartingNodeTop: startingNodeTop,
+        screenDimensions: { screenWidth, screenHeight }
+      });
+      
+      res.json({ 
+        success: true, 
+        message: 'Starting node position set successfully',
+        position: {
+          StartingNodeLeft: startingNodeLeft,
+          StartingNodeTop: startingNodeTop
+        },
+        screenDimensions: { screenWidth, screenHeight }
+      });
+    });
+  });
+});
+
 // Endpoint to update Filter.json
 app.post('/Filter.json', (req, res) => {
   fs.writeFile(path.join(__dirname, 'Filter.json'), JSON.stringify(req.body, null, 2), err => {

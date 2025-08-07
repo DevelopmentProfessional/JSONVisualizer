@@ -5,11 +5,76 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSON Visualizer - APIRunner</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrollbars on body */
+        }
+        
         #output-graph {
-            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
             height: 100vh;
-            border: 1px solid #ccc;
+            z-index: 1;
+            background-color: #212529; /* Dark background */
+            border: none;
+        }
+        
+        #controlNav {
+            position: fixed;
+            top: 70px; /* Below navbar */
+            left: 10px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 8px;
+            padding: 10px;
+            max-width: 300px;
+        }
+        
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+        }
+        
+        svg {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            cursor: grab; /* Default cursor for panning */
+        }
+        
+        svg:active {
+            cursor: grabbing; /* Cursor when actively panning */
+        }
+        
+        /* When nodes are being dragged, change the global cursor */
+        body.node-dragging svg {
+            cursor: default;
+        }
+        
+        body.node-dragging .tree-node {
+            pointer-events: none; /* Disable pointer events on non-dragged nodes */
+        }
+        
+        body.node-dragging .tree-node.dragging {
+            pointer-events: all; /* Re-enable for the currently dragged node */
+            cursor: grabbing;
+        }
+        
+        #filterDropdownContainer {
+            position: fixed;
+            top: 70px;
+            right: 10px;
+            z-index: 1000;
+        }
+    </style>
             overflow-x: auto;
             overflow-y: auto;
             position: relative;
@@ -20,9 +85,9 @@
             align-items: flex-start;
         }
         .node-rect {
-            stroke: #333;
+            stroke: #555;
             stroke-width: 2px;
-            fill: #1f77b4;
+            fill: #343a40;
             rx: 10;
             ry: 10;
         }
@@ -70,6 +135,62 @@
             flex: 1;
             min-width: 0;
         }
+        
+        /* Type-specific styling */
+        .type-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin: 2px 0;
+        }
+        .type-url a {
+            color: #4fc3f7;
+            text-decoration: none;
+        }
+        .type-url a:hover {
+            text-decoration: underline;
+        }
+        .type-email a {
+            color: #81c784;
+        }
+        .type-boolean {
+            font-weight: bold;
+        }
+        .type-boolean.true {
+            color: #4caf50;
+        }
+        .type-boolean.false {
+            color: #f44336;
+        }
+        .type-number {
+            color: #ff9800;
+            font-family: monospace;
+        }
+        .type-date {
+            color: #9c27b0;
+            font-style: italic;
+        }
+        .type-json {
+            background: rgba(255,255,255,0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .type-icon {
+            margin-right: 4px;
+        }
+        
+        /* Drag and drop styling */
+        .tree-node.dragging {
+            opacity: 0.8;
+        }
+        .tree-node {
+            transition: opacity 0.2s ease;
+        }
+        .tree-node:hover {
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body> 
@@ -106,6 +227,9 @@
             </h2>
             <div id="controlsCollapse" class="accordion-collapse collapse hide" aria-labelledby="controlsHeading" data-bs-parent="#controlsAccordion">
                 <div class="accordion-body">
+                    <div class="alert alert-info alert-sm mb-3" style="font-size: 0.85em; padding: 8px;">
+                        <strong>💡 Navigation:</strong> Pan canvas by dragging empty space • Drag nodes to reposition • Scroll to zoom
+                    </div>
                     <div class="d-flex flex-wrap gap-3">
                         <!-- Text Size -->
                         <div class="input-group input-group-sm">
@@ -135,10 +259,18 @@
                         </div>
                         <!-- Expand All -->
                         <button class="btn btn-success btn-sm ms-2" onclick="expandAllNodes()">Expand All</button>
+                        <!-- Reset Positions -->
+                        <button class="btn btn-info btn-sm ms-2" onclick="resetPositions()">Reset Positions</button>
+                        <!-- Reset Starting Position -->
+                        <button class="btn btn-success btn-sm ms-2" onclick="resetStartingPosition()">Reset Starting Position</button>
+                        <!-- Center View -->
+                        <button class="btn btn-primary btn-sm ms-2" onclick="centerView()">Center View</button>
                         <!-- Reset Filter -->
                         <button class="btn btn-warning btn-sm ms-2" onclick="resetFilter()">Reset Filter</button>
                         <!-- Clear JSON Output -->
                         <button class="btn btn-danger btn-sm ms-2" onclick="clearJsonOutput()">Clear JSON Output</button>
+                        <!-- Debug Overlaps -->
+                        <button class="btn btn-outline-light btn-sm ms-2" onclick="toggleOverlapDebug()">Debug Overlaps</button>
                     </div>
                 </div>
             </div>
@@ -194,12 +326,179 @@ async function saveJSON(path, data) {
 }
 
 let hiddenNodes = [];
+let nodePositions = {}; // Store position offsets for nodes
 
-// Load hidden types and output.json, then render
+// Function to check and set starting node position if not already set
+async function checkAndSetStartingPosition() {
+    // Check if StartingNodeLeft and StartingNodeTop already exist
+    if (nodePositions.StartingNodeLeft !== undefined && nodePositions.StartingNodeTop !== undefined) {
+        console.log('Starting node position already set:', {
+            StartingNodeLeft: nodePositions.StartingNodeLeft,
+            StartingNodeTop: nodePositions.StartingNodeTop
+        });
+        return;
+    }
+    
+    // Get screen resolution
+    const screenWidth = window.screen.width;
+    const screenHeight = window.screen.height;
+    
+    console.log('Setting starting node position for screen resolution:', { screenWidth, screenHeight });
+    
+    try {
+        const response = await fetch('/SetStartNodePosition', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ screenWidth, screenHeight })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to set starting node position: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Starting node position set successfully:', result);
+        
+        // Update local nodePositions with the new values
+        nodePositions.StartingNodeLeft = result.position.StartingNodeLeft;
+        nodePositions.StartingNodeTop = result.position.StartingNodeTop;
+        
+    } catch (error) {
+        console.error('Error setting starting node position:', error);
+    }
+}
+
+// Function to reset starting node position (called by button)
+window.resetStartingPosition = async function() {
+    try {
+        const screenWidth = window.screen.width;
+        const screenHeight = window.screen.height;
+        
+        console.log('Resetting starting node position for screen resolution:', { screenWidth, screenHeight });
+        
+        const response = await fetch('/SetStartNodePosition', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ screenWidth, screenHeight })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to reset starting node position: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Starting node position reset successfully:', result);
+        
+        // Update local nodePositions with the new values
+        nodePositions.StartingNodeLeft = result.position.StartingNodeLeft;
+        nodePositions.StartingNodeTop = result.position.StartingNodeTop;
+        
+        // Reload the tree to apply the new centered position
+        updateTree();
+        
+    } catch (error) {
+        console.error('Error resetting starting node position:', error);
+        alert('Failed to reset starting node position. Please try again.');
+    }
+};
+
+// Debug overlaps functionality
+let overlapDebugMode = false;
+window.toggleOverlapDebug = function() {
+    overlapDebugMode = !overlapDebugMode;
+    
+    if (overlapDebugMode) {
+        console.log('Overlap debug mode enabled');
+        highlightOverlaps();
+        document.querySelector('button[onclick="toggleOverlapDebug()"]').classList.remove('btn-outline-light');
+        document.querySelector('button[onclick="toggleOverlapDebug()"]').classList.add('btn-light');
+        document.querySelector('button[onclick="toggleOverlapDebug()"]').textContent = 'Hide Overlaps';
+    } else {
+        console.log('Overlap debug mode disabled');
+        removeOverlapHighlights();
+        document.querySelector('button[onclick="toggleOverlapDebug()"]').classList.remove('btn-light');
+        document.querySelector('button[onclick="toggleOverlapDebug()"]').classList.add('btn-outline-light');
+        document.querySelector('button[onclick="toggleOverlapDebug()"]').textContent = 'Debug Overlaps';
+    }
+};
+
+// Function to highlight overlapping nodes
+function highlightOverlaps() {
+    // Remove existing highlights
+    removeOverlapHighlights();
+    
+    const overlappingPairs = [];
+    
+    // Find all overlapping pairs
+    for (let i = 0; i < flatNodes.length; i++) {
+        for (let j = i + 1; j < flatNodes.length; j++) {
+            if (nodesOverlap(flatNodes[i], flatNodes[j])) {
+                overlappingPairs.push([flatNodes[i], flatNodes[j]]);
+            }
+        }
+    }
+    
+    console.log(`Found ${overlappingPairs.length} overlapping pairs:`, overlappingPairs);
+    
+    if (overlappingPairs.length === 0) {
+        alert('No overlapping nodes found!');
+        return;
+    }
+    
+    // Add visual indicators for overlapping nodes
+    const svg = d3.select('#output-graph svg');
+    const overlapGroup = svg.append('g').attr('class', 'overlap-indicators');
+    
+    overlappingPairs.forEach((pair, index) => {
+        const [node1, node2] = pair;
+        
+        // Add red border around overlapping nodes
+        [node1, node2].forEach(node => {
+            const nodeHeight = node.measuredHeight || 60;
+            overlapGroup.append('rect')
+                .attr('class', 'overlap-highlight')
+                .attr('x', node.x - 2)
+                .attr('y', node.y - 2)
+                .attr('width', nodeWidth + 4)
+                .attr('height', nodeHeight + 4)
+                .attr('fill', 'none')
+                .attr('stroke', 'red')
+                .attr('stroke-width', 3)
+                .attr('stroke-dasharray', '5,5')
+                .attr('opacity', 0.8);
+        });
+        
+        // Add connection line between overlapping nodes
+        const node1Height = node1.measuredHeight || 60;
+        const node2Height = node2.measuredHeight || 60;
+        overlapGroup.append('line')
+            .attr('class', 'overlap-connection')
+            .attr('x1', node1.x + nodeWidth/2)
+            .attr('y1', node1.y + node1Height/2)
+            .attr('x2', node2.x + nodeWidth/2)
+            .attr('y2', node2.y + node2Height/2)
+            .attr('stroke', 'red')
+            .attr('stroke-width', 2)
+            .attr('stroke-dasharray', '3,3')
+            .attr('opacity', 0.6);
+    });
+    
+    alert(`Found and highlighted ${overlappingPairs.length} overlapping node pairs. Check console for details.`);
+}
+
+// Function to remove overlap highlights
+function removeOverlapHighlights() {
+    d3.select('#output-graph svg .overlap-indicators').remove();
+}
+
+// Load hidden types, node positions, and output.json, then render
 Promise.all([
     loadJSON('HiddenNodes.json').then(cfg => { hiddenNodes = cfg.hiddenNodes || []; }),
+    loadJSON('NodePosition.json').then(cfg => { nodePositions = cfg.nodePositions || {}; }).catch(() => { nodePositions = {}; }),
     loadJSON('output.json')
-]).then(([_, data]) => {
+]).then(async ([_, __, data]) => {
+        // Check and set starting position if needed
+        await checkAndSetStartingPosition();
         // Exclude LOGIN node and flatten segments
         // Special handling for /Channels/{id}/Connectors
         const connectorsMap = {};
@@ -230,8 +529,24 @@ Promise.all([
                 };
             });
 
-        const width = document.getElementById('output-graph').clientWidth;
-        const height = document.getElementById('output-graph').clientHeight;
+        // Get screen resolution and viewport dimensions
+        const screenWidth = window.screen.width;
+        const screenHeight = window.screen.height;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        // Use the larger of screen resolution or viewport size for optimal display
+        const width = Math.max(viewportWidth, screenWidth);
+        const height = Math.max(viewportHeight, screenHeight);
+        
+        console.log('Display dimensions:', {
+            screenWidth,
+            screenHeight,
+            viewportWidth,
+            viewportHeight,
+            finalWidth: width,
+            finalHeight: height
+        });
         const maxNodeContentWidth = 220;
         const maxBranchContentWidth = 180;
         const minNodeWidth = 40;
@@ -263,6 +578,196 @@ Promise.all([
             };
             div.remove();
             return bbox;
+        }
+
+        // Type Detection Functions
+        function detectValueType(key, value) {
+            if (value === null) return 'null';
+            if (value === undefined) return 'undefined';
+            
+            const strValue = String(value).toLowerCase();
+            
+            // Boolean detection
+            if (typeof value === 'boolean' || strValue === 'true' || strValue === 'false') {
+                return 'boolean';
+            }
+            
+            // Number detection
+            if (typeof value === 'number' || (!isNaN(value) && !isNaN(parseFloat(value)) && isFinite(value))) {
+                return 'number';
+            }
+            
+            // Array detection
+            if (Array.isArray(value)) {
+                return 'array';
+            }
+            
+            // Object detection
+            if (typeof value === 'object' && value !== null) {
+                return 'object';
+            }
+            
+            // String-based type detection
+            const stringValue = String(value);
+            
+            // Image URL detection (common image extensions)
+            if (/\.(jpg|jpeg|png|gif|bmp|svg|webp)(\?.*)?$/i.test(stringValue)) {
+                return 'image';
+            }
+            
+            // URL detection
+            if (/^https?:\/\/.+/i.test(stringValue)) {
+                return 'url';
+            }
+            
+            // Email detection
+            if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(stringValue)) {
+                return 'email';
+            }
+            
+            // Date detection (ISO format, common date formats)
+            if (/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2})?/.test(stringValue) || 
+                /^\d{1,2}\/\d{1,2}\/\d{4}/.test(stringValue) ||
+                !isNaN(Date.parse(stringValue))) {
+                return 'date';
+            }
+            
+            // JSON string detection
+            if ((stringValue.startsWith('{') && stringValue.endsWith('}')) ||
+                (stringValue.startsWith('[') && stringValue.endsWith(']'))) {
+                try {
+                    JSON.parse(stringValue);
+                    return 'json';
+                } catch (e) {
+                    // Not valid JSON
+                }
+            }
+            
+            // Default to string
+            return 'string';
+        }
+
+        // Type-specific rendering functions
+        function renderTypedValue(key, value, type) {
+            const iconMap = {
+                'image': 'bi-image',
+                'url': 'bi-link-45deg',
+                'email': 'bi-envelope',
+                'boolean': 'bi-toggle-on',
+                'number': 'bi-123',
+                'date': 'bi-calendar-date',
+                'json': 'bi-code-square',
+                'array': 'bi-list-ul',
+                'object': 'bi-braces',
+                'string': 'bi-type',
+                'null': 'bi-dash-circle',
+                'undefined': 'bi-question-circle'
+            };
+
+            const icon = iconMap[type] || 'bi-file-text';
+            let content = '';
+            
+            switch (type) {
+                case 'image':
+                    content = `<div class="type-image">
+                        <i class="bi ${icon} type-icon"></i>
+                        <img src="${value}" alt="${key}" style="max-width: 80px; max-height: 60px;" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                        <span style="display: none;">${value}</span>
+                    </div>`;
+                    break;
+                    
+                case 'url':
+                    content = `<div class="type-url">
+                        <i class="bi ${icon} type-icon"></i>
+                        <a href="${value}" target="_blank" rel="noopener noreferrer">${value.length > 30 ? value.substring(0, 30) + '...' : value}</a>
+                    </div>`;
+                    break;
+                    
+                case 'email':
+                    content = `<div class="type-email">
+                        <i class="bi ${icon} type-icon"></i>
+                        <a href="mailto:${value}">${value}</a>
+                    </div>`;
+                    break;
+                    
+                case 'boolean':
+                    const boolValue = String(value).toLowerCase() === 'true';
+                    content = `<div class="type-boolean ${boolValue}">
+                        <i class="bi ${boolValue ? 'bi-check-circle' : 'bi-x-circle'} type-icon"></i>
+                        ${boolValue ? 'True' : 'False'}
+                    </div>`;
+                    break;
+                    
+                case 'number':
+                    content = `<div class="type-number">
+                        <i class="bi ${icon} type-icon"></i>
+                        ${value}
+                    </div>`;
+                    break;
+                    
+                case 'date':
+                    const dateObj = new Date(value);
+                    const isValidDate = !isNaN(dateObj.getTime());
+                    content = `<div class="type-date">
+                        <i class="bi ${icon} type-icon"></i>
+                        ${isValidDate ? dateObj.toLocaleDateString() : value}
+                    </div>`;
+                    break;
+                    
+                case 'json':
+                    let jsonPreview = String(value);
+                    if (jsonPreview.length > 50) {
+                        jsonPreview = jsonPreview.substring(0, 50) + '...';
+                    }
+                    content = `<div class="type-json">
+                        <i class="bi ${icon} type-icon"></i>
+                        ${jsonPreview}
+                    </div>`;
+                    break;
+                    
+                case 'array':
+                    content = `<div class="type-array">
+                        <i class="bi ${icon} type-icon"></i>
+                        Array[${Array.isArray(value) ? value.length : 'unknown'}]
+                    </div>`;
+                    break;
+                    
+                case 'object':
+                    const objKeys = typeof value === 'object' && value !== null ? Object.keys(value).length : 0;
+                    content = `<div class="type-object">
+                        <i class="bi ${icon} type-icon"></i>
+                        Object{${objKeys} ${objKeys === 1 ? 'key' : 'keys'}}
+                    </div>`;
+                    break;
+                    
+                case 'null':
+                    content = `<div class="type-null">
+                        <i class="bi ${icon} type-icon"></i>
+                        <em>null</em>
+                    </div>`;
+                    break;
+                    
+                case 'undefined':
+                    content = `<div class="type-undefined">
+                        <i class="bi ${icon} type-icon"></i>
+                        <em>undefined</em>
+                    </div>`;
+                    break;
+                    
+                default: // string
+                    let stringValue = String(value);
+                    if (stringValue.length > 50) {
+                        stringValue = stringValue.substring(0, 50) + '...';
+                    }
+                    content = `<div class="type-string">
+                        <i class="bi ${icon} type-icon"></i>
+                        ${stringValue}
+                    </div>`;
+                    break;
+            }
+            
+            return content;
         }
 
 
@@ -358,6 +863,211 @@ Promise.all([
         let nodeSeparation = parseInt(localStorage.getItem('ojv_nodeSeparation')) || 60;
 let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
         let textSize = parseInt(localStorage.getItem('ojv_textSize')) || 12;
+
+        // Helper function to get all descendants of a node
+        function getDescendants(node) {
+            let descendants = [];
+            flatNodes.forEach(n => {
+                if (n.path !== node.path && n.path.startsWith(node.path + '.')) {
+                    descendants.push(n);
+                }
+            });
+            return descendants;
+        }
+
+        // Helper function to get all siblings of a node (nodes at same depth with same parent)
+        function getSiblings(node) {
+            let siblings = [];
+            const parentPath = node.path.substring(0, node.path.lastIndexOf('.'));
+            flatNodes.forEach(n => {
+                if (n.path !== node.path && n.depth === node.depth) {
+                    const nParentPath = n.path.substring(0, n.path.lastIndexOf('.'));
+                    if (nParentPath === parentPath) {
+                        siblings.push(n);
+                    }
+                }
+            });
+            return siblings;
+        }
+
+        // Helper function to get parent node
+        function getParent(node) {
+            if (node.depth === 0) return null;
+            const parentPath = node.path.substring(0, node.path.lastIndexOf('.'));
+            return flatNodes.find(n => n.path === parentPath);
+        }
+
+        // Function to reset all saved positions
+        async function resetPositions() {
+            console.log('Resetting all node positions');
+            nodePositions = {}; // Clear all global positioning
+            await saveNodePositions();
+            renderTree(); // Re-render with default positions
+        }
+
+        // Test function to manually save positions (for debugging)
+        async function testSave() {
+            nodePositions.test = { Left: 100, Top: 50 };
+            console.log('Testing manual save with data:', nodePositions);
+            const result = await saveNodePositions();
+            console.log('Manual save result:', result);
+        }
+
+        // Make test function available globally for debugging
+        window.testSave = testSave;
+
+        // Helper function to process and validate node positions
+        function processNodePositions() {
+            console.log('Processing global node positions for validation...');
+            
+            // Simple validation for global positioning
+            if (nodePositions.Left !== undefined && nodePositions.Top !== undefined) {
+                console.log('Global positioning validated:', {
+                    Left: nodePositions.Left,
+                    Top: nodePositions.Top
+                });
+            }
+            
+            if (nodePositions.rootLeft !== undefined || nodePositions.rootTop !== undefined) {
+                console.log('Root positioning validated:', {
+                    rootLeft: nodePositions.rootLeft,
+                    rootTop: nodePositions.rootTop
+                });
+            }
+            
+            console.log('Final processed node positions:', nodePositions);
+        }
+
+        // Helper function to calculate dynamic spacing for siblings to prevent overlaps
+        function calculateDynamicSpacing(siblings, startY) {
+            const positions = [];
+            let currentY = startY;
+            
+            siblings.forEach((sibling, index) => {
+                positions.push({
+                    node: sibling,
+                    y: currentY
+                });
+                
+                const nodeHeight = sibling.measuredHeight || 60;
+                const minSpacing = 8; // Minimum gap between nodes
+                currentY += nodeHeight + minSpacing;
+            });
+            
+            return positions;
+        }
+
+        // Helper function to save node positions
+        async function saveNodePositions() {
+            try {
+                console.log('Saving node positions to NodePosition.json:', nodePositions);
+                const success = await saveJSON('NodePosition.json', { nodePositions });
+                if (!success) {
+                    console.error('Failed to save node positions');
+                } else {
+                    console.log('Node positions saved successfully');
+                }
+            } catch (error) {
+                console.error('Error saving node positions:', error);
+            }
+        }
+
+        // Helper function to apply saved position offsets
+        function applyPositionOffsets() {
+            // Check if we have global positioning values
+            if (nodePositions.Left !== undefined && nodePositions.Top !== undefined) {
+                console.log('Applying global position offsets:', { Left: nodePositions.Left, Top: nodePositions.Top });
+                
+                // Group nodes by their parent to handle siblings together
+                const nodesByParent = {};
+                flatNodes.forEach(node => {
+                    const parent = getParent(node);
+                    if (parent) {
+                        const parentPath = parent.path;
+                        if (!nodesByParent[parentPath]) {
+                            nodesByParent[parentPath] = [];
+                        }
+                        nodesByParent[parentPath].push(node);
+                    }
+                });
+                
+                // Apply positioning to each group of siblings
+                Object.keys(nodesByParent).forEach(parentPath => {
+                    const parent = flatNodes.find(n => n.path === parentPath);
+                    const children = nodesByParent[parentPath];
+                    
+                    if (parent && children.length > 0) {
+                        // Sort children to ensure consistent ordering
+                        const sortedChildren = children.sort((a, b) => a.path.localeCompare(b.path));
+                        
+                        // Apply dynamic spacing based on node heights to prevent overlaps
+                        let currentY = parent.y + nodePositions.Top;
+                        
+                        sortedChildren.forEach((child, index) => {
+                            child.x = parent.x + nodePositions.Left;
+                            child.y = currentY;
+                            
+                            // Calculate spacing for next sibling based on current node's height + padding
+                            const nodeHeight = child.measuredHeight || 60; // Use measured height or default
+                            const minSpacing = 8; // Minimum gap between nodes
+                            currentY += nodeHeight + minSpacing;
+                            
+                            console.log(`Applied dynamic position to ${child.path}:`, {
+                                parentPos: { x: parent.x, y: parent.y },
+                                globalOffset: { Left: nodePositions.Left, Top: nodePositions.Top },
+                                siblingIndex: index,
+                                nodeHeight: nodeHeight,
+                                finalPos: { x: child.x, y: child.y },
+                                nextY: currentY
+                            });
+                        });
+                    }
+                });
+            }
+            
+            // Apply root level offsets if they exist
+            if (nodePositions.rootLeft !== undefined || nodePositions.rootTop !== undefined) {
+                flatNodes.forEach(node => {
+                    if (!getParent(node)) { // Root level nodes
+                        if (nodePositions.rootLeft !== undefined) node.x += nodePositions.rootLeft;
+                        if (nodePositions.rootTop !== undefined) node.y += nodePositions.rootTop;
+                    }
+                });
+            }
+        }
+
+        // Helper function to update node positions without full re-render
+        function updateNodePositions() {
+            contentGroup.select('g.nodes-group')
+                .selectAll('g.tree-node')
+                .attr('transform', d => `translate(${d.x}, ${d.y})`);
+        }
+
+        // Helper function to update link positions without full re-render
+        function updateLinkPositions() {
+            const linksGroup = contentGroup.select('g.links-group');
+            linksGroup.selectAll('.tree-link').remove();
+            
+            flatNodes.forEach((d, i) => {
+                if (d.depth > 0) {
+                    const parentPath = d.path.substring(0, d.path.lastIndexOf('.'));
+                    const parent = flatNodes.find(n => n.path === parentPath);
+                    if (parent) {
+                        const dHeight = d.measuredHeight || 60;
+                        const parentHeight = parent.measuredHeight || 60;
+                        linksGroup.append('line')
+                            .attr('class', 'tree-link')
+                            .attr('x1', orientation === 'vertical' ? parent.x + nodeWidth : parent.x + nodeWidth/2)
+                            .attr('y1', orientation === 'vertical' ? parent.y + parentHeight/2 : parent.y + parentHeight)
+                            .attr('x2', orientation === 'vertical' ? d.x : d.x + nodeWidth/2)
+                            .attr('y2', orientation === 'vertical' ? d.y + dHeight/2 : d.y)
+                            .attr('stroke', '#888')
+                            .attr('stroke-width', 2)
+                            .attr('marker-end', 'url(#arrow)');
+                    }
+                }
+            });
+        }
 
         // Set initial control values immediately (in case script runs after DOM is ready)
         function setInitialControlValues() {
@@ -459,6 +1169,40 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             }
         };
 
+        // Reset node positions function
+        window.resetPositions = function() {
+            // Clear all saved position offsets
+            nodePositions = {};
+            saveNodePositions();
+            updateTree(); // This will recalculate and reset all positions
+        };
+
+        // Center view function - resets zoom and centers the view on the root nodes
+        window.centerView = function() {
+            if (svg && zoomBehavior) {
+                // Calculate the center of the content
+                const contentBounds = {
+                    minX: Math.min(...flatNodes.map(n => n.x)),
+                    maxX: Math.max(...flatNodes.map(n => n.x + nodeWidth)),
+                    minY: Math.min(...flatNodes.map(n => n.y)),
+                    maxY: Math.max(...flatNodes.map(n => n.y + (n.measuredHeight || 60)))
+                };
+                
+                const contentCenterX = (contentBounds.minX + contentBounds.maxX) / 2;
+                const contentCenterY = (contentBounds.minY + contentBounds.maxY) / 2;
+                
+                const svgCenterX = svgWidth / 2;
+                const svgCenterY = svgHeight / 2;
+                
+                const translateX = svgCenterX - contentCenterX;
+                const translateY = svgCenterY - contentCenterY;
+                
+                // Apply centered transform with scale 1 (no zoom)
+                const transform = d3.zoomIdentity.translate(translateX, translateY).scale(1);
+                svg.transition().duration(750).call(zoomBehavior.transform, transform);
+            }
+        };
+
         // Initial flatten for rendering
         let flatNodes = [];
         let y = 20;
@@ -467,9 +1211,19 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             y = flattenTree(root, flatNodes, y, 0);
         });
 
-        // Calculate SVG size
-        let svgHeight = Math.max(height, y + 40);
-        let svgWidth = Math.max(width, 600);
+        // Calculate SVG size to fill the entire screen/viewport
+        const maxX = flatNodes.length > 0 ? Math.max(...flatNodes.map(n => n.x + nodeWidth), 0) : nodeWidth;
+        const maxY = flatNodes.length > 0 ? Math.max(...flatNodes.map(n => n.y + (n.measuredHeight || 60)), y) : y;
+        
+        // Use full screen dimensions, but ensure content fits with padding
+        let svgHeight = Math.max(height, maxY + 200); // Use screen height or content height + padding
+        let svgWidth = Math.max(width, maxX + 200);   // Use screen width or content width + padding
+        
+        console.log('SVG size calculation:', {
+            screenDimensions: { width, height },
+            contentDimensions: { maxX, maxY },
+            finalSvgDimensions: { svgWidth, svgHeight }
+        });
         let svg, contentGroup, zoomBehavior, lastTransform = null;
         function createSVG() {
             d3.select('#output-graph').selectAll('svg').remove();
@@ -483,6 +1237,21 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             contentGroup.append('g').attr('class', 'nodes-group');
             zoomBehavior = d3.zoom()
                 .scaleExtent([0.2, 5])
+                .filter(function(event) {
+                    // Allow zoom/pan only when:
+                    // 1. Not dragging a node
+                    // 2. Not clicking on a node element
+                    // 3. Using wheel (for zoom) or clicking on empty space (for pan)
+                    const isNodeElement = event.target.closest('.tree-node');
+                    const isWheelEvent = event.type === 'wheel';
+                    const isDragging = d3.select('body').classed('node-dragging');
+                    
+                    // Allow wheel zoom always (unless dragging)
+                    if (isWheelEvent && !isDragging) return true;
+                    
+                    // Allow pan only on empty space (not on nodes) and not while dragging
+                    return !isNodeElement && !isDragging;
+                })
                 .on('zoom', (event) => {
                     contentGroup.attr('transform', event.transform);
                     lastTransform = event.transform;
@@ -500,6 +1269,120 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
         }
         nodes.forEach(n => expanded[n.id] = false);
 
+        // Helper function to check if two nodes overlap
+        function nodesOverlap(node1, node2, padding = 8) {
+            const node1Height = node1.measuredHeight || 60;
+            const node2Height = node2.measuredHeight || 60;
+            
+            // Check if rectangles overlap
+            const overlap = !(
+                node1.x + nodeWidth + padding < node2.x ||
+                node2.x + nodeWidth + padding < node1.x ||
+                node1.y + node1Height + padding < node2.y ||
+                node2.y + node2Height + padding < node1.y
+            );
+            
+            return overlap;
+        }
+
+        // Helper function to find a non-overlapping position for a node
+        function findNonOverlappingPosition(targetNode, existingNodes, startX, startY) {
+            let attempts = 0;
+            const maxAttempts = 50;
+            const stepSize = 15; // How much to move when collision detected
+            const targetHeight = targetNode.measuredHeight || 60;
+            
+            targetNode.x = startX;
+            targetNode.y = startY;
+            
+            // Try different strategies for positioning
+            const strategies = [
+                // Strategy 1: Move down incrementally
+                { deltaX: 0, deltaY: stepSize },
+                // Strategy 2: Move right incrementally  
+                { deltaX: stepSize, deltaY: 0 },
+                // Strategy 3: Move down and slightly right
+                { deltaX: stepSize * 0.5, deltaY: stepSize },
+                // Strategy 4: Move up (for when moving down doesn't work)
+                { deltaX: 0, deltaY: -stepSize }
+            ];
+            
+            for (let strategy of strategies) {
+                targetNode.x = startX;
+                targetNode.y = startY;
+                let strategyAttempts = 0;
+                
+                while (strategyAttempts < maxAttempts / strategies.length) {
+                    let hasCollision = false;
+                    
+                    // Check collision with all existing positioned nodes
+                    for (let existingNode of existingNodes) {
+                        if (existingNode.path !== targetNode.path && nodesOverlap(targetNode, existingNode)) {
+                            hasCollision = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!hasCollision) {
+                        console.log(`Found non-overlapping position for ${targetNode.path} at (${targetNode.x}, ${targetNode.y}) using strategy ${strategies.indexOf(strategy) + 1} after ${strategyAttempts} attempts`);
+                        return { x: targetNode.x, y: targetNode.y };
+                    }
+                    
+                    // Apply strategy movement
+                    targetNode.x += strategy.deltaX;
+                    targetNode.y += strategy.deltaY;
+                    
+                    strategyAttempts++;
+                }
+            }
+            
+            console.warn(`Could not find non-overlapping position for ${targetNode.path} after trying all strategies, using last position`);
+            return { x: targetNode.x, y: targetNode.y };
+        }
+
+        // Helper function to resolve overlaps for all nodes
+        function resolveNodeOverlaps(nodes) {
+            const positionedNodes = [];
+            
+            // Sort nodes by depth and then by original Y position to maintain hierarchy
+            const sortedNodes = [...nodes].sort((a, b) => {
+                if (a.depth !== b.depth) return a.depth - b.depth;
+                return a.y - b.y;
+            });
+            
+            for (let node of sortedNodes) {
+                if (positionedNodes.length === 0) {
+                    // First node, no collision possible
+                    positionedNodes.push(node);
+                    continue;
+                }
+                
+                // Check for overlaps with already positioned nodes
+                let hasOverlap = false;
+                for (let positioned of positionedNodes) {
+                    if (nodesOverlap(node, positioned)) {
+                        hasOverlap = true;
+                        break;
+                    }
+                }
+                
+                if (hasOverlap) {
+                    // Find a new position that doesn't overlap
+                    const originalX = node.x;
+                    const originalY = node.y;
+                    const newPos = findNonOverlappingPosition(node, positionedNodes, originalX, originalY);
+                    node.x = newPos.x;
+                    node.y = newPos.y;
+                    
+                    console.log(`Adjusted position for ${node.path} from (${originalX}, ${originalY}) to (${node.x}, ${node.y})`);
+                }
+                
+                positionedNodes.push(node);
+            }
+            
+            return nodes;
+        }
+
         // Render the flat node list as a tree
 
         function renderTree() {
@@ -509,17 +1392,99 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
 
             // Layout: vertical or horizontal (initial y, will update after measuring height)
             const initialNodeHeight = 2;
-            // Restore original horizontal layout: all nodes expand to the right of parent
-            let xMap = {};
-            let yMap = {};
-            let maxDepth = Math.max(...flatNodes.map(n => n.depth));
-            let y = 20;
-            flatNodes.forEach((d, i) => {
-                d.x = 40 + d.depth * (nodeWidth + nodeSeparation);
-                if (!yMap[d.depth]) yMap[d.depth] = 20;
-                d.y = yMap[d.depth];
-                yMap[d.depth] += (d.measuredHeight || 60) + 8;
-            });
+            // Only set initial positions if no saved global positions exist
+            let hasGlobalPositions = nodePositions.Left !== undefined && nodePositions.Top !== undefined;
+            
+            if (!hasGlobalPositions) {
+                // Calculate center positions for root nodes
+                // Use StartingNodeLeft/StartingNodeTop if available, otherwise use screen center
+                let centerX, centerY;
+                
+                if (nodePositions.StartingNodeLeft !== undefined && nodePositions.StartingNodeTop !== undefined) {
+                    // Use the saved starting position values
+                    centerX = nodePositions.StartingNodeLeft - nodeWidth / 2;
+                    centerY = nodePositions.StartingNodeTop;
+                    console.log('Using saved starting node position:', {
+                        StartingNodeLeft: nodePositions.StartingNodeLeft,
+                        StartingNodeTop: nodePositions.StartingNodeTop,
+                        calculatedCenterX: centerX,
+                        calculatedCenterY: centerY
+                    });
+                } else {
+                    // Fallback to SVG center if no starting position is set
+                    centerX = svgWidth / 2 - nodeWidth / 2;
+                    centerY = svgHeight / 2;
+                    console.log('Using default SVG center position:', { centerX, centerY });
+                }
+                
+                // Set initial horizontal layout: root nodes start in center, children expand to the right
+                let xMap = {};
+                let yMap = {};
+                let maxDepth = Math.max(...flatNodes.map(n => n.depth));
+                let y = 20;
+                
+                // Find root nodes to distribute them around center
+                const rootNodes = flatNodes.filter(n => n.depth === 0);
+                const rootSpacing = 120; // Vertical spacing between multiple root nodes
+                const rootStartY = centerY - (rootNodes.length - 1) * rootSpacing / 2;
+                
+                flatNodes.forEach((d, i) => {
+                    if (d.depth === 0) {
+                        // Center root nodes horizontally, distribute vertically around center
+                        d.x = centerX;
+                        const rootIndex = rootNodes.findIndex(r => r.path === d.path);
+                        d.y = rootStartY + rootIndex * rootSpacing;
+                    } else {
+                        // Child nodes expand to the right from their parent's center position
+                        d.x = centerX + d.depth * (nodeWidth + nodeSeparation);
+                        if (!yMap[d.depth]) yMap[d.depth] = 20;
+                        d.y = yMap[d.depth];
+                        yMap[d.depth] += (d.measuredHeight || 60) + 8;
+                    }
+                });
+            } else {
+                // Initialize with default positions that will be overridden by global positioning
+                // Use StartingNodeLeft/StartingNodeTop if available, otherwise use screen center
+                let centerX, centerY;
+                
+                if (nodePositions.StartingNodeLeft !== undefined && nodePositions.StartingNodeTop !== undefined) {
+                    centerX = nodePositions.StartingNodeLeft - nodeWidth / 2;
+                    centerY = nodePositions.StartingNodeTop;
+                } else {
+                    centerX = svgWidth / 2 - nodeWidth / 2;
+                    centerY = svgHeight / 2;
+                }
+                
+                let yMap = {};
+                
+                // Find root nodes for centered positioning
+                const rootNodes = flatNodes.filter(n => n.depth === 0);
+                const rootSpacing = 120;
+                const rootStartY = centerY - (rootNodes.length - 1) * rootSpacing / 2;
+                
+                flatNodes.forEach((d, i) => {
+                    if (d.depth === 0) {
+                        // Set default centered position for root nodes (may be overridden by applyPositionOffsets)
+                        d.x = centerX;
+                        const rootIndex = rootNodes.findIndex(r => r.path === d.path);
+                        d.y = rootStartY + rootIndex * rootSpacing;
+                    } else {
+                        // Set minimal default position for child nodes that will be overridden by applyPositionOffsets
+                        d.x = centerX + d.depth * (nodeWidth + nodeSeparation);
+                        if (!yMap[d.depth]) yMap[d.depth] = 20;
+                        d.y = yMap[d.depth];
+                        yMap[d.depth] += (d.measuredHeight || 60) + 8;
+                    }
+                });
+            }
+
+            // Apply saved position offsets after initial layout
+            applyPositionOffsets();
+
+            // Resolve any overlapping nodes before rendering
+            console.log('Checking for node overlaps...');
+            resolveNodeOverlaps(flatNodes);
+            console.log('Node overlap resolution completed');
 
             // --- Draw links (lines) between parent and child nodes in the background links-group ---
             const linksGroup = contentGroup.select('g.links-group');
@@ -564,19 +1529,195 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
                 .append('g')
                 .attr('class', 'tree-node')
                 .attr('transform', d => `translate(${d.x}, ${d.y})`)
-                .style('cursor', d => d.isObject ? 'pointer' : 'default')
+                .style('cursor', 'grab')
                 .on('click', function(event, d) {
+                    // Prevent event propagation to stop zoom/pan
+                    event.stopPropagation();
+                    
                     if (!d.isObject) return;
+                    // Prevent click during drag
+                    if (d3.select(this).classed('dragging')) return;
                     expanded[d.path] = !expanded[d.path];
                     updateTree();
-                });
+                })
+                .call(d3.drag()
+                    .on('start', function(event, d) {
+                        // Prevent event propagation to stop zoom/pan
+                        event.sourceEvent.stopPropagation();
+                        
+                        // Set global dragging state
+                        d3.select('body').classed('node-dragging', true);
+                        d3.select(this).classed('dragging', true);
+                        
+                        // Get all descendants and siblings for this node
+                        const descendants = getDescendants(d);
+                        const siblings = getSiblings(d);
+                        const parent = getParent(d);
+                        
+                        // All nodes that should move together
+                        const nodesToMove = [...descendants, ...siblings];
+                        
+                        // Store initial positions
+                        d.dragData = {
+                            startX: d.x,
+                            startY: d.y,
+                            parent: parent,
+                            siblings: siblings,
+                            descendants: descendants,
+                            nodesToMove: nodesToMove,
+                            originalOffsets: []
+                        };
+                        
+                        // Store original relative positions for all nodes that should move
+                        nodesToMove.forEach(node => {
+                            d.dragData.originalOffsets.push({
+                                node: node,
+                                relativeX: node.x - d.x,
+                                relativeY: node.y - d.y,
+                                startX: node.x,
+                                startY: node.y
+                            });
+                        });
+                    })
+                    .on('drag', function(event, d) {
+                        // Prevent event propagation to stop zoom/pan
+                        event.sourceEvent.stopPropagation();
+                        
+                        // Calculate the drag offset from original position
+                        const dx = event.x - d.dragData.startX;
+                        const dy = event.y - d.dragData.startY;
+                        
+                        // Update position of the dragged node
+                        d.x = d.dragData.startX + dx;
+                        d.y = d.dragData.startY + dy;
+                        
+                        // If dragging a child node, move all siblings to maintain uniform alignment with dynamic spacing
+                        if (d.dragData.parent && d.dragData.siblings.length > 0) {
+                            const parent = d.dragData.parent;
+                            const allChildren = [d, ...d.dragData.siblings].sort((a, b) => a.path.localeCompare(b.path));
+                            const draggedIndex = allChildren.findIndex(c => c.path === d.path);
+                            
+                            // Calculate horizontal offset from parent (Left value)
+                            const leftOffset = d.x - parent.x;
+                            
+                            // Apply dynamic positioning to prevent overlaps
+                            let currentY = d.y; // Start from dragged node position
+                            
+                            // Position nodes before the dragged node (going upward)
+                            for (let i = draggedIndex - 1; i >= 0; i--) {
+                                const child = allChildren[i];
+                                const childHeight = child.measuredHeight || 60;
+                                currentY -= (childHeight + 8); // Move up by height + padding
+                                child.x = parent.x + leftOffset;
+                                child.y = currentY;
+                            }
+                            
+                            // Reset for nodes after the dragged node
+                            currentY = d.y + (d.measuredHeight || 60) + 8;
+                            
+                            // Position nodes after the dragged node (going downward)
+                            for (let i = draggedIndex + 1; i < allChildren.length; i++) {
+                                const child = allChildren[i];
+                                child.x = parent.x + leftOffset;
+                                child.y = currentY;
+                                const childHeight = child.measuredHeight || 60;
+                                currentY += childHeight + 8; // Move down by height + padding
+                            }
+                        }
+                        
+                        // Update positions of descendants maintaining their relative positions
+                        d.dragData.descendants.forEach(desc => {
+                            const originalOffset = d.dragData.originalOffsets.find(o => o.node.path === desc.path);
+                            if (originalOffset) {
+                                desc.x = d.x + originalOffset.relativeX;
+                                desc.y = d.y + originalOffset.relativeY;
+                            }
+                        });
+                        
+                        // Update visual positions
+                        updateNodePositions();
+                        updateLinkPositions();
+                    })
+                    .on('end', function(event, d) {
+                        // Calculate final offset from original position
+                        const finalDx = d.x - d.dragData.startX;
+                        const finalDy = d.y - d.dragData.startY;
+                        
+                        console.log('Drag end:', {
+                            node: d.path,
+                            finalDx,
+                            finalDy,
+                            hasMovement: Math.abs(finalDx) > 1 || Math.abs(finalDy) > 1
+                        });
+                        
+                        // Only save if there was actual movement
+                        if (Math.abs(finalDx) > 1 || Math.abs(finalDy) > 1) {
+                            const parent = d.dragData.parent;
+                            
+                            if (parent) {
+                                // For child nodes, save single global offset that all children will use
+                                const leftOffset = d.x - parent.x;
+                                const topOffset = d.y - parent.y;
+                                
+                                // Store single global reference values
+                                nodePositions = {
+                                    Left: leftOffset,
+                                    Top: topOffset
+                                };
+                                
+                                console.log(`Saved global child positioning:`, {
+                                    Left: leftOffset,
+                                    Top: topOffset,
+                                    parentPosition: { x: parent.x, y: parent.y },
+                                    childPosition: { x: d.x, y: d.y }
+                                });
+                            } else {
+                                // For root nodes, still save absolute offset
+                                if (!nodePositions.rootLeft) nodePositions.rootLeft = 0;
+                                if (!nodePositions.rootTop) nodePositions.rootTop = 0;
+                                
+                                nodePositions.rootLeft += finalDx;
+                                nodePositions.rootTop += finalDy;
+                                
+                                console.log(`Saved root node offset:`, {
+                                    rootLeft: nodePositions.rootLeft,
+                                    rootTop: nodePositions.rootTop
+                                });
+                            }
+                            
+                            // Force save to file - add more debugging
+                            console.log('About to save node positions...');
+                            
+                            // Resolve any overlaps created by dragging before saving
+                            console.log('Checking for overlaps after drag...');
+                            resolveNodeOverlaps(flatNodes);
+                            updateNodePositions(); // Update visual positions after collision resolution
+                            updateLinkPositions(); // Update links after position changes
+                            
+                            saveNodePositions().then(() => {
+                                console.log('Save promise resolved');
+                            }).catch(error => {
+                                console.error('Save promise rejected:', error);
+                            });
+                        }
+                        
+                        // Clear dragging state after a short delay to prevent click
+                        setTimeout(() => {
+                            d3.select(this).classed('dragging', false);
+                            d3.select('body').classed('node-dragging', false);
+                        }, 100);
+                        delete d.dragData;
+                    })
+                );
 
             nodeGroup.append('rect')
                 .attr('width', nodeWidth)
                 .attr('height', initialNodeHeight)
                 .attr('rx', 8)
                 .attr('ry', 8)
-                .attr('fill', '#1f77b4');
+                .attr('fill', '#343a40')
+                .attr('stroke', '#555')
+                .attr('stroke-width', 1);
 
             // Flex container for label, value, and controls
             const contentContainer = nodeGroup.append('foreignObject')
@@ -595,10 +1736,11 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
 
             // Filter button
             inputGroup.append('button')
-                .attr('class', 'btn btn-warning btn-filter-node')
+                .attr('class', 'btn btn-outline-warning btn-filter-node')
                 .style('min-width', '50px')
                 .style('padding', '0 8px')
-                .text('Filter')
+                .html('<i class="bi bi-funnel"></i>')
+                .attr('title', 'Filter')
                 .on('click', async function(event, d) {
                     event.stopPropagation();
                     try {
@@ -622,7 +1764,7 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
                 });
             // Expand/collapse button (left)
             inputGroup.append('button')
-                .attr('class', 'btn btn-outline-light btn-expand-collapse')
+                .attr('class', 'btn btn-outline-info btn-expand-collapse')
                 .style('min-width', '32px')
                 .style('padding', '0 8px')
                 .style('font-size', Math.max(18, textSize * 1.5) + 'px')
@@ -637,10 +1779,11 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
 
             // Hide button (right)
             inputGroup.append('button')
-                .attr('class', 'btn btn-danger btn-hide-node')
+                .attr('class', 'btn btn-outline-danger btn-hide-node')
                 .style('min-width', '40px')
                 .style('padding', '0 8px')
-                .text('Hide')
+                .html('<i class="bi bi-eye-slash"></i>')
+                .attr('title', 'Hide')
                 .on('click', async function(event, d) {
                     event.stopPropagation();
                     if (!hiddenNodes.some(hn => hn.key === d.key && hn.depth === d.depth)) {
@@ -680,11 +1823,21 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
                             const v = d.mergedValues[i];
                             if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
                                 // Show up to 2 key-value pairs for each merged object
-                                return Object.entries(v).slice(0, 2).map(([kk, vv]) => ({k: k + '.' + kk, v: (typeof vv === 'object' ? (Array.isArray(vv) ? 'Array' : 'Object') : vv)}));
+                                return Object.entries(v).slice(0, 2).map(([kk, vv]) => {
+                                    const type = detectValueType(kk, vv);
+                                    return {
+                                        k: k + '.' + kk, 
+                                        v: vv,
+                                        type: type,
+                                        displayValue: typeof vv === 'object' ? (Array.isArray(vv) ? 'Array' : 'Object') : vv
+                                    };
+                                });
                             } else if (Array.isArray(v)) {
-                                return [{k: k, v: `Array[${v.length}]`}];
+                                const type = detectValueType(k, v);
+                                return [{k: k, v: v, type: type, displayValue: `Array[${v.length}]`}];
                             } else {
-                                return [{k: k, v: String(v)}];
+                                const type = detectValueType(k, v);
+                                return [{k: k, v: v, type: type, displayValue: String(v)}];
                             }
                         }).flat();
                     }
@@ -692,11 +1845,21 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
                     if (d.isObject && d.value && typeof d.value === 'object' && !Array.isArray(d.value)) {
                         return Object.entries(d.value)
                             .slice(0, 4)
-                            .map(([k, v]) => ({k, v: (typeof v === 'object' ? (Array.isArray(v) ? 'Array' : 'Object') : v)}));
+                            .map(([k, v]) => {
+                                const type = detectValueType(k, v);
+                                return {
+                                    k: k, 
+                                    v: v, 
+                                    type: type,
+                                    displayValue: typeof v === 'object' ? (Array.isArray(v) ? 'Array' : 'Object') : v
+                                };
+                            });
                     } else if (!d.isObject) {
-                        return [{k: '', v: String(d.value)}];
+                        const type = detectValueType('', d.value);
+                        return [{k: '', v: d.value, type: type, displayValue: String(d.value)}];
                     } else if (Array.isArray(d.value)) {
-                        return [{k: '', v: `Array[${d.value.length}]`}];
+                        const type = detectValueType('', d.value);
+                        return [{k: '', v: d.value, type: type, displayValue: `Array[${d.value.length}]`}];
                     }
                     return [];
                 })
@@ -707,9 +1870,11 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
                     if (d.k) {
                         // If key is 'name', add a data attribute for CSS
                         const keyAttr = d.k.trim().toLowerCase() === 'name' ? ' data-key-name="name"' : '';
-                        return `<span class="key"${keyAttr}>${d.k} :</span><span class="value">${d.v}</span>`;
+                        const renderedValue = renderTypedValue(d.k, d.v, d.type);
+                        return `<span class="key"${keyAttr}>${d.k}:</span><span class="value">${renderedValue}</span>`;
                     } else {
-                        return `<span class="value">${d.v}</span>`;
+                        const renderedValue = renderTypedValue('', d.v, d.type);
+                        return `<span class="value">${renderedValue}</span>`;
                     }
                 });
 
@@ -750,6 +1915,10 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
                         d.y = 20 + d.depth * nodeSeparation;
                     }
                 });
+                
+                // Re-apply saved position offsets after re-layout
+                applyPositionOffsets();
+                
                 // Update node positions
                 nodeGroup.attr('transform', d => `translate(${d.x}, ${d.y})`);
                 // Update link positions in the background links-group
@@ -791,10 +1960,20 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             treeRoots.forEach(root => {
                 y = flattenTree(root, flatNodes, y, 0);
             });
-            // Recompute SVG size for new layout (use estimated 60px per node, will be auto after render)
-            // Restore original horizontal layout for SVG size
-            svgHeight = Math.max(height, (Math.max(...flatNodes.map(n => n.depth)) + 1) * nodeSeparation + 60);
-            svgWidth = Math.max(width, flatNodes.length * nodeWidth * 1.2 + 60);
+            // Recompute SVG size to fill the screen while accommodating content
+            const maxX = flatNodes.length > 0 ? Math.max(...flatNodes.map(n => n.x + nodeWidth), 0) : nodeWidth;
+            const maxY = flatNodes.length > 0 ? Math.max(...flatNodes.map(n => n.y + (n.measuredHeight || 60)), 0) : 60;
+            
+            // Use screen/viewport dimensions for full coverage
+            const screenWidth = window.screen.width;
+            const screenHeight = window.screen.height;
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const fullWidth = Math.max(viewportWidth, screenWidth);
+            const fullHeight = Math.max(viewportHeight, screenHeight);
+            
+            svgHeight = Math.max(fullHeight, maxY + 200); // Screen height or content + padding
+            svgWidth = Math.max(fullWidth, maxX + 200);   // Screen width or content + padding
             createSVG();
             renderTree();
         }
@@ -812,6 +1991,12 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             handleSearchInput('');
         };
         renderTree();
+
+        // Handle window resize to update SVG dimensions
+        window.addEventListener('resize', function() {
+            console.log('Window resized, updating SVG dimensions');
+            updateTree();
+        });
 
 
         // Add arrow marker for branch connectors
