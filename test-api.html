@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test UpdateGraphConfiguration API</title>
+</head>
+<body>
+    <h2>Test UpdateGraphConfiguration API</h2>
+    <button onclick="testGraphControls()">Test Graph Controls</button>
+    <button onclick="testHierarchicalControls()">Test Hierarchical Controls</button>
+    <button onclick="testNodePositions()">Test Node Positions</button>
+    <button onclick="testAllTogether()">Test All Together</button>
+    <div id="result"></div>
+
+    <script>
+        async function testGraphControls() {
+            try {
+                const response = await fetch('/UpdateGraphConfiguration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        graphControls: {
+                            expandAll: true,
+                            collapseAll: false,
+                            nodeWidth: 120,
+                            textSize: 14
+                        }
+                    })
+                });
+                
+                const result = await response.json();
+                document.getElementById('result').innerHTML = '<h3>Graph Controls Test:</h3><pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        }
+
+        async function testHierarchicalControls() {
+            try {
+                const response = await fetch('/UpdateGraphConfiguration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        hierarchicalControls: {
+                            nodeSeparation: 120,
+                            levelSeparation: 180,
+                            nodeSize: 25,
+                            treeOrientation: 'horizontal',
+                            zoomValue: 1.5
+                        }
+                    })
+                });
+                
+                const result = await response.json();
+                document.getElementById('result').innerHTML = '<h3>Hierarchical Controls Test:</h3><pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        }
+
+        async function testNodePositions() {
+            try {
+                const response = await fetch('/UpdateGraphConfiguration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nodePositions: {
+                            Left: 200,
+                            Top: 100,
+                            StartingNodeLeft: 800,
+                            StartingNodeTop: 400
+                        }
+                    })
+                });
+                
+                const result = await response.json();
+                document.getElementById('result').innerHTML = '<h3>Node Positions Test:</h3><pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        }
+
+        async function testAllTogether() {
+            try {
+                const response = await fetch('/UpdateGraphConfiguration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nodePositions: {
+                            Left: 150,
+                            Top: 50
+                        },
+                        graphControls: {
+                            nodeWidth: 110,
+                            orientation: 'vertical'
+                        },
+                        hierarchicalControls: {
+                            treeOrientation: 'radial',
+                            zoomValue: 1.2
+                        }
+                    })
+                });
+                
+                const result = await response.json();
+                document.getElementById('result').innerHTML = '<h3>All Together Test:</h3><pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

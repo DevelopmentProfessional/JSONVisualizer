@@ -3,21 +3,163 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Redirecting to Manage API - APIRunner</title>
-    <script>
-        // Redirect to the new ManageAPI.html page
-        window.location.replace('ManageAPI.html');
-    </script>
-    <meta http-equiv="refresh" content="0; url=ManageAPI.html" />
+    <title>Manage API Calls - APIRunner</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        .api-list {
+            max-width: 800px;
+            margin: 2rem auto;
+        }
+        .api-item {
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+            padding: 1rem;
+        }
+        .api-item.search-match {
+            border: 2px solid #0d6efd;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+        .search-highlight {
+            background-color: yellow;
+            color: black;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+        .drag-handle {
+            cursor: grab;
+            margin-right: 8px;
+            color: #6c757d;
+        }
+        .badge.bg-secondary {
+            user-select: none;
+        }
+        .btn-icon {
+            padding: 0.25rem 0.5rem;
+        }
+        .search-container {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--bs-body-bg);
+            padding: 1rem 0;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+        .search-stats {
+            font-size: 0.875rem;
+            color: var(--bs-secondary);
+        }
+    </style>
 </head>
 <body>
-    <div style="text-align: center; padding: 50px; color: white;">
-        <h2>This page has been moved</h2>
-        <p>You are being redirected to the new <strong>Manage API</strong> page...</p>
-        <p>If you are not redirected automatically, <a href="ManageAPI.html" style="color: #0d6efd;">click here</a>.</p>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">APIRunner</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link active" href="ManageAPI.html">Manage API</a></li>
+                    <li class="nav-item"><a class="nav-link" href="view.html">Visualizer</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Variables.html">Variables</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Run.html">Run</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container api-list">
+        <!-- Search Section -->
+        <div class="search-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>Manage API Calls</h2>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addApiModal" title="Create New API">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Create API
+                </button>
+            </div>
+            
+            <!-- Search Controls -->
+            <div class="row g-3 align-items-center">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" id="searchInput" class="form-control" 
+                               placeholder="Search in URLs, methods, headers, or body content..." 
+                               oninput="handleSearch()">
+                        <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()" title="Clear search">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="caseToggle" onchange="handleSearch()">
+                        <label class="form-check-label" for="caseToggle">
+                            Case sensitive
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Search Results Stats -->
+            <div class="mt-2">
+                <span id="searchStats" class="search-stats"></span>
+            </div>
+        </div>
+        
+        <!-- API List -->
+        <div id="apiListContainer"></div>
     </div>
-</body>
-</html>
+
+    <!-- Add API Modal -->
+    <div class="modal fade" id="addApiModal" tabindex="-1" aria-labelledby="addApiModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addApiModalLabel">Create New API Call</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Draggable Variables in Modal -->
+                    <div class="mb-3">
+                        <label class="form-label">Available Variables <small class="text-muted">(drag into endpoint field)</small>:</label>
+                        <div id="modalVariablesContainer" class="border rounded p-2 bg-body-secondary"></div>
+                    </div>
+                    
+                    <!-- Add API Form -->
+                    <form id="addApiForm">
+                        <div class="mb-3">
+                            <label for="apiNameInput" class="form-label">API Name</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="apiNameInput"
+                                placeholder="Enter a descriptive name for this API"
+                                required
+                            />
+                        </div>
+                        <div class="input-group mb-3">
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="apiUrlInput"
+                                placeholder="Add Endpoint"
+                                required
+                                ondrop="handleVariableDrop(event)"
+                                ondragover="event.preventDefault()"
+                            />
+                            <select class="form-select" id="apiMethodInput" style="max-width: 120px;">
+                                <option value="GET">GET</option>
+                                <option value="POST">POST</option>
+                                <option value="PUT">PUT</option>
                                 <option value="DELETE">DELETE</option>
                                 <option value="PATCH">PATCH</option>
                             </select>
@@ -64,11 +206,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-success" onclick="addApiFromModal()" title="Save API">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-save me-2" viewBox="0 0 16 16">
-                            <path d="M8.5 1.5v2h-1v-2h1z"/>
-                            <path d="M3 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H3zm10 1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h10z"/>
-                            <path d="M7.5 10.5v-2h1v2h-1z"/>
-                        </svg>
+                        <i class="bi bi-save me-2"></i>
                         Save API
                     </button>
                 </div>
@@ -82,66 +220,151 @@
         let apiCalls = [];
         let variables = [];
         let draggedVariable = null;
+        let currentSearchTerm = '';
+        let searchMatches = [];
         const apiFile = 'APIcalls.json';
         const variablesFile = 'variables.json';
+
+        // --- Search Functionality ---
+        function handleSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const caseToggle = document.getElementById('caseToggle');
+            const searchTerm = searchInput.value.trim();
+            const caseSensitive = caseToggle.checked;
+            
+            currentSearchTerm = searchTerm;
+            searchMatches = [];
+            
+            if (searchTerm) {
+                // Search through all APIs
+                apiCalls.forEach((api, index) => {
+                    const searchableText = getSearchableText(api);
+                    if (searchInText(searchableText, searchTerm, caseSensitive)) {
+                        searchMatches.push(index);
+                    }
+                });
+            }
+            
+            updateSearchStats();
+            renderApiList();
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            currentSearchTerm = '';
+            searchMatches = [];
+            updateSearchStats();
+            renderApiList();
+        }
+
+        function getSearchableText(api) {
+            let text = '';
+            text += (api.method || 'GET') + ' ';
+            text += (api.url || '') + ' ';
+            
+            if (api.headers && typeof api.headers === 'object') {
+                text += JSON.stringify(api.headers) + ' ';
+            }
+            
+            if (api.body) {
+                text += api.body + ' ';
+            }
+            
+            return text;
+        }
+
+        function searchInText(text, searchTerm, caseSensitive) {
+            if (!searchTerm) return false;
+            
+            const haystack = caseSensitive ? text : text.toLowerCase();
+            const needle = caseSensitive ? searchTerm : searchTerm.toLowerCase();
+            
+            return haystack.includes(needle);
+        }
+
+        function highlightText(text, searchTerm, caseSensitive) {
+            if (!searchTerm || !text) return escapeHtml(text);
+            
+            const escapedText = escapeHtml(text);
+            const flags = caseSensitive ? 'g' : 'gi';
+            const regex = new RegExp(`(${escapeRegex(searchTerm)})`, flags);
+            
+            return escapedText.replace(regex, '<span class="search-highlight">$1</span>');
+        }
+
+        function escapeRegex(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function updateSearchStats() {
+            const statsElement = document.getElementById('searchStats');
+            if (currentSearchTerm) {
+                const totalApis = apiCalls.length;
+                const matchCount = searchMatches.length;
+                statsElement.textContent = `Found ${matchCount} matches out of ${totalApis} API calls`;
+            } else {
+                statsElement.textContent = `Showing all ${apiCalls.length} API calls`;
+            }
+        }
 
         // --- HTML Templates ---
         // Template for API item display (non-editing mode)
         function getApiItemTemplate(api, idx) {
+            const name = api.name || 'Unnamed';
             const method = api.method || 'GET';
             const url = api.url || '';
             const headers = api.headers && typeof api.headers === 'object' ? api.headers : {};
             const body = api.body || '';
             const isChecked = api.checked === true;
+            const isMatch = searchMatches.includes(idx);
+            const caseSensitive = document.getElementById('caseToggle')?.checked || false;
+            
+            // Apply highlighting to searchable content
+            const highlightedName = highlightText(name, currentSearchTerm, caseSensitive);
+            const highlightedMethod = highlightText(method, currentSearchTerm, caseSensitive);
+            const highlightedUrl = highlightText(url, currentSearchTerm, caseSensitive);
+            const highlightedHeaders = currentSearchTerm ? 
+                highlightText(JSON.stringify(headers, null, 2), currentSearchTerm, caseSensitive) : 
+                escapeHtml(JSON.stringify(headers, null, 2));
+            const highlightedBody = highlightText(body, currentSearchTerm, caseSensitive);
             
             return `
-                <li class="list-group-item d-flex align-items-center api-item">
+                <li class="list-group-item d-flex align-items-center api-item ${isMatch ? 'search-match' : ''}">
                     <button class="btn btn-danger btn-sm me-2" onclick="removeApi(${idx})" title="Remove">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5.5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6zm3 .5a.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6z"/>
-                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1-1V1a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1H1v1h14V3h-1.5zm-1-1V1h-7v1h7zM1 4v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4H1zm2 10a1 1 0 0 1-1-1V4h12v9a1 1 0 0 1-1 1H3z"/>
-                        </svg>
+                        <i class="bi bi-trash"></i>
                     </button>
                     ${isChecked ? 
                         `<span class="badge bg-success me-2" title="Selected for execution">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm-2.5-4.5a.5.5 0 0 1 .708 0L8 12.293l4.646-4.647a.5.5 0 0 1 .708.708l-5 5a.5.5 0 0 1-.708 0l-2.5-2.5a.5.5 0 0 1 0-.708z"/>
-                            </svg>
+                            <i class="bi bi-check-circle"></i>
                         </span>` : 
                         `<span class="badge bg-secondary me-2" title="Not selected for execution">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-circle" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                            </svg>
+                            <i class="bi bi-circle"></i>
                         </span>`
                     }
                     <div class="input-group w-100">
                         <div class="form-control bg-transparent border-0 px-2">
                             <div class="api-header">
+                                <h6 class="mb-1 text-primary">${highlightedName}</h6>
                                 <strong>Method:</strong> 
-                                <span class="badge bg-info text-dark">${escapeHtml(method)}</span> 
-                                <strong>URL:</strong> ${escapeHtml(url)}
+                                <span class="badge bg-info text-dark">${highlightedMethod}</span> 
+                                <strong>URL:</strong> ${highlightedUrl}
                             </div>
                             ${Object.keys(headers).length > 0 ? 
-                                `<div><strong>Headers:</strong> <code>${escapeHtml(JSON.stringify(headers, null, 2))}</code></div>` 
+                                `<div><strong>Headers:</strong> <code>${highlightedHeaders}</code></div>` 
                                 : ''
                             }
                             ${(['POST', 'PUT', 'PATCH'].includes(method) && body) ? 
-                                `<div><strong>Body:</strong> <code>${escapeHtml(body)}</code></div>` 
+                                `<div><strong>Body:</strong> <code>${highlightedBody}</code></div>` 
                                 : ''
                             }
                         </div>
                         <span class="input-group-text p-0 bg-transparent border-0">
                             <div class="d-flex flex-row gap-1">
                                 <button class="btn btn-info btn-sm" onclick="copyApiDetails(${idx})" title="Copy">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
-                                        <path d="M10 1.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1A1.5 1.5 0 0 1 7.5 0h1A1.5 1.5 0 0 1 10 1.5z"/>
-                                        <path d="M3.5 1A1.5 1.5 0 0 0 2 2.5v11A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 12.5 1h-9zm0 1h9A.5.5 0 0 1 13 2.5v11a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5v-11A.5.5 0 0 1 3.5 2z"/>
-                                    </svg>
+                                    <i class="bi bi-clipboard"></i>
                                 </button>
                                 <button class="btn btn-secondary btn-sm" onclick="editApi(${idx})" title="Edit">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
-                                        <path d="M12.146.854a.5.5 0 0 1 .708 0l2.292 2.292a.5.5 0 0 1 0 .708l-9.193 9.193a.5.5 0 0 1-.168.11l-4 1.5a.5.5 0 0 1-.65-.65l1.5-4a.5.5 0 0 1 .11-.168l9.193-9.193zm1.415 2.121L13 2.293 13.707 3l.561-.561a.5.5 0 0 0-.707-.707zm-1.768.768L2.5 12.146V13.5h1.354l8.293-8.293-1.354-1.354z"/>
-                                    </svg>
+                                    <i class="bi bi-pencil"></i>
                                 </button>
                             </div>
                         </span>
@@ -152,6 +375,7 @@
 
         // Template for API item editing mode
         function getApiEditTemplate(api, idx) {
+            const name = api.name || 'Unnamed';
             const method = api.method || 'GET';
             const url = api.url || '';
             const headers = api.headers && typeof api.headers === 'object' ? api.headers : {};
@@ -169,6 +393,10 @@
             
             return `
                 <li class="list-group-item api-item">
+                    <div class="mb-3">
+                        <label for="editApiName_${idx}" class="form-label">API Name</label>
+                        <input type="text" class="form-control" id="editApiName_${idx}" value="${escapeHtml(name)}" required>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">URL:</label>
                         <input type="text" id="editApiUrl_${idx}" class="form-control" value="${escapeHtml(url)}">
@@ -229,15 +457,6 @@
             toggleBodyInput(); // Initial state
             setupEventListeners();
             
-            // Add debug button to navbar
-            const navbar = document.querySelector('.navbar-nav');
-            if (navbar) {
-                const debugLi = document.createElement('li');
-                debugLi.className = 'nav-item';
-                 navbar.appendChild(debugLi);
-            }
-            
-         
             // Modal event listeners
             const addApiModal = document.getElementById('addApiModal');
             addApiModal.addEventListener('shown.bs.modal', function () {
@@ -259,26 +478,31 @@
                     }
                 }
             });
+
+            // Handle Enter key in search
+            document.getElementById('searchInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearch();
+                }
+            });
         });
 
         // --- Event Listeners ---
         function setupEventListeners() {
-            // Remove the old form submit listener since we're using modal now
             document.getElementById('apiMethodInput').addEventListener('change', toggleBodyInput);
         }
 
         // --- Toggle Body & Headers based on Method ---
-function toggleBodyInput() {
-    const method = document.getElementById('apiMethodInput').value;
-    const bodySection = document.getElementById('bodyInputSection');
-    const headersSection = document.getElementById('headersInputSection');
-    const hide = ['GET', 'DELETE'].includes(method);
-    bodySection.style.display = hide ? 'none' : '';
-    // Headers section is always visible since headers can be useful for all methods
-    headersSection.style.display = '';
-}
-
-
+        function toggleBodyInput() {
+            const method = document.getElementById('apiMethodInput').value;
+            const bodySection = document.getElementById('bodyInputSection');
+            const headersSection = document.getElementById('headersInputSection');
+            const hide = ['GET', 'DELETE'].includes(method);
+            bodySection.style.display = hide ? 'none' : '';
+            // Headers section is always visible since headers can be useful for all methods
+            headersSection.style.display = '';
+        }
 
         function toggleEditFields(idx) {
             const method = document.getElementById(`editApiMethod_${idx}`).value;
@@ -315,11 +539,17 @@ function toggleBodyInput() {
 
         // --- Add API from Modal ---
         function addApiFromModal() {
+            const name = document.getElementById('apiNameInput').value.trim();
             const url = document.getElementById('apiUrlInput').value.trim();
             const method = document.getElementById('apiMethodInput').value;
             const body = document.getElementById('apiBodyInput').value.trim();
             const contentType = document.getElementById('apiContentTypeInput').value;
             const customHeaders = document.getElementById('apiCustomHeadersInput').value.trim();
+
+            if (!name) {
+                alert('API Name is required.');
+                return;
+            }
 
             if (!url) {
                 alert('URL is required.');
@@ -349,12 +579,12 @@ function toggleBodyInput() {
                 });
             }
 
-            const newApi = { url, method };
+            const newApi = { name, url, method };
             if (body) newApi.body = body;
             if (Object.keys(headers).length > 0) newApi.headers = headers;
 
             apiCalls.push(newApi);
-            renderApiList();
+            handleSearch(); // Refresh search results
             saveApiCalls();
 
             // Reset form and close modal
@@ -365,18 +595,13 @@ function toggleBodyInput() {
 
         // --- Reset Modal Form ---
         function resetModalForm() {
+            document.getElementById('apiNameInput').value = '';
             document.getElementById('apiUrlInput').value = '';
             document.getElementById('apiMethodInput').value = 'GET';
             document.getElementById('apiBodyInput').value = '';
             document.getElementById('apiContentTypeInput').value = '';
             document.getElementById('apiCustomHeadersInput').value = '';
             toggleBodyInput(); // Reset visibility
-        }
-
-        // --- Add API from Form (kept for compatibility, but not used anymore) ---
-        function addApiFromForm(e) {
-            e.preventDefault();
-            addApiFromModal();
         }
 
         // --- Quick Header Addition ---
@@ -406,11 +631,17 @@ function toggleBodyInput() {
         }
 
         function saveApiEdit(idx) {
+            const name = document.getElementById('editApiName_' + idx).value.trim();
             const method = document.getElementById('editApiMethod_' + idx).value;
             const url = document.getElementById('editApiUrl_' + idx).value;
             const contentType = document.getElementById('editApiContentType_' + idx).value;
             const body = document.getElementById('editApiBody_' + idx) ? document.getElementById('editApiBody_' + idx).value : '';
             const customHeaders = document.getElementById('editApiCustomHeaders_' + idx).value.trim();
+            
+            if (!name) {
+                alert('API Name is required.');
+                return;
+            }
             
             // Build headers object
             let headers = {};
@@ -435,12 +666,13 @@ function toggleBodyInput() {
                 });
             }
             
+            apiCalls[idx].name = name;
             apiCalls[idx].method = method;
             apiCalls[idx].url = url;
             apiCalls[idx].headers = Object.keys(headers).length > 0 ? headers : {};
             apiCalls[idx].body = body;
             editingIdx = null;
-            renderApiList();
+            handleSearch(); // Refresh search results
             saveApiCalls();
         }
 
@@ -448,7 +680,7 @@ function toggleBodyInput() {
         function removeApi(idx) {
             if (confirm('Are you sure you want to delete this API call?')) {
                 apiCalls.splice(idx, 1);
-                renderApiList();
+                handleSearch(); // Refresh search results
                 saveApiCalls();
             }
         }
@@ -458,14 +690,14 @@ function toggleBodyInput() {
             const api = apiCalls[idx];
             if (!api) return;
 
-            let details = `Method: ${api.method || 'GET'}\n`;
+            let details = `Name: ${api.name || 'Unnamed'}\n`;
+            details += `Method: ${api.method || 'GET'}\n`;
             details += `URL: ${api.url}\n`;
             if (api.headers) details += `Headers: ${JSON.stringify(api.headers, null, 2)}\n`;
             if (api.body) details += `Body: ${api.body}\n`;
 
             navigator.clipboard
                 .writeText(details)
-                // .then(() => console.log('Copied to clipboard')) - removed for cleaner console
                 .catch(err => {
                     console.error('Failed to copy: ', err);
                     fallbackCopy(details);
@@ -505,7 +737,7 @@ function toggleBodyInput() {
 
             const moved = apiCalls.splice(sourceIdx, 1)[0];
             apiCalls.splice(targetIdx, 0, moved);
-            renderApiList();
+            handleSearch(); // Refresh search results
             saveApiCalls();
         }
 
@@ -520,7 +752,7 @@ function toggleBodyInput() {
                 console.warn('Failed to load API calls:', err);
                 apiCalls = [];
             } finally {
-                renderApiList();
+                handleSearch(); // Initialize search
             }
         }
 
@@ -541,7 +773,6 @@ function toggleBodyInput() {
         // --- Save Data ---
         async function saveApiCalls() {
             try {
-                // console.log('Saving API calls:', apiCalls); // Debug log - removed for cleaner console
                 const res = await fetch('/saveApiCalls', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -554,10 +785,6 @@ function toggleBodyInput() {
                 }
                 
                 const result = await res.json();
-                // console.log('Save successful:', result); // Debug log - removed for cleaner console
-                
-                // Optional: Show success message (can be removed if not needed)
-                // alert('API calls saved successfully!');
                 
             } catch (err) {
                 console.error('Error saving API calls:', err);
@@ -602,22 +829,25 @@ function toggleBodyInput() {
                 return;
             }
 
-            const listItems = apiCalls.map((api, idx) => {
-                if (editingIdx === idx) {
-                    return getApiEditTemplate(api, idx);
+            // Filter APIs based on search if search is active
+            const apisToShow = currentSearchTerm ? 
+                apiCalls.map((api, index) => ({ api, index })).filter(item => searchMatches.includes(item.index)) :
+                apiCalls.map((api, index) => ({ api, index }));
+
+            if (currentSearchTerm && apisToShow.length === 0) {
+                container.innerHTML = '<div class="alert alert-warning">No API calls match your search criteria.</div>';
+                return;
+            }
+
+            const listItems = apisToShow.map(({ api, index }) => {
+                if (editingIdx === index) {
+                    return getApiEditTemplate(api, index);
                 } else {
-                    return getApiItemTemplate(api, idx);
+                    return getApiItemTemplate(api, index);
                 }
             }).join('');
 
             container.innerHTML = `<ul class="list-group">${listItems}</ul>`;
-        }
- 
-        // Test function to manually trigger save (for debugging)
-        function testSaveApiCalls() {
-            // console.log('Manual save test triggered'); - removed for cleaner console
-            // console.log('Current apiCalls:', apiCalls); - removed for cleaner console
-            saveApiCalls();
         }
  
     </script>

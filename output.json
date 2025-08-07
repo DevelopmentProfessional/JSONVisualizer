@@ -1,251 +1,125 @@
 [
   {
-    "apiCall": "GET - https://api.restful-api.dev/objects",
-    "timestamp": "2025-08-07T03:15:40.073Z",
+    "apiCall": "GET - https://api.worldbank.org/v2/country",
+    "timestamp": "2025-08-07T15:27:46.364Z",
     "status": "success",
-    "data": [
-      {
-        "id": "1",
-        "name": "Google Pixel 6 Pro",
-        "data": {
-          "color": "Cloudy White",
-          "capacity": "128 GB"
+    "data": {
+      "wb:countries": {
+        "wb:country": {
+          "wb:iso2Code": "CL",
+          "wb:name": "Chile",
+          "wb:region": "Latin America &amp; Caribbean",
+          "wb:incomeLevel": "High income",
+          "wb:lendingType": "IBRD",
+          "wb:capitalCity": "Santiago",
+          "wb:longitude": -70.6475,
+          "wb:latitude": -33.475
         }
-      },
-      {
-        "id": "2",
-        "name": "Apple iPhone 12 Mini, 256GB, Blue",
-        "data": null
-      },
-      {
-        "id": "3",
-        "name": "Apple iPhone 12 Pro Max",
-        "data": {
-          "color": "Cloudy White",
-          "capacity GB": 512
-        }
-      },
-      {
-        "id": "4",
-        "name": "Apple iPhone 11, 64GB",
-        "data": {
-          "price": 389.99,
-          "color": "Purple"
-        }
-      },
-      {
-        "id": "5",
-        "name": "Samsung Galaxy Z Fold2",
-        "data": {
-          "price": 689.99,
-          "color": "Brown"
-        }
-      },
-      {
-        "id": "6",
-        "name": "Apple AirPods",
-        "data": {
-          "generation": "3rd",
-          "price": 120
-        }
-      },
-      {
-        "id": "7",
-        "name": "Apple MacBook Pro 16",
-        "data": {
-          "year": 2019,
-          "price": 1849.99,
-          "CPU model": "Intel Core i9",
-          "Hard disk size": "1 TB"
-        }
-      },
-      {
-        "id": "8",
-        "name": "Apple Watch Series 8",
-        "data": {
-          "Strap Colour": "Elderberry",
-          "Case Size": "41mm"
-        }
-      },
-      {
-        "id": "9",
-        "name": "Beats Studio3 Wireless",
-        "data": {
-          "Color": "Red",
-          "Description": "High-performance wireless noise cancelling headphones"
-        }
-      },
-      {
-        "id": "10",
-        "name": "Apple iPad Mini 5th Gen",
-        "data": {
-          "Capacity": "64 GB",
-          "Screen size": 7.9
-        }
-      },
-      {
-        "id": "11",
-        "name": "Apple iPad Mini 5th Gen",
-        "data": {
-          "Capacity": "254 GB",
-          "Screen size": 7.9
-        }
-      },
-      {
-        "id": "12",
-        "name": "Apple iPad Air",
-        "data": {
-          "Generation": "4th",
-          "Price": "419.99",
-          "Capacity": "64 GB"
-        }
-      },
-      {
-        "id": "13",
-        "name": "Apple iPad Air",
-        "data": {
-          "Generation": "4th",
-          "Price": "519.99",
-          "Capacity": "256 GB"
-        }
-      }
-    ],
-    "request": {
-      "method": "GET",
-      "originalUrl": "https://api.restful-api.dev/objects",
-      "interpolatedUrl": "https://api.restful-api.dev/objects",
-      "headers": {
-        "Accept": "application/json"
       }
     },
+    "request": {
+      "method": "GET",
+      "originalUrl": "https://api.worldbank.org/v2/country",
+      "interpolatedUrl": "https://api.worldbank.org/v2/country",
+      "headers": {}
+    },
     "variables": {
-      "username": "dev",
-      "password": "admin",
-      "baseurl": "https://localhost:8443/api"
+      "mirthbaseurl": "https://localhost:8443/api",
+      "mirthdevusername": "dev",
+      "mirthdevpassword": "admin"
     },
     "response": {
       "status": 200,
       "statusText": "OK",
       "headers": {
-        "date": "Thu, 07 Aug 2025 03:15:39 GMT",
-        "content-type": "application/json",
-        "transfer-encoding": "chunked",
+        "date": "Thu, 07 Aug 2025 15:27:46 GMT",
+        "content-type": "text/xml",
+        "content-length": "4720",
         "connection": "close",
         "server": "cloudflare",
-        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
-        "vary": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+        "cf-ray": "96b7ccc9ffb67c90-EWR",
         "cf-cache-status": "DYNAMIC",
-        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=f4yhYa8BlOZWBJEI1ek3R7GtHEZumzWei6CWtwWMx2YVbgS5T1zuqRVGZZz3lMby%2FdIaO5KbPfXJX3ZPpIvVH3ZPiWd513X%2FoA9h%2FtoLWT8F0zk%3D\"}]}",
-        "cf-ray": "96b39c58cfb14238-EWR",
-        "alt-svc": "h3=\":443\"; ma=86400"
+        "access-control-allow-origin": "*",
+        "cache-control": "public, must-revalidate, max-age=942009",
+        "expires": "Mon, 18 Aug 2025 13:07:55 GMT",
+        "last-modified": "Sat, 19 Jul 2025 13:07:55 GMT",
+        "set-cookie": "api.worldbank.orgCORS=403be8494990e664779c34c52fa19686; Path=/; SameSite=None; Secure, api.worldbank.org=403be8494990e664779c34c52fa19686; Path=/, __cf_bm=nn0cl1ZCOEbbigbv6dNqxgrVo5sUtUfKYYq6ix4uB68-1752930475-1.0.1.1-Jt.1CiXXe3RwkXrTJvWuF5zftdVmX5LINNC7r2ArfZTvWRD4t3Ui3Cr13B8JKgwIgnnFca7TrFserwr84PysAPz3Yw86gubgtnx_oU8Cc.g; path=/; expires=Sat, 19-Jul-25 13:37:55 GMT; domain=.worldbank.org; HttpOnly, _cfuvid=FghUbe9UkD0gAB.5zIjGPphMsEaxZbtv4M3GpBcp46E-1752930475080-0.0.1.1-604800000; path=/; domain=.worldbank.org; HttpOnly, __cf_bm=Gjst9l9NiNJCU3SnT9ToVCvexVvhUZLj0Z4MEet3eL0-1754580466-1.0.1.1-1O7_TGfd4YMYTqIKbnrWuEKhTEx5ZeDrCIJVmr4tyd0a3tLz7MbqEHYBbxOd4dyVtEwzuTJJPJvRtFGdtptIGAiMswGScVYkYJXc.jQP728; path=/; expires=Thu, 07-Aug-25 15:57:46 GMT; domain=.worldbank.org; HttpOnly; Secure; SameSite=None, _cfuvid=T_MKO.jn7QY3WbQjMMmq9c3hB1blQNWHGmtktormY44-1754580466338-0.0.1.1-604800000; path=/; domain=.worldbank.org; HttpOnly; Secure; SameSite=None",
+        "vary": "accept-encoding",
+        "access-control-allow-headers": "X-Requested-With",
+        "access-control-allow-methods": "GET",
+        "request-context": "appId=cid-v1:da002513-bd8b-4441-9f30-737944134422"
       },
-      "data": [
-        {
-          "id": "1",
-          "name": "Google Pixel 6 Pro",
-          "data": {
-            "color": "Cloudy White",
-            "capacity": "128 GB"
-          }
-        },
-        {
-          "id": "2",
-          "name": "Apple iPhone 12 Mini, 256GB, Blue",
-          "data": null
-        },
-        {
-          "id": "3",
-          "name": "Apple iPhone 12 Pro Max",
-          "data": {
-            "color": "Cloudy White",
-            "capacity GB": 512
-          }
-        },
-        {
-          "id": "4",
-          "name": "Apple iPhone 11, 64GB",
-          "data": {
-            "price": 389.99,
-            "color": "Purple"
-          }
-        },
-        {
-          "id": "5",
-          "name": "Samsung Galaxy Z Fold2",
-          "data": {
-            "price": 689.99,
-            "color": "Brown"
-          }
-        },
-        {
-          "id": "6",
-          "name": "Apple AirPods",
-          "data": {
-            "generation": "3rd",
-            "price": 120
-          }
-        },
-        {
-          "id": "7",
-          "name": "Apple MacBook Pro 16",
-          "data": {
-            "year": 2019,
-            "price": 1849.99,
-            "CPU model": "Intel Core i9",
-            "Hard disk size": "1 TB"
-          }
-        },
-        {
-          "id": "8",
-          "name": "Apple Watch Series 8",
-          "data": {
-            "Strap Colour": "Elderberry",
-            "Case Size": "41mm"
-          }
-        },
-        {
-          "id": "9",
-          "name": "Beats Studio3 Wireless",
-          "data": {
-            "Color": "Red",
-            "Description": "High-performance wireless noise cancelling headphones"
-          }
-        },
-        {
-          "id": "10",
-          "name": "Apple iPad Mini 5th Gen",
-          "data": {
-            "Capacity": "64 GB",
-            "Screen size": 7.9
-          }
-        },
-        {
-          "id": "11",
-          "name": "Apple iPad Mini 5th Gen",
-          "data": {
-            "Capacity": "254 GB",
-            "Screen size": 7.9
-          }
-        },
-        {
-          "id": "12",
-          "name": "Apple iPad Air",
-          "data": {
-            "Generation": "4th",
-            "Price": "419.99",
-            "Capacity": "64 GB"
-          }
-        },
-        {
-          "id": "13",
-          "name": "Apple iPad Air",
-          "data": {
-            "Generation": "4th",
-            "Price": "519.99",
-            "Capacity": "256 GB"
+      "data": {
+        "wb:countries": {
+          "wb:country": {
+            "wb:iso2Code": "CL",
+            "wb:name": "Chile",
+            "wb:region": "Latin America &amp; Caribbean",
+            "wb:incomeLevel": "High income",
+            "wb:lendingType": "IBRD",
+            "wb:capitalCity": "Santiago",
+            "wb:longitude": -70.6475,
+            "wb:latitude": -33.475
           }
         }
-      ]
+      }
+    }
+  },
+  {
+    "apiCall": "GET - {{MirthBaseURL}}/channels/portsInUse",
+    "timestamp": "2025-08-07T15:55:11.657Z",
+    "status": "success",
+    "data": {
+      "list": {
+        "com.mirth.connect.donkey.model.channel.Ports": {
+          "name": "RELAYTEST",
+          "id": "7b3f2d75-176a-4013-a539-a19fa1bf5e19",
+          "port": 6661
+        }
+      }
+    },
+    "request": {
+      "method": "GET",
+      "originalUrl": "{{MirthBaseURL}}/channels/portsInUse",
+      "interpolatedUrl": "https://localhost:8443/api/channels/portsInUse",
+      "headers": {
+        "accept": "application/xml",
+        "X-Requested-With": "OpenAPI",
+        "Cookie": "JSESSIONID=node0flt84v05cg7ksvtgk7y2ynb7939.node0"
+      },
+      "body": ""
+    },
+    "variables": {
+      "mirthbaseurl": "https://localhost:8443/api",
+      "mirthdevusername": "dev",
+      "mirthdevpassword": "admin"
+    },
+    "response": {
+      "status": 200,
+      "statusText": "OK",
+      "headers": {
+        "connection": "close",
+        "date": "Thu, 07 Aug 2025 15:55:11 GMT",
+        "access-control-allow-origin": "*",
+        "access-control-allow-credentials": "false",
+        "access-control-allow-methods": "GET, POST, DELETE, PUT",
+        "access-control-allow-headers": "Content-Type",
+        "content-security-policy": "frame-ancestors 'none'",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "content-type": "application/xml",
+        "content-length": "804"
+      },
+      "data": {
+        "list": {
+          "com.mirth.connect.donkey.model.channel.Ports": {
+            "name": "RELAYTEST",
+            "id": "7b3f2d75-176a-4013-a539-a19fa1bf5e19",
+            "port": 6661
+          }
+        }
+      }
     }
   }
 ]

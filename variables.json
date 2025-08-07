@@ -1,18 +1,16 @@
 {
   "variables": [
     {
-      "name": "Username",
-      "value": "dev",
-      "visible": false
-    },
-    {
-      "name": "Password",
-      "value": "admin",
-      "visible": false
-    },
-    {
-      "name": "baseURL",
+      "name": "MirthBaseURL",
       "value": "https://localhost:8443/api"
+    },
+    {
+      "name": "MirthDevUsername",
+      "value": "dev"
+    },
+    {
+      "name": "MirthDevPassword",
+      "value": "admin"
     }
   ]
 }

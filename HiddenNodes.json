@@ -1,156 +1,20 @@
 {
   "hiddenNodes": [
     {
-      "key": "@version",
-      "depth": 2
-    },
-    {
-      "key": "id",
-      "depth": 2
-    },
-    {
-      "key": 0,
-      "depth": 1
+      "key": "channels",
+      "depth": 4
     },
     {
       "key": "description",
-      "depth": 2
+      "depth": 4
     },
     {
-      "key": "nextMetaDataId",
-      "depth": 2
+      "key": "lastModified",
+      "depth": 4
     },
     {
       "key": "revision",
-      "depth": 2
-    },
-    {
-      "key": "preprocessingScript",
-      "depth": 2
-    },
-    {
-      "key": "postprocessingScript",
-      "depth": 2
-    },
-    {
-      "key": "deployScript",
-      "depth": 2
-    },
-    {
-      "key": "undeployScript",
-      "depth": 2
-    },
-    {
-      "key": "id",
-      "depth": 1
-    },
-    {
-      "key": "metaDataId",
-      "depth": 3
-    },
-    {
-      "key": "properties",
-      "depth": 3
-    },
-    {
-      "key": "transformer",
-      "depth": 3
-    },
-    {
-      "key": "responseTransformer",
-      "depth": 3
-    },
-    {
-      "key": "filter",
-      "depth": 3
-    },
-    {
-      "key": "transportName",
-      "depth": 3
-    },
-    {
-      "key": "mode",
-      "depth": 3
-    },
-    {
-      "key": "enabled",
-      "depth": 3
-    },
-    {
-      "key": "waitForPrevious",
-      "depth": 3
-    },
-    {
-      "key": "@version",
-      "depth": 3
-    },
-    {
-      "key": "properties",
-      "depth": 2
-    },
-    {
-      "key": "exportData",
-      "depth": 2
-    },
-    {
-      "key": "name",
-      "depth": 2
-    },
-    {
-      "key": "sourceConnector",
-      "depth": 2
-    },
-    {
-      "key": "@version",
       "depth": 4
-    },
-    {
-      "key": "metaDataId",
-      "depth": 4
-    },
-    {
-      "key": "properties",
-      "depth": 4
-    },
-    {
-      "key": "serializationProperties",
-      "depth": 6
-    },
-    {
-      "key": "deserializationProperties",
-      "depth": 6
-    },
-    {
-      "key": "batchScript",
-      "depth": 7
-    },
-    {
-      "key": "@version",
-      "depth": 7
-    },
-    {
-      "key": "@class",
-      "depth": 7
-    },
-    {
-      "key": "@version",
-      "depth": 6
-    },
-    {
-      "key": "@class",
-      "depth": 6
-    },
-    {
-      "key": "transformer",
-      "depth": 4
-    },
-    {
-      "key": "apiCall",
-      "depth": 1
-    },
-    {
-      "key": "status",
-      "depth": 1
     },
     {
       "key": "variables",
@@ -159,6 +23,30 @@
     {
       "key": "timestamp",
       "depth": 1
+    },
+    {
+      "key": "status",
+      "depth": 1
+    },
+    {
+      "key": "response",
+      "depth": 1
+    },
+    {
+      "key": "request",
+      "depth": 1
+    },
+    {
+      "key": "apiCall",
+      "depth": 1
+    },
+    {
+      "key": "id",
+      "depth": 4
+    },
+    {
+      "key": "com.mirth.connect.donkey.model.channel.Ports",
+      "depth": 3
     }
   ]
 }

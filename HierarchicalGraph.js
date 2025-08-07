@@ -7,40 +7,61 @@ let levelSeparation = 150;
 let nodeSize = 22;
 let treeOrientation = 'vertical';
 let graphData = { nodes: [], links: [] };
+let hierarchicalControls = {};
 
-// Default values for localStorage
+// Default values
 const DEFAULT_VALUES = {
     nodeSeparation: 100,
     levelSeparation: 150,
     nodeSize: 22,
-    treeOrientation: 'vertical'
+    treeOrientation: 'vertical',
+    zoomValue: 1
 };
 
-// Function to save control values to localStorage
-function saveControlValues() {
-    const values = {
-        nodeSeparation: nodeSeparation,
-        levelSeparation: levelSeparation,
-        nodeSize: nodeSize,
-        treeOrientation: treeOrientation,
-        zoomValue: currentZoom
-    };
-    localStorage.setItem('hierarchicalGraphControls', JSON.stringify(values));
+// Function to save control values to Graphconf.json
+async function saveControlValues() {
+    try {
+        hierarchicalControls = {
+            nodeSeparation: nodeSeparation,
+            levelSeparation: levelSeparation,
+            nodeSize: nodeSize,
+            treeOrientation: treeOrientation,
+            zoomValue: currentZoom
+        };
+        
+        const response = await fetch('/UpdateGraphConfiguration', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                hierarchicalControls: hierarchicalControls
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        console.log('Hierarchical controls saved successfully');
+    } catch (error) {
+        console.error('Failed to save hierarchical controls:', error);
+    }
 }
 
-// Function to load control values from localStorage
-function loadControlValues() {
+// Function to load control values from Graphconf.json
+async function loadControlValues() {
     try {
-        const saved = localStorage.getItem('hierarchicalGraphControls');
-        if (saved) {
-            const values = JSON.parse(saved);
-            nodeSeparation = values.nodeSeparation || DEFAULT_VALUES.nodeSeparation;
-            levelSeparation = values.levelSeparation || DEFAULT_VALUES.levelSeparation;
-            nodeSize = values.nodeSize || DEFAULT_VALUES.nodeSize;
-            treeOrientation = values.treeOrientation || DEFAULT_VALUES.treeOrientation;
-            currentZoom = values.zoomValue || DEFAULT_VALUES.zoomValue;
+        const response = await fetch('/Graphconf.json');
+        if (response.ok) {
+            const config = await response.json();
+            hierarchicalControls = config.hierarchicalControls || DEFAULT_VALUES;
+            
+            nodeSeparation = hierarchicalControls.nodeSeparation || DEFAULT_VALUES.nodeSeparation;
+            levelSeparation = hierarchicalControls.levelSeparation || DEFAULT_VALUES.levelSeparation;
+            nodeSize = hierarchicalControls.nodeSize || DEFAULT_VALUES.nodeSize;
+            treeOrientation = hierarchicalControls.treeOrientation || DEFAULT_VALUES.treeOrientation;
+            currentZoom = hierarchicalControls.zoomValue || DEFAULT_VALUES.zoomValue;
         } else {
-            // Use defaults if no saved values
+            // Use defaults if file doesn't exist
             nodeSeparation = DEFAULT_VALUES.nodeSeparation;
             levelSeparation = DEFAULT_VALUES.levelSeparation;
             nodeSize = DEFAULT_VALUES.nodeSize;
@@ -846,14 +867,14 @@ function renderHierarchicalGraph(data) {
 }
 
 // --- Initialize ---
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('Initializing Hierarchical Graph...');
+    
+    // Load control values from Graphconf.json
+    await loadControlValues();
     
     // Automatically load existing JSON data on page load
     loadDataFromJson();
-
-    // Load control values on page load
-    loadControlValues();
     
     console.log('Hierarchical Graph initialized');
 });

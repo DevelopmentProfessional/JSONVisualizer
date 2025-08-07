@@ -202,9 +202,9 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="AddAPI.html">Add API</a></li>
+                    <li class="nav-item"><a class="nav-link" href="ManageAPI.html">Manage API</a></li>
                     <li class="nav-item"><a class="nav-link active" href="view.html">Visualizer</a></li>
-                    <li class="nav-item"><a class="nav-link" href="admin.html">Admin</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Variables.html">Variables</a></li>
                     <li class="nav-item"><a class="nav-link" href="Run.html">Run</a></li>
       </ul>
     </div>
@@ -212,10 +212,10 @@
 </nav>
     <div id="controlNav" class="sticky-top">
          <!-- Search Box -->
-    <div class=" d-flex align-items-center">
-        <input type="text" id="searchBox" class="form-control" placeholder="Search all node values..." oninput="handleSearchInput(this.value)">
-        <button class="btn btn-primary btn-sm" onclick="searchBoxSearch()">Search</button>
-        <button class="btn btn-secondary btn-sm" onclick="clearSearchBox()">Clear</button>
+    <div class=" input-group-sm d-flex align-items-center">
+        <input type="text" id="searchBox" class="input-group-text " placeholder="Search all node values..." oninput="handleSearchInput(this.value)">
+        <button class=" btn btn-outline-primary btn-sm "  onclick="searchBoxSearch()"><i class="bi bi-search"></i></button>
+        <button class="btn btn-outline-secondary btn-sm" onclick="clearSearchBox()"><i class="bi bi-x-circle"></i></button>
     </div>
       <!-- Controls Accordion -->
     <div class="accordion mb-3" id="controlsAccordion">
@@ -230,47 +230,80 @@
                     <div class="alert alert-info alert-sm mb-3" style="font-size: 0.85em; padding: 8px;">
                         <strong>💡 Navigation:</strong> Pan canvas by dragging empty space • Drag nodes to reposition • Scroll to zoom
                     </div>
-                    <div class="d-flex flex-wrap gap-3">
+                    <div class="d-flex flex-wrap gap-2 justify-content-start">
                         <!-- Text Size -->
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text" style="min-width: 100px;">Text Size</span>
-                            <input type="number" class="form-control" id="textSizeInput" min="8" max="48" value="12" step="1" style="width: 80px;" oninput="updateTextSize(this.value)">
-                            <input type="range" class="form-range" id="textSizeSlider" min="8" max="48" value="12" step="1" oninput="updateTextSize(this.value)">
+                        <div class="input-group input-group-sm" style="max-width: 200px;">
+                            <span class="input-group-text" title="Text Size">
+                                <i class="bi bi-fonts"></i>
+                            </span>
+                            <input type="number" class="form-control" id="textSizeInput" min="8" max="48" value="12" step="1" style="width: 60px;" oninput="updateTextSize(this.value)">
+                            <input type="range" class="form-range" id="textSizeSlider" min="8" max="48" value="12" step="1" oninput="updateTextSize(this.value)" style="width: 80px;">
                         </div>
                         <!-- Node Width -->
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text" style="min-width: 100px;">Node Width</span>
-                            <input type="number" class="form-control" id="nodeWidthInput" min="60" max="1200" value="110" step="5" style="width: 80px;" oninput="updateNodeWidth(this.value)">
-                            <input type="range" class="form-range" id="nodeWidthSlider" min="60" max="1200" value="110" step="5" oninput="updateNodeWidth(this.value)">
+                        <div class="input-group input-group-sm" style="max-width: 200px;">
+                            <span class="input-group-text" title="Node Width">
+                                <i class="bi bi-arrows-expand"></i>
+                            </span>
+                            <input type="number" class="form-control" id="nodeWidthInput" min="60" max="1200" value="110" step="5" style="width: 60px;" oninput="updateNodeWidth(this.value)">
+                            <input type="range" class="form-range" id="nodeWidthSlider" min="60" max="1200" value="110" step="5" oninput="updateNodeWidth(this.value)" style="width: 80px;">
                         </div>
                         <!-- Node Separation -->
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text" style="min-width: 100px;">Node Separation</span>
-                            <input type="number" class="form-control" id="nodeSeparationInput" min="20" max="200" value="60" step="5" style="width: 80px;" oninput="updateNodeSeparation(this.value)">
-                            <input type="range" class="form-range" id="nodeSeparationSlider" min="20" max="200" value="60" step="5" oninput="updateNodeSeparation(this.value)">
+                        <div class="input-group input-group-sm" style="max-width: 200px;">
+                            <span class="input-group-text" title="Node Separation">
+                                <i class="bi bi-distribute-vertical"></i>
+                            </span>
+                            <input type="number" class="form-control" id="nodeSeparationInput" min="20" max="200" value="60" step="5" style="width: 60px;" oninput="updateNodeSeparation(this.value)">
+                            <input type="range" class="form-range" id="nodeSeparationSlider" min="20" max="200" value="60" step="5" oninput="updateNodeSeparation(this.value)" style="width: 80px;">
                         </div>
                         <!-- Orientation -->
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text" style="min-width: 100px;">Orientation</span>
-                            <select id="treeOrientation" class="form-select" style="width: 120px;" onchange="updateTreeOrientation(this.value)">
+                        <div class="input-group input-group-sm" style="max-width: 150px;">
+                            <span class="input-group-text" title="Orientation">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </span>
+                            <select id="treeOrientation" class="form-select" onchange="updateTreeOrientation(this.value)">
                                 <option value="vertical">Vertical</option>
                                 <option value="horizontal">Horizontal</option>
                             </select>
                         </div>
-                        <!-- Expand All -->
-                        <button class="btn btn-success btn-sm ms-2" onclick="expandAllNodes()">Expand All</button>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 justify-content-start mt-3">
+                        <!-- Expand/Collapse Toggle -->
+                        <button id="expandCollapseToggleBtn" class="btn btn-success btn-sm" onclick="toggleExpandCollapse()" title="Expand All">
+                            <i class="bi bi-plus-square" id="expandCollapseIcon"></i>
+                            <span id="expandCollapseText" class="d-none d-md-inline ms-1">Expand All</span>
+                        </button>
                         <!-- Reset Positions -->
-                        <button class="btn btn-info btn-sm ms-2" onclick="resetPositions()">Reset Positions</button>
+                        <button class="btn btn-outline-info btn-sm" onclick="resetPositions()" title="Reset Positions">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
                         <!-- Reset Starting Position -->
-                        <button class="btn btn-success btn-sm ms-2" onclick="resetStartingPosition()">Reset Starting Position</button>
+                        <button class="btn btn-outline-success btn-sm" onclick="resetStartingPosition()" title="Reset Starting Position">
+                            <i class="bi bi-house"></i>
+                        </button>
                         <!-- Center View -->
-                        <button class="btn btn-primary btn-sm ms-2" onclick="centerView()">Center View</button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="centerView()" title="Center View">
+                            <i class="bi bi-bullseye"></i>
+                        </button>
+                        <!-- Force Center Tree -->
+                        <button class="btn btn-outline-primary btn-sm" onclick="forceCenterTree()" title="Reset positions and center tree">
+                            <i class="bi bi-pip"></i>
+                        </button>
                         <!-- Reset Filter -->
-                        <button class="btn btn-warning btn-sm ms-2" onclick="resetFilter()">Reset Filter</button>
+                        <button class="btn btn-outline-warning btn-sm" onclick="resetFilter()" title="Reset Filter">
+                            <i class="bi bi-funnel-fill"></i>
+                        </button>
                         <!-- Clear JSON Output -->
-                        <button class="btn btn-danger btn-sm ms-2" onclick="clearJsonOutput()">Clear JSON Output</button>
-                        <!-- Debug Overlaps -->
-                        <button class="btn btn-outline-light btn-sm ms-2" onclick="toggleOverlapDebug()">Debug Overlaps</button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="clearJsonOutput()" title="Clear JSON Output">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        <!-- Fix Overlaps -->
+                        <button class="btn btn-outline-success btn-sm" onclick="fixOverlaps()" title="Fix Overlaps">
+                            <i class="bi bi-grid-3x3-gap"></i>
+                        </button>
+                        <!-- Show All Nodes -->
+                        <button class="btn btn-outline-secondary btn-sm" onclick="showAllNodes()" title="Show All Nodes">
+                            <i class="bi bi-eye"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -282,6 +315,9 @@
 
 
     <div id="output-graph"></div>
+    <div id="debug-info" style="position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; font-family: monospace; font-size: 12px; z-index: 1000; max-width: 300px;">
+        Debug Info: Loading...
+    </div>
     <!-- Filter dropdown checklist will be rendered here by ProcessFilter() -->
     <div id="filterDropdownContainer"></div>
  
@@ -292,10 +328,22 @@
 <script>
 // Helper to load JSON file (returns Promise)
 function loadJSON(path) {
-    // Use relative path for local file loading
+    console.log('Loading JSON file:', path);
+    
+    // Use relative path for server-based loading
     return fetch(path).then(r => {
-        if (!r.ok) throw new Error('Failed to load ' + path);
+        console.log('Fetch response for', path, ':', r);
+        if (!r.ok) {
+            console.error('Failed to load', path, 'Status:', r.status, r.statusText);
+            throw new Error('Failed to load ' + path + ' (Status: ' + r.status + ')');
+        }
         return r.json();
+    }).then(data => {
+        console.log('JSON parsed successfully for', path, ':', data);
+        return data;
+    }).catch(err => {
+        console.error('Error loading', path, ':', err);
+        throw err;
     });
 }
 
@@ -327,6 +375,7 @@ async function saveJSON(path, data) {
 
 let hiddenNodes = [];
 let nodePositions = {}; // Store position offsets for nodes
+let graphControls = { expandAll: false, collapseAll: false }; // Store graph control states
 
 // Function to check and set starting node position if not already set
 async function checkAndSetStartingPosition() {
@@ -402,34 +451,39 @@ window.resetStartingPosition = async function() {
     }
 };
 
-// Debug overlaps functionality
-let overlapDebugMode = false;
-window.toggleOverlapDebug = function() {
-    overlapDebugMode = !overlapDebugMode;
+// Fix overlaps functionality
+window.fixOverlaps = function() {
+    console.log('Fixing overlapping nodes...');
     
-    if (overlapDebugMode) {
-        console.log('Overlap debug mode enabled');
-        highlightOverlaps();
-        document.querySelector('button[onclick="toggleOverlapDebug()"]').classList.remove('btn-outline-light');
-        document.querySelector('button[onclick="toggleOverlapDebug()"]').classList.add('btn-light');
-        document.querySelector('button[onclick="toggleOverlapDebug()"]').textContent = 'Hide Overlaps';
-    } else {
-        console.log('Overlap debug mode disabled');
-        removeOverlapHighlights();
-        document.querySelector('button[onclick="toggleOverlapDebug()"]').classList.remove('btn-light');
-        document.querySelector('button[onclick="toggleOverlapDebug()"]').classList.add('btn-outline-light');
-        document.querySelector('button[onclick="toggleOverlapDebug()"]').textContent = 'Debug Overlaps';
-    }
-};
-
-// Function to highlight overlapping nodes
-function highlightOverlaps() {
-    // Remove existing highlights
-    removeOverlapHighlights();
+    // Save current expanded state before fixing overlaps
+    const currentExpanded = {...expanded};
     
+    // Clear any saved positions that might be causing issues
+    nodePositions = {};
+    
+    // Force a fresh layout calculation
+    flatNodes = [];
+    let y = 20;
+    treeRoots.forEach(root => {
+        y = flattenTree(root, flatNodes, y, 0);
+    });
+    
+    // Resolve overlaps using the existing function
+    resolveNodeOverlaps(flatNodes);
+    
+    // Save the new positions
+    saveNodePositions();
+    
+    // Restore expanded state
+    expanded = currentExpanded;
+    
+    // Re-render the tree with fixed positions
+    renderTree();
+    
+    console.log('Overlaps fixed and nodes properly spaced');
+    
+    // Show confirmation
     const overlappingPairs = [];
-    
-    // Find all overlapping pairs
     for (let i = 0; i < flatNodes.length; i++) {
         for (let j = i + 1; j < flatNodes.length; j++) {
             if (nodesOverlap(flatNodes[i], flatNodes[j])) {
@@ -438,80 +492,308 @@ function highlightOverlaps() {
         }
     }
     
-    console.log(`Found ${overlappingPairs.length} overlapping pairs:`, overlappingPairs);
-    
     if (overlappingPairs.length === 0) {
-        alert('No overlapping nodes found!');
-        return;
+        alert('All overlaps have been fixed! Nodes are now properly spaced.');
+    } else {
+        alert(`Fixed most overlaps. ${overlappingPairs.length} overlaps may still exist due to layout constraints.`);
+    }
+};
+
+// Search functions - defined globally so they're available immediately
+window.handleSearchInput = function(val) {
+    // This will be properly implemented once the tree is loaded
+    if (typeof searchTerm !== 'undefined' && typeof updateTree === 'function') {
+        searchTerm = val.trim();
+        updateTree();
+    }
+};
+
+window.searchBoxSearch = function() {
+    var val = document.getElementById('searchBox').value;
+    handleSearchInput(val);
+};
+
+window.clearSearchBox = function() {
+    const searchBox = document.getElementById('searchBox');
+    if (searchBox) {
+        searchBox.value = '';
+        searchBox.focus();
+        // Only call handleSearchInput if it's available
+        if (typeof handleSearchInput === 'function') {
+            handleSearchInput('');
+        }
+    }
+};
+
+// Clear JSON output function - moved outside Promise chain for global accessibility
+window.clearJsonOutput = async function() {
+    try {
+        // Clear the output.json file by sending an empty array
+        const response = await fetch('/output.json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify([])
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to clear JSON output: ${response.status}`);
+        }
+
+        console.log('JSON output cleared successfully');
+        // Reload the page to reflect the cleared output
+        location.reload();
+    } catch (error) {
+        console.error('Failed to clear JSON output:', error);
+        alert('Failed to clear JSON output. Please try again.');
+    }
+};
+
+// Show all nodes function - moved outside Promise chain for global accessibility
+window.showAllNodes = async function() {
+    try {
+        // Clear the HiddenNodes.json file by sending an empty hiddenNodes array
+        const response = await fetch('/HiddenNodes.json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ hiddenNodes: [] })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to clear hidden nodes: ${response.status}`);
+        }
+
+        console.log('Hidden nodes cleared successfully');
+        // Clear the local hiddenNodes array and update the tree
+        hiddenNodes = [];
+        updateTree();
+        
+        alert('All hidden nodes are now visible!');
+    } catch (error) {
+        console.error('Failed to show all nodes:', error);
+        alert('Failed to show all nodes. Please try again.');
+    }
+};
+
+// Combined toggle function for Expand/Collapse - moved outside Promise chain for global accessibility
+window.toggleExpandCollapse = async function() {
+    const isExpanded = graphControls.expandAll;
+    
+    if (isExpanded) {
+        // Currently expanded, so collapse all
+        graphControls.expandAll = false;
+        graphControls.collapseAll = true;
+        if (typeof collapseAllNodes === 'function') collapseAllNodes();
+        
+        // Update button appearance for collapse state
+        const btn = document.getElementById('expandCollapseToggleBtn');
+        const icon = document.getElementById('expandCollapseIcon');
+        const text = document.getElementById('expandCollapseText');
+        
+        if (btn) {
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-warning');
+            btn.title = 'Expand All';
+        }
+        if (icon) icon.className = 'bi bi-plus-square';
+        if (text) text.textContent = 'Expand All';
+    } else {
+        // Currently collapsed, so expand all
+        graphControls.expandAll = true;
+        graphControls.collapseAll = false;
+        if (typeof expandAllNodes === 'function') expandAllNodes();
+        
+        // Update button appearance for expand state
+        const btn = document.getElementById('expandCollapseToggleBtn');
+        const icon = document.getElementById('expandCollapseIcon');
+        const text = document.getElementById('expandCollapseText');
+        
+        if (btn) {
+            btn.classList.remove('btn-warning');
+            btn.classList.add('btn-success');
+            btn.title = 'Collapse All';
+        }
+        if (icon) icon.className = 'bi bi-dash-square';
+        if (text) text.textContent = 'Collapse All';
     }
     
-    // Add visual indicators for overlapping nodes
-    const svg = d3.select('#output-graph svg');
-    const overlapGroup = svg.append('g').attr('class', 'overlap-indicators');
-    
-    overlappingPairs.forEach((pair, index) => {
-        const [node1, node2] = pair;
-        
-        // Add red border around overlapping nodes
-        [node1, node2].forEach(node => {
-            const nodeHeight = node.measuredHeight || 60;
-            overlapGroup.append('rect')
-                .attr('class', 'overlap-highlight')
-                .attr('x', node.x - 2)
-                .attr('y', node.y - 2)
-                .attr('width', nodeWidth + 4)
-                .attr('height', nodeHeight + 4)
-                .attr('fill', 'none')
-                .attr('stroke', 'red')
-                .attr('stroke-width', 3)
-                .attr('stroke-dasharray', '5,5')
-                .attr('opacity', 0.8);
-        });
-        
-        // Add connection line between overlapping nodes
-        const node1Height = node1.measuredHeight || 60;
-        const node2Height = node2.measuredHeight || 60;
-        overlapGroup.append('line')
-            .attr('class', 'overlap-connection')
-            .attr('x1', node1.x + nodeWidth/2)
-            .attr('y1', node1.y + node1Height/2)
-            .attr('x2', node2.x + nodeWidth/2)
-            .attr('y2', node2.y + node2Height/2)
-            .attr('stroke', 'red')
-            .attr('stroke-width', 2)
-            .attr('stroke-dasharray', '3,3')
-            .attr('opacity', 0.6);
-    });
-    
-    alert(`Found and highlighted ${overlappingPairs.length} overlapping node pairs. Check console for details.`);
-}
+    // Update configuration via API if function exists
+    if (typeof updateGraphConfiguration === 'function') {
+        await updateGraphConfiguration();
+    }
+};
 
-// Function to remove overlap highlights
-function removeOverlapHighlights() {
-    d3.select('#output-graph svg .overlap-indicators').remove();
+// Reset filter function - moved outside Promise chain for global accessibility
+window.resetFilter = async function() {
+    try {
+        // Clear the Filter.json file by sending an empty filters array
+        const response = await fetch('/Filter.json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filters: [] })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to reset filter: ${response.status}`);
+        }
+
+        console.log('Filter reset successfully');
+        // Reload the page to reflect the reset filter
+        location.reload();
+    } catch (error) {
+        console.error('Failed to reset filter:', error);
+        alert('Failed to reset filter. Please try again.');
+    }
+};
+
+// Reset positions function - moved outside Promise chain for global accessibility  
+window.resetPositions = function() {
+    // Clear all saved position offsets
+    nodePositions = {};
+    if (typeof saveNodePositions === 'function') saveNodePositions();
+    if (typeof updateTree === 'function') updateTree(); // This will recalculate and reset all positions
+    alert('Node positions have been reset!');
+};
+
+// Center view function - moved outside Promise chain for global accessibility
+window.centerView = function() {
+    if (typeof svg !== 'undefined' && svg) {
+        const bounds = svg.node().getBBox();
+        const parent = svg.node().parentElement;
+        const fullWidth = parent.clientWidth;
+        const fullHeight = parent.clientHeight;
+        const width = bounds.width;
+        const height = bounds.height;
+        const midX = bounds.x + width / 2;
+        const midY = bounds.y + height / 2;
+        
+        const scale = 0.85 / Math.max(width / fullWidth, height / fullHeight);
+        const translate = [fullWidth / 2 - scale * midX, fullHeight / 2 - scale * midY];
+        
+        svg.transition()
+            .duration(750)
+            .call(zoom.transform, d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale));
+    }
+};
+
+// Force center tree function - moved outside Promise chain for global accessibility
+window.forceCenterTree = function() {
+    // Reset positions first
+    nodePositions = {};
+    if (typeof saveNodePositions === 'function') {
+        saveNodePositions().then(() => {
+            if (typeof updateTree === 'function') updateTree();
+            setTimeout(() => {
+                if (typeof window.centerView === 'function') window.centerView();
+            }, 100);
+        });
+    }
+};
+
+// Debug function to show status on page
+function updateDebugInfo(message) {
+    const debugDiv = document.getElementById('debug-info');
+    if (debugDiv) {
+        debugDiv.innerHTML = message;
+    }
+    console.log('DEBUG:', message);
 }
 
 // Load hidden types, node positions, and output.json, then render
+updateDebugInfo('Starting data load...');
+console.log('Starting Promise.all to load data files...');
+console.log('D3 available:', typeof d3);
+console.log('Output graph element:', document.getElementById('output-graph'));
+
 Promise.all([
     loadJSON('HiddenNodes.json').then(cfg => { hiddenNodes = cfg.hiddenNodes || []; }),
-    loadJSON('NodePosition.json').then(cfg => { nodePositions = cfg.nodePositions || {}; }).catch(() => { nodePositions = {}; }),
-    loadJSON('output.json')
+    loadJSON('Graphconf.json').then(cfg => { 
+        nodePositions = cfg.nodePositions || {}; 
+        graphControls = cfg.graphControls || { 
+            expandAll: false, 
+            collapseAll: false,
+            nodeWidth: 110,
+            nodeSeparation: 60,
+            orientation: 'horizontal',
+            textSize: 12
+        };
+        
+        // Load control values from configuration
+        nodeWidth = graphControls.nodeWidth || 110;
+        nodeSeparation = graphControls.nodeSeparation || 60;
+        orientation = graphControls.orientation || 'horizontal';
+        textSize = graphControls.textSize || 12;
+        
+        // Initialize button states and control values
+        initializeButtonStates();
+        setInitialControlValues();
+    }).catch(() => { 
+        nodePositions = {}; 
+        graphControls = { 
+            expandAll: false, 
+            collapseAll: false,
+            nodeWidth: 110,
+            nodeSeparation: 60,
+            orientation: 'horizontal',
+            textSize: 12
+        };
+        
+        // Set default values
+        nodeWidth = 110;
+        nodeSeparation = 60;
+        orientation = 'horizontal';
+        textSize = 12;
+        
+        initializeButtonStates();
+        setInitialControlValues();
+    }),
+    loadJSON('output.json').then(data => {
+        updateDebugInfo('Output.json loaded: ' + (data ? data.length : 'null') + ' items');
+        console.log('output.json loaded successfully:', data);
+        console.log('Data type:', typeof data);
+        console.log('Is array:', Array.isArray(data));
+        console.log('Data length:', data ? data.length : 'undefined');
+        return data;
+    }).catch(err => {
+        updateDebugInfo('Error loading output.json: ' + err.message);
+        console.error('Failed to load output.json:', err);
+        throw err;
+    })
 ]).then(async ([_, __, data]) => {
+        updateDebugInfo('Promise chain executing with data...');
+        console.log('Promise chain executing. Data loaded:', data);
+        
         // Check and set starting position if needed
         await checkAndSetStartingPosition();
-        // Exclude LOGIN node and flatten segments
+        // Handle both array and object data formats
+        let processedData = data;
+        
+        // If data is an array, convert it to an object format for processing
+        if (Array.isArray(data)) {
+            processedData = {};
+            data.forEach((item, index) => {
+                if (item && typeof item === 'object') {
+                    // Use a meaningful key if available, otherwise use index
+                    const key = item.apiCall || item.name || item.id || `Item ${index}`;
+                    processedData[key] = item;
+                } else {
+                    processedData[`Item ${index}`] = item;
+                }
+            });
+        }
+        
         // Special handling for /Channels/{id}/Connectors
         const connectorsMap = {};
-        Object.keys(data).forEach(key => {
+        Object.keys(processedData).forEach(key => {
             const match = key.match(/^\/Channels\/([^/]+)\/Connectors$/);
             if (match) {
-                connectorsMap[match[1]] = data[key];
+                connectorsMap[match[1]] = processedData[key];
             }
         });
 
-        const nodes = Object.entries(data)
+        const nodes = Object.entries(processedData)
             .filter(([key]) => key !== 'LOGIN' && !key.match(/^\/Channels\/[^/]+\/Connectors$/))
             .map(([key, value], i) => {
+                console.log('Processing node:', key, value);
                 // If this is the /Channels node, inject connectors into each channel
                 if (key === '/channels' && value && value.list && value.list.channel && Array.isArray(value.list.channel)) {
                     // For each channel, add a 'Connectors' property if available
@@ -774,8 +1056,8 @@ Promise.all([
 
         // (removed duplicate expanded declaration)
 
-        // Build a tree structure from the JSON for hierarchical rendering
-        // Compress chains of single-child nodes into one node
+        // Build a tree structure from the JSON using bracket-aware logic
+        // Each { or [ creates a new node, leaf values become individual child nodes
         function buildTree(key, value, parentPath = '', depth = 0) {
             const path = parentPath ? parentPath + '.' + key : key;
             let node = {
@@ -786,53 +1068,137 @@ Promise.all([
                 children: [],
                 isObject: typeof value === 'object' && value !== null,
                 isArray: Array.isArray(value),
+                leafValues: {}, // Store leaf values to display within this node (for summary)
                 mergedKeys: [key],
                 mergedValues: [value]
             };
+            
             if (node.isObject) {
-                const keys = node.isArray ? value.map((_,i)=>i) : Object.keys(value);
-                const values = node.isArray ? value : keys.map(k => value[k]);
-                // Recursively build children
-                let children = keys.map((k, i) => buildTree(k, values[i], path, depth + 1));
-                // Compress chains of single-child nodes
-                while (children.length === 1 && children[0].isObject) {
-                    // Merge child into this node
-                    node.mergedKeys.push(children[0].key);
-                    node.mergedValues.push(children[0].value);
-                    children = children[0].children;
+                if (node.isArray) {
+                    // For arrays, create child nodes for ALL items (objects, arrays, and primitives)
+                    value.forEach((item, index) => {
+                        const arrayKey = `[${index}]`;
+                        if (typeof item === 'object' && item !== null) {
+                            // Objects and arrays become child nodes
+                            node.children.push(buildTree(arrayKey, item, path, depth + 1));
+                        } else {
+                            // Primitives also become individual child nodes for proper spacing
+                            node.children.push(buildTree(arrayKey, item, path, depth + 1));
+                        }
+                    });
+                } else {
+                    // For objects, create child nodes for ALL properties
+                    Object.keys(value).forEach(k => {
+                        const objValue = value[k];
+                        if (typeof objValue === 'object' && objValue !== null) {
+                            // Objects and arrays become child nodes
+                            node.children.push(buildTree(k, objValue, path, depth + 1));
+                        } else {
+                            // Primitives also become individual child nodes for proper spacing
+                            node.children.push(buildTree(k, objValue, path, depth + 1));
+                        }
+                    });
                 }
-                node.children = children;
             }
+            
             return node;
         }
 
 
         // Build the root nodes (one for each top-level key)
+        console.log('Building tree roots from nodes:', nodes);
         const treeRoots = nodes.map(n => buildTree(n.id, n.data));
+        console.log('Tree roots created:', treeRoots);
 
         // Track expanded/collapsed state for each node by path
         const expanded = {};
-        treeRoots.forEach(n => expanded[n.path] = false);
+        
+        // Helper function to add all nodes to expanded tracking
+        function addToExpanded(node) {
+            expanded[node.path] = false;
+            if (node.children && node.children.length > 0) {
+                node.children.forEach(child => addToExpanded(child));
+            }
+        }
+        
+        // Initialize expanded state for all nodes in the tree
+        treeRoots.forEach(root => addToExpanded(root));
+
+        // Helper function to check if a node has any hidden children
+        function hasHiddenChildren(node, nodeDepth = null) {
+            if (!node.children || node.children.length === 0) return false;
+            
+            // Use provided depth or calculate from node
+            const currentDepth = nodeDepth !== null ? nodeDepth : (node.depth || 0);
+            
+            // Check direct children
+            for (const child of node.children) {
+                const childDepth = currentDepth + 1;
+                if (hiddenNodes.some(hn => hn.key === child.key && hn.depth === childDepth)) {
+                    return true;
+                }
+                // Recursively check grandchildren
+                if (hasHiddenChildren(child, childDepth)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Helper function to get all hidden children of a node
+        function getHiddenChildren(node, nodeDepth = null) {
+            const hiddenChildren = [];
+            if (!node.children || node.children.length === 0) return hiddenChildren;
+            
+            // Use provided depth or calculate from node
+            const currentDepth = nodeDepth !== null ? nodeDepth : (node.depth || 0);
+            
+            // Check direct children
+            for (const child of node.children) {
+                const childDepth = currentDepth + 1;
+                if (hiddenNodes.some(hn => hn.key === child.key && hn.depth === childDepth)) {
+                    hiddenChildren.push({ 
+                        key: child.key, 
+                        depth: childDepth, 
+                        name: child.key,
+                        fullPath: child.path || `${node.path || ''}.${child.key}`
+                    });
+                }
+                // Recursively check grandchildren
+                hiddenChildren.push(...getHiddenChildren(child, childDepth));
+            }
+            return hiddenChildren;
+        }
 
         // Helper to flatten the tree for rendering, including only expanded nodes
         // Accepts a nodeHeightMap for measured heights
         function flattenTree(node, arr = [], parentY = 0, depth = 0, nodeHeightMap = {}) {
-            // Hide node if its key and depth match a hidden node
-            if (hiddenNodes.some(hn => hn.key === node.key && hn.depth === depth)) return parentY;
-            // If searching, only show nodes that match the search term in any key or value (case-insensitive, substring)
-            if (searchTerm && !nodeMatchesSearchInnerHTML(node, searchTerm)) return parentY;
-            const thisHeight = nodeHeightMap[node.path] || 60;
-            arr.push({
-                ...node,
-                y: parentY,
-                depth
-            });
-            let y = parentY + thisHeight + 8; // 8px gap
+            // Check if this node should be hidden
+            const isNodeHidden = hiddenNodes.some(hn => hn.key === node.key && hn.depth === depth);
+            
+            // If searching, check if node matches search term
+            const matchesSearch = !searchTerm || nodeMatchesSearchInnerHTML(node, searchTerm);
+            
+            // If node is hidden, skip adding it to the array but continue processing children
+            if (!isNodeHidden && matchesSearch) {
+                const thisHeight = nodeHeightMap[node.path] || 60;
+                arr.push({
+                    ...node,
+                    y: parentY,
+                    depth
+                });
+                parentY = parentY + thisHeight + 8; // 8px gap
+            }
+            
+            // Always process children, even if parent is hidden
+            // When parent is hidden, children maintain the same parentY (they move up to fill the gap)
+            let y = parentY;
             if (expanded[node.path] && node.children.length > 0) {
                 node.children.forEach(child => {
                     y = flattenTree(child, arr, y, depth + 1, nodeHeightMap);
                 });
             }
+            
             return y;
         }
         // Helper: does any key or value in the node (recursively) match the search term in its stringified HTML
@@ -858,11 +1224,11 @@ Promise.all([
 
 
         // --- Controls State ---
-        // Load controls from localStorage if available
-        let nodeWidth = parseInt(localStorage.getItem('ojv_nodeWidth')) || 110;
-        let nodeSeparation = parseInt(localStorage.getItem('ojv_nodeSeparation')) || 60;
-let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
-        let textSize = parseInt(localStorage.getItem('ojv_textSize')) || 12;
+        // Default values - will be loaded from Graphconf.json
+        let nodeWidth = 110;
+        let nodeSeparation = 60;
+        let orientation = 'horizontal';
+        let textSize = 12;
 
         // Helper function to get all descendants of a node
         function getDescendants(node) {
@@ -960,10 +1326,10 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
         // Helper function to save node positions
         async function saveNodePositions() {
             try {
-                console.log('Saving node positions to NodePosition.json:', nodePositions);
-                const success = await saveJSON('NodePosition.json', { nodePositions });
-                if (!success) {
-                    console.error('Failed to save node positions');
+                console.log('Saving node positions via UpdateGraphConfiguration API:', nodePositions);
+                const result = await updateGraphConfiguration();
+                if (!result.success) {
+                    console.error('Failed to save node positions:', result.error);
                 } else {
                     console.log('Node positions saved successfully');
                 }
@@ -1043,6 +1409,27 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
                 .attr('transform', d => `translate(${d.x}, ${d.y})`);
         }
 
+        // Helper function to find the nearest visible parent for a node
+        function findNearestVisibleParent(nodePath, allNodes) {
+            let currentPath = nodePath;
+            
+            while (currentPath.includes('.')) {
+                // Remove the last segment to get parent path
+                const lastDotIndex = currentPath.lastIndexOf('.');
+                currentPath = currentPath.substring(0, lastDotIndex);
+                
+                // Find the parent node in the flat nodes array (only visible nodes)
+                const parentNode = allNodes.find(n => n.path === currentPath);
+                if (parentNode) {
+                    return parentNode;
+                }
+            }
+            
+            // If no parent found, try to find a root node
+            const rootPath = nodePath.split('.')[0];
+            return allNodes.find(n => n.path === rootPath) || null;
+        }
+
         // Helper function to update link positions without full re-render
         function updateLinkPositions() {
             const linksGroup = contentGroup.select('g.links-group');
@@ -1050,8 +1437,8 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             
             flatNodes.forEach((d, i) => {
                 if (d.depth > 0) {
-                    const parentPath = d.path.substring(0, d.path.lastIndexOf('.'));
-                    const parent = flatNodes.find(n => n.path === parentPath);
+                    // Find the nearest visible parent (may not be immediate parent if some are hidden)
+                    const parent = findNearestVisibleParent(d.path, flatNodes);
                     if (parent) {
                         const dHeight = d.measuredHeight || 60;
                         const parentHeight = parent.measuredHeight || 60;
@@ -1078,6 +1465,9 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             document.getElementById('treeOrientation').value = orientation;
             document.getElementById('textSizeInput').value = textSize;
             document.getElementById('textSizeSlider').value = textSize;
+            
+            // Initialize button states based on graph controls
+            initializeButtonStates();
         }
         if (document.readyState === 'loading') {
             window.addEventListener('DOMContentLoaded', setInitialControlValues);
@@ -1086,42 +1476,304 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
         }
 
         // --- Controls Handlers ---
-        window.updateNodeWidth = function(val) {
+        window.updateNodeWidth = async function(val) {
             nodeWidth = parseInt(val);
             document.getElementById('nodeWidthInput').value = nodeWidth;
             document.getElementById('nodeWidthSlider').value = nodeWidth;
-            localStorage.setItem('ojv_nodeWidth', nodeWidth);
+            graphControls.nodeWidth = nodeWidth;
+            await updateGraphConfiguration();
             updateTree();
         };
-        window.updateNodeSeparation = function(val) {
+        window.updateNodeSeparation = async function(val) {
             nodeSeparation = parseInt(val);
             document.getElementById('nodeSeparationInput').value = nodeSeparation;
             document.getElementById('nodeSeparationSlider').value = nodeSeparation;
-            localStorage.setItem('ojv_nodeSeparation', nodeSeparation);
+            graphControls.nodeSeparation = nodeSeparation;
+            await updateGraphConfiguration();
             updateTree();
         };
-        window.updateTreeOrientation = function(val) {
+        window.updateTreeOrientation = async function(val) {
             orientation = val;
-            localStorage.setItem('ojv_orientation', orientation);
+            graphControls.orientation = orientation;
+            await updateGraphConfiguration();
             updateTree();
         };
 
-        window.updateTextSize = function(val) {
+        window.updateTextSize = async function(val) {
             textSize = parseInt(val);
             document.getElementById('textSizeInput').value = textSize;
             document.getElementById('textSizeSlider').value = textSize;
-            localStorage.setItem('ojv_textSize', textSize);
+            graphControls.textSize = textSize;
+            await updateGraphConfiguration();
             updateTree();
         };
 
         // Add this function after controls handlers
         window.expandAllNodes = function() {
+            console.log('Expanding all nodes and ensuring proper spacing...');
+            
             // Expand all nodes in the tree
             Object.keys(expanded).forEach(function(key) {
                 expanded[key] = true;
             });
+            
+            // Clear any saved positions that might cause issues with proper spacing
+            const originalPositions = {...nodePositions}; // Backup original positions
+            nodePositions = {}; // Clear for fresh layout
+            
+            // Force a fresh layout calculation with all nodes expanded
+            flatNodes = [];
+            let y = 20;
+            treeRoots.forEach(root => {
+                y = flattenTree(root, flatNodes, y, 0);
+            });
+            
+            // Resolve any overlaps that might occur with all nodes expanded
+            resolveNodeOverlaps(flatNodes);
+            
+            // Update the tree with the new layout
             updateTree();
+            
+            // Save the new positions for consistency
+            saveNodePositions();
+            
+            console.log('All nodes expanded and properly spaced');
+            
+            // Show confirmation
+            const overlappingPairs = [];
+            for (let i = 0; i < flatNodes.length; i++) {
+                for (let j = i + 1; j < flatNodes.length; j++) {
+                    if (nodesOverlap(flatNodes[i], flatNodes[j])) {
+                        overlappingPairs.push([flatNodes[i], flatNodes[j]]);
+                    }
+                }
+            }
+            
+            if (overlappingPairs.length === 0) {
+                console.log('All nodes expanded with perfect spacing - no overlaps detected');
+            } else {
+                console.log(`All nodes expanded with ${overlappingPairs.length} minor overlaps remaining`);
+            }
         };
+
+        // Combined toggle function for Expand/Collapse
+        window.toggleExpandCollapse = async function() {
+            const isExpanded = graphControls.expandAll;
+            
+            if (isExpanded) {
+                // Currently expanded, so collapse all
+                graphControls.expandAll = false;
+                graphControls.collapseAll = true;
+                collapseAllNodes();
+                
+                // Update button appearance for collapse state
+                const btn = document.getElementById('expandCollapseToggleBtn');
+                const icon = document.getElementById('expandCollapseIcon');
+                const text = document.getElementById('expandCollapseText');
+                
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-warning');
+                btn.title = 'Expand All';
+                icon.className = 'bi bi-plus-square';
+                text.textContent = 'Expand All';
+            } else {
+                // Currently collapsed, so expand all
+                graphControls.expandAll = true;
+                graphControls.collapseAll = false;
+                expandAllNodes();
+                
+                // Update button appearance for expand state
+                const btn = document.getElementById('expandCollapseToggleBtn');
+                const icon = document.getElementById('expandCollapseIcon');
+                const text = document.getElementById('expandCollapseText');
+                
+                btn.classList.remove('btn-warning');
+                btn.classList.add('btn-success');
+                btn.title = 'Collapse All';
+                icon.className = 'bi bi-dash-square';
+                text.textContent = 'Collapse All';
+            }
+            
+            // Update configuration via API
+            await updateGraphConfiguration();
+        };
+
+        // Function to collapse all nodes
+        window.collapseAllNodes = function() {
+            console.log('Collapsing all nodes...');
+            
+            // Collapse all nodes in the tree
+            Object.keys(expanded).forEach(function(key) {
+                expanded[key] = false;
+            });
+            
+            updateTree();
+            saveNodePositions();
+            console.log('All nodes collapsed');
+        };
+
+        // Function to update graph configuration via API
+        async function updateGraphConfiguration() {
+            try {
+                const response = await fetch('/UpdateGraphConfiguration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nodePositions: nodePositions,
+                        graphControls: graphControls
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('Graph configuration updated:', result);
+                return result;
+            } catch (error) {
+                console.error('Failed to update graph configuration:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Function to show a specific node using the ShowNode API
+        async function showNode(key, depth) {
+            try {
+                console.log(`Showing node: key="${key}", depth=${depth}`);
+                
+                const response = await fetch('/ShowNode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key, depth })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('Show node result:', result);
+                
+                if (result.success) {
+                    // Update local hiddenNodes array
+                    hiddenNodes = hiddenNodes.filter(hn => !(hn.key === key && hn.depth === depth));
+                    
+                    // Refresh the tree to show the unhidden node
+                    updateTree();
+                } else {
+                    alert('Failed to show node: ' + (result.error || 'Unknown error'));
+                }
+                
+                return result;
+            } catch (error) {
+                console.error('Failed to show node:', error);
+                alert('Failed to show node: ' + error.message);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Function to show a menu for selecting which hidden child to show
+        function showHiddenChildrenMenu(hiddenChildren, event) {
+            // Remove any existing menu
+            d3.selectAll('.hidden-children-menu').remove();
+            
+            // Create a dropdown menu
+            const menu = d3.select('body')
+                .append('div')
+                .attr('class', 'hidden-children-menu')
+                .style('position', 'absolute')
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY + 10) + 'px')
+                .style('background', '#fff')
+                .style('border', '1px solid #ccc')
+                .style('border-radius', '4px')
+                .style('box-shadow', '0 2px 8px rgba(0,0,0,0.15)')
+                .style('z-index', '9999')
+                .style('max-height', '200px')
+                .style('overflow-y', 'auto')
+                .style('min-width', '150px');
+            
+            // Add menu items
+            const menuItems = menu.selectAll('.menu-item')
+                .data(hiddenChildren)
+                .enter()
+                .append('div')
+                .attr('class', 'menu-item')
+                .style('padding', '8px 12px')
+                .style('cursor', 'pointer')
+                .style('border-bottom', '1px solid #eee')
+                .style('color', '#333')
+                .text(d => `${d.name} (depth: ${d.depth})`)
+                .on('mouseover', function() {
+                    d3.select(this).style('background', '#f0f0f0');
+                })
+                .on('mouseout', function() {
+                    d3.select(this).style('background', '#fff');
+                })
+                .on('click', async function(event, d) {
+                    event.stopPropagation();
+                    menu.remove();
+                    await showNode(d.key, d.depth);
+                });
+            
+            // Add "Show All" option if there are multiple children
+            if (hiddenChildren.length > 1) {
+                menu.append('div')
+                    .attr('class', 'menu-item show-all')
+                    .style('padding', '8px 12px')
+                    .style('cursor', 'pointer')
+                    .style('border-top', '2px solid #007bff')
+                    .style('background', '#f8f9fa')
+                    .style('font-weight', 'bold')
+                    .style('color', '#007bff')
+                    .text(`Show All (${hiddenChildren.length} nodes)`)
+                    .on('mouseover', function() {
+                        d3.select(this).style('background', '#e9ecef');
+                    })
+                    .on('mouseout', function() {
+                        d3.select(this).style('background', '#f8f9fa');
+                    })
+                    .on('click', async function(event) {
+                        event.stopPropagation();
+                        menu.remove();
+                        
+                        // Show all hidden children
+                        for (const child of hiddenChildren) {
+                            await showNode(child.key, child.depth);
+                        }
+                    });
+            }
+            
+            // Close menu when clicking outside
+            d3.select('body').on('click.hidden-menu', function() {
+                menu.remove();
+                d3.select('body').on('click.hidden-menu', null);
+            });
+        }
+
+        // Initialize button states on page load
+        function initializeButtonStates() {
+            const btn = document.getElementById('expandCollapseToggleBtn');
+            const icon = document.getElementById('expandCollapseIcon');
+            const text = document.getElementById('expandCollapseText');
+            
+            if (graphControls.expandAll) {
+                // Currently expanded state
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-warning');
+                btn.title = 'Collapse All';
+                icon.className = 'bi bi-dash-square';
+                text.textContent = 'Collapse All';
+            } else {
+                // Currently collapsed/default state
+                btn.classList.remove('btn-warning');
+                btn.classList.add('btn-success');
+                btn.title = 'Expand All';
+                icon.className = 'bi bi-plus-square';
+                text.textContent = 'Expand All';
+            }
+        }
 
         // Reset filter function
         window.resetFilter = async function() {
@@ -1143,29 +1795,6 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             } catch (error) {
                 console.error('Failed to reset filter:', error);
                 alert('Failed to reset filter. Please try again.');
-            }
-        };
-
-        // Clear JSON output function
-        window.clearJsonOutput = async function() {
-            try {
-                // Clear the output.json file by sending an empty object
-                const response = await fetch('/output.json', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({})
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Failed to clear JSON output: ${response.status}`);
-                }
-
-                console.log('JSON output cleared successfully');
-                // Reload the page to reflect the cleared output
-                location.reload();
-            } catch (error) {
-                console.error('Failed to clear JSON output:', error);
-                alert('Failed to clear JSON output. Please try again.');
             }
         };
 
@@ -1203,6 +1832,21 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             }
         };
 
+        // Force center tree function - repositions nodes to center and redraws
+        window.forceCenterTree = function() {
+            // Clear any saved positions that might interfere with centering
+            nodePositions = {};
+            saveNodePositions();
+            
+            // Recalculate positions with fresh centering
+            updateTree();
+            
+            // Then apply visual centering
+            setTimeout(() => {
+                window.centerView();
+            }, 100);
+        };
+
         // Initial flatten for rendering
         let flatNodes = [];
         let y = 20;
@@ -1211,13 +1855,13 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             y = flattenTree(root, flatNodes, y, 0);
         });
 
-        // Calculate SVG size to fill the entire screen/viewport
+        // Calculate SVG size to fill the entire screen/viewport for proper centering
         const maxX = flatNodes.length > 0 ? Math.max(...flatNodes.map(n => n.x + nodeWidth), 0) : nodeWidth;
         const maxY = flatNodes.length > 0 ? Math.max(...flatNodes.map(n => n.y + (n.measuredHeight || 60)), y) : y;
         
-        // Use full screen dimensions, but ensure content fits with padding
-        let svgHeight = Math.max(height, maxY + 200); // Use screen height or content height + padding
-        let svgWidth = Math.max(width, maxX + 200);   // Use screen width or content width + padding
+        // Use full screen dimensions for optimal centering
+        let svgHeight = height; // Use full screen height
+        let svgWidth = width;   // Use full screen width
         
         console.log('SVG size calculation:', {
             screenDimensions: { width, height },
@@ -1226,15 +1870,23 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
         });
         let svg, contentGroup, zoomBehavior, lastTransform = null;
         function createSVG() {
+            console.log('createSVG() called');
+            console.log('svgWidth:', svgWidth, 'svgHeight:', svgHeight);
+            
             d3.select('#output-graph').selectAll('svg').remove();
             svg = d3.select('#output-graph')
                 .append('svg')
                 .attr('width', svgWidth)
                 .attr('height', svgHeight);
+                
+            console.log('SVG created:', svg.node());
+            
             // Add a group for links (background) and a group for nodes (foreground)
             contentGroup = svg.append('g').attr('class', 'content-group');
             contentGroup.append('g').attr('class', 'links-group');
             contentGroup.append('g').attr('class', 'nodes-group');
+            
+            console.log('contentGroup created:', contentGroup.node());
             zoomBehavior = d3.zoom()
                 .scaleExtent([0.2, 5])
                 .filter(function(event) {
@@ -1386,6 +2038,16 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
         // Render the flat node list as a tree
 
         function renderTree() {
+            console.log('renderTree() called');
+            console.log('flatNodes for rendering:', flatNodes.length, flatNodes);
+            console.log('svg element:', svg);
+            console.log('contentGroup:', contentGroup);
+            
+            if (!svg || !contentGroup) {
+                console.error('SVG or contentGroup not initialized!');
+                return;
+            }
+            
             // Remove previous nodes and links
             contentGroup.select('g.links-group').selectAll('.tree-link').remove();
             contentGroup.select('g.nodes-group').selectAll('.tree-node').remove();
@@ -1397,11 +2059,12 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             
             if (!hasGlobalPositions) {
                 // Calculate center positions for root nodes
-                // Use StartingNodeLeft/StartingNodeTop if available, otherwise use screen center
-                let centerX, centerY;
+                // Always use SVG center for optimal centering
+                let centerX = svgWidth / 2 - nodeWidth / 2;
+                let centerY = svgHeight / 2;
                 
+                // Only use saved starting position if explicitly set
                 if (nodePositions.StartingNodeLeft !== undefined && nodePositions.StartingNodeTop !== undefined) {
-                    // Use the saved starting position values
                     centerX = nodePositions.StartingNodeLeft - nodeWidth / 2;
                     centerY = nodePositions.StartingNodeTop;
                     console.log('Using saved starting node position:', {
@@ -1411,10 +2074,7 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
                         calculatedCenterY: centerY
                     });
                 } else {
-                    // Fallback to SVG center if no starting position is set
-                    centerX = svgWidth / 2 - nodeWidth / 2;
-                    centerY = svgHeight / 2;
-                    console.log('Using default SVG center position:', { centerX, centerY });
+                    console.log('Using SVG center position for optimal centering:', { centerX, centerY, svgWidth, svgHeight });
                 }
                 
                 // Set initial horizontal layout: root nodes start in center, children expand to the right
@@ -1443,16 +2103,14 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
                     }
                 });
             } else {
-                // Initialize with default positions that will be overridden by global positioning
-                // Use StartingNodeLeft/StartingNodeTop if available, otherwise use screen center
-                let centerX, centerY;
+                // Initialize with default centered positions that will be adjusted by global positioning
+                let centerX = svgWidth / 2 - nodeWidth / 2;
+                let centerY = svgHeight / 2;
                 
+                // Only override if explicitly saved starting positions exist
                 if (nodePositions.StartingNodeLeft !== undefined && nodePositions.StartingNodeTop !== undefined) {
                     centerX = nodePositions.StartingNodeLeft - nodeWidth / 2;
                     centerY = nodePositions.StartingNodeTop;
-                } else {
-                    centerX = svgWidth / 2 - nodeWidth / 2;
-                    centerY = svgHeight / 2;
                 }
                 
                 let yMap = {};
@@ -1490,8 +2148,8 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             const linksGroup = contentGroup.select('g.links-group');
             flatNodes.forEach((d, i) => {
                 if (d.depth > 0) {
-                    const parentPath = d.path.substring(0, d.path.lastIndexOf('.'));
-                    const parent = flatNodes.find(n => n.path === parentPath);
+                    // Find the nearest visible parent (may not be immediate parent if some are hidden)
+                    const parent = findNearestVisibleParent(d.path, flatNodes);
                     if (parent) {
                         // Use measured heights if available
                         const dHeight = d.measuredHeight || initialNodeHeight;
@@ -1736,9 +2394,9 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
 
             // Filter button
             inputGroup.append('button')
-                .attr('class', 'btn btn-outline-warning btn-filter-node')
-                .style('min-width', '50px')
-                .style('padding', '0 8px')
+                .attr('class', 'btn btn-outline-warning btn-filter-node btn-sm')
+                .style('min-width', '32px')
+                .style('padding', '0px 1px 0px 1px')
                 .html('<i class="bi bi-funnel"></i>')
                 .attr('title', 'Filter')
                 .on('click', async function(event, d) {
@@ -1762,17 +2420,18 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
                         alert('Failed to process filter. Please try again.');
                     }
                 });
-            // Expand/collapse button (left)
+            // Expand/collapse button (left) - only show for expandable nodes
             inputGroup.append('button')
                 .attr('class', 'btn btn-outline-info btn-expand-collapse')
                 .style('min-width', '32px')
-                .style('padding', '0 8px')
+                .style('padding', '0px 1px 0px 1px')
                 .style('font-size', Math.max(18, textSize * 1.5) + 'px')
                 .style('font-weight', 'bold')
-                .text(d => d.isObject ? (expanded[d.path] ? '−' : '+') : '')
+                .style('display', d => (d.children && d.children.length > 0) ? 'inline-block' : 'none') // Hide if no child nodes
+                .text(d => (d.children && d.children.length > 0) ? (expanded[d.path] ? '−' : '+') : '')
                 .on('click', function(event, d) {
                     event.stopPropagation();
-                    if (!d.isObject) return;
+                    if (!d.children || d.children.length === 0) return;
                     expanded[d.path] = !expanded[d.path];
                     updateTree();
                 });
@@ -1780,8 +2439,8 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             // Hide button (right)
             inputGroup.append('button')
                 .attr('class', 'btn btn-outline-danger btn-hide-node')
-                .style('min-width', '40px')
-                .style('padding', '0 8px')
+                .style('min-width', '32px')
+                .style('padding', '0px 1px 0px 1px')
                 .html('<i class="bi bi-eye-slash"></i>')
                 .attr('title', 'Hide')
                 .on('click', async function(event, d) {
@@ -1799,69 +2458,96 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
                     }
                 });
 
-            // Node label: show merged keys joined by ' / '
-            contentContainer.append('div')
-                .attr('class', 'node-label')
+            // Show hidden children button - only show when node has hidden children
+            inputGroup.append('button')
+                .attr('class', 'btn btn-outline-success btn-show-children')
+                .style('min-width', '32px')
+                .style('padding', '0px 1px 0px 1px')
+                .style('display', d => hasHiddenChildren(d, d.depth) ? 'inline-block' : 'none')
+                .html('<i class="bi bi-eye"></i>')
+                .attr('title', 'Show hidden children')
+                .on('click', async function(event, d) {
+                    event.stopPropagation();
+                    
+                    // Get all hidden children of this node
+                    const hiddenChildren = getHiddenChildren(d, d.depth);
+                    
+                    if (hiddenChildren.length === 0) {
+                        console.log('No hidden children found for this node');
+                        return;
+                    }
+                    
+                    // Show a dropdown/menu for user to select which hidden child to show
+                    if (hiddenChildren.length === 1) {
+                        // If only one hidden child, show it directly
+                        await showNode(hiddenChildren[0].key, hiddenChildren[0].depth);
+                    } else {
+                        // If multiple hidden children, show a selection menu
+                        showHiddenChildrenMenu(hiddenChildren, event);
+                    }
+                });
+
+            // Create flex container for node label and content on same line
+            const nodeInfoContainer = contentContainer.append('div')
+                .attr('class', 'd-flex')
                 .style('margin', '2px 0 0 10px')
+                .style('align-items', 'flex-start')
+                .style('gap', '8px')
+                .style('width', '100%');
+
+            // Node label: show merged keys joined by ' / '
+            nodeInfoContainer.append('div')
+                .attr('class', 'node-label')
                 .style('font-size', textSize + 'px')
                 .style('font-weight', 'bold')
                 .style('color', '#fff')
+                .style('white-space', 'nowrap')
+                .style('flex-shrink', '0')
                 .text(d => d.mergedKeys ? d.mergedKeys.join(' / ') : d.key);
 
             // Node value summary: show merged values for each merged key
-            const valueDiv = contentContainer.append('div')
+            const valueDiv = nodeInfoContainer.append('div')
                 .attr('class', 'node-content')
-                .style('margin', '2px 0 0 10px')
-                .style('width', (nodeWidth - 20) + 'px')
-                .style('font-size', textSize + 'px');
+                .style('font-size', textSize + 'px')
+                .style('flex-grow', '1')
+                .style('min-width', '0');
 
             valueDiv.selectAll('div.kv-row')
                 .data(d => {
-                    // If merged, show all merged values
-                    if (d.mergedKeys && d.mergedKeys.length > 1) {
-                        return d.mergedKeys.map((k, i) => {
-                            const v = d.mergedValues[i];
-                            if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
-                                // Show up to 2 key-value pairs for each merged object
-                                return Object.entries(v).slice(0, 2).map(([kk, vv]) => {
-                                    const type = detectValueType(kk, vv);
-                                    return {
-                                        k: k + '.' + kk, 
-                                        v: vv,
-                                        type: type,
-                                        displayValue: typeof vv === 'object' ? (Array.isArray(vv) ? 'Array' : 'Object') : vv
-                                    };
-                                });
-                            } else if (Array.isArray(v)) {
-                                const type = detectValueType(k, v);
-                                return [{k: k, v: v, type: type, displayValue: `Array[${v.length}]`}];
-                            } else {
-                                const type = detectValueType(k, v);
-                                return [{k: k, v: v, type: type, displayValue: String(v)}];
-                            }
-                        }).flat();
+                    let displayData = [];
+                    
+                    // For leaf nodes (primitive values), display the value directly
+                    if (!d.isObject) {
+                        const type = detectValueType(d.key, d.value);
+                        displayData.push({
+                            k: '', // No key for leaf nodes, just the value
+                            v: d.value,
+                            type: type,
+                            displayValue: String(d.value)
+                        });
+                        return displayData;
                     }
-                    // Otherwise, show as before
-                    if (d.isObject && d.value && typeof d.value === 'object' && !Array.isArray(d.value)) {
-                        return Object.entries(d.value)
-                            .slice(0, 4)
-                            .map(([k, v]) => {
-                                const type = detectValueType(k, v);
-                                return {
-                                    k: k, 
-                                    v: v, 
-                                    type: type,
-                                    displayValue: typeof v === 'object' ? (Array.isArray(v) ? 'Array' : 'Object') : v
-                                };
-                            });
-                    } else if (!d.isObject) {
-                        const type = detectValueType('', d.value);
-                        return [{k: '', v: d.value, type: type, displayValue: String(d.value)}];
-                    } else if (Array.isArray(d.value)) {
-                        const type = detectValueType('', d.value);
-                        return [{k: '', v: d.value, type: type, displayValue: `Array[${d.value.length}]`}];
+                    
+                    // For object/array nodes, show summary information
+                    if (d.isArray) {
+                        const childCount = d.children ? d.children.length : 0;
+                        displayData.push({
+                            k: 'Array Info',
+                            v: `Array[${childCount}] - ${childCount} items`,
+                            type: 'array',
+                            displayValue: `Array[${childCount}] - ${childCount} items`
+                        });
+                    } else if (d.isObject) {
+                        const childCount = d.children ? d.children.length : 0;
+                        displayData.push({
+                            k: 'Object Info',
+                            v: `Object{${childCount}} - ${childCount} properties`,
+                            type: 'object',
+                            displayValue: `Object{${childCount}} - ${childCount} properties`
+                        });
                     }
-                    return [];
+                    
+                    return displayData;
                 })
                 .enter()
                 .append('div')
@@ -1926,8 +2612,8 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
                 linksGroup.selectAll('.tree-link').remove();
                 flatNodes.forEach((d, i) => {
                     if (d.depth > 0) {
-                        const parentPath = d.path.substring(0, d.path.lastIndexOf('.'));
-                        const parent = flatNodes.find(n => n.path === parentPath);
+                        // Find the nearest visible parent (may not be immediate parent if some are hidden)
+                        const parent = findNearestVisibleParent(d.path, flatNodes);
                         if (parent) {
                             const dHeight = d.measuredHeight || 60;
                             const parentHeight = parent.measuredHeight || 60;
@@ -1950,6 +2636,10 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
 
 
         function updateTree() {
+            console.log('updateTree() called');
+            console.log('treeRoots available:', treeRoots ? treeRoots.length : 'undefined');
+            console.log('treeRoots content:', treeRoots);
+            
             // Save current transform before update
             if (svg && zoomBehavior) {
                 const t = d3.zoomTransform(svg.node());
@@ -1960,9 +2650,8 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             treeRoots.forEach(root => {
                 y = flattenTree(root, flatNodes, y, 0);
             });
-            // Recompute SVG size to fill the screen while accommodating content
-            const maxX = flatNodes.length > 0 ? Math.max(...flatNodes.map(n => n.x + nodeWidth), 0) : nodeWidth;
-            const maxY = flatNodes.length > 0 ? Math.max(...flatNodes.map(n => n.y + (n.measuredHeight || 60)), 0) : 60;
+            
+            console.log('flatNodes after flattening:', flatNodes.length, flatNodes);
             
             // Use screen/viewport dimensions for full coverage
             const screenWidth = window.screen.width;
@@ -1972,25 +2661,27 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             const fullWidth = Math.max(viewportWidth, screenWidth);
             const fullHeight = Math.max(viewportHeight, screenHeight);
             
-            svgHeight = Math.max(fullHeight, maxY + 200); // Screen height or content + padding
-            svgWidth = Math.max(fullWidth, maxX + 200);   // Screen width or content + padding
+            // Set SVG size to full screen dimensions for proper centering
+            svgHeight = fullHeight;
+            svgWidth = fullWidth;
+            
             createSVG();
             renderTree();
         }
-        // Search input handler
+        // Re-define search functions now that all variables are available
         window.handleSearchInput = function(val) {
             searchTerm = val.trim();
             updateTree();
         };
-        window.searchBoxSearch = function() {
-            var val = document.getElementById('searchBox').value;
-            handleSearchInput(val);
-        };
-        window.clearSearchBox = function() {
-            document.getElementById('searchBox').value = '';
-            handleSearchInput('');
-        };
+        
         renderTree();
+
+        // Ensure tree is centered on initial load
+        setTimeout(() => {
+            if (flatNodes.length > 0) {
+                window.centerView();
+            }
+        }, 100);
 
         // Handle window resize to update SVG dimensions
         window.addEventListener('resize', function() {
@@ -1998,6 +2689,14 @@ let orientation = localStorage.getItem('ojv_orientation') || 'horizontal';
             updateTree();
         });
 
+        // Initial tree rendering - this was missing!
+        console.log('Calling initial updateTree to render the data');
+        const { nodes: processedNodes, treeRoots: processedRoots } = updateTree(data);
+        updateDebugInfo('Tree updated. Nodes: ' + processedNodes.length + ', Roots: ' + processedRoots.length);
+        console.log('treeRoots after processing:', processedRoots);
+        console.log('treeRoots length:', processedRoots.length);
+        console.log('nodes after processing:', processedNodes);
+        console.log('nodes length:', processedNodes.length);
 
         // Add arrow marker for branch connectors
         svg.append('defs').append('marker')

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test ShowNode API</title>
+</head>
+<body>
+    <h2>Test ShowNode API</h2>
+    <div>
+        <label>Key: <input type="text" id="nodeKey" placeholder="e.g., variables" value="variables"></label><br><br>
+        <label>Depth: <input type="number" id="nodeDepth" placeholder="e.g., 1" value="1"></label><br><br>
+        <button onclick="testShowNode()">Show Node</button>
+        <button onclick="getCurrentHiddenNodes()">Get Current Hidden Nodes</button>
+    </div>
+    <div id="result"></div>
+
+    <script>
+        async function testShowNode() {
+            const key = document.getElementById('nodeKey').value;
+            const depth = parseInt(document.getElementById('nodeDepth').value);
+            
+            if (!key || isNaN(depth)) {
+                document.getElementById('result').innerHTML = 'Please enter valid key and depth';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/ShowNode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key, depth })
+                });
+                
+                const result = await response.json();
+                document.getElementById('result').innerHTML = '<h3>ShowNode Result:</h3><pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        }
+
+        async function getCurrentHiddenNodes() {
+            try {
+                const response = await fetch('/HiddenNodes.json');
+                const result = await response.json();
+                document.getElementById('result').innerHTML = '<h3>Current Hidden Nodes:</h3><pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -461,6 +461,65 @@ app.post('/HiddenNodes.json', (req, res) => {
   });
 });
 
+// Endpoint to show (unhide) a specific node
+app.post('/ShowNode', (req, res) => {
+  const { key, depth } = req.body;
+  
+  if (key === undefined || depth === undefined) {
+    return res.status(400).json({ 
+      error: 'Missing required parameters: key and depth' 
+    });
+  }
+  
+  console.log(`Showing node: key="${key}", depth=${depth}`);
+  
+  const hiddenNodesPath = path.join(__dirname, 'HiddenNodes.json');
+  
+  // Read current hidden nodes
+  fs.readFile(hiddenNodesPath, 'utf8', (err, data) => {
+    let hiddenNodesData = { hiddenNodes: [] };
+    
+    if (!err && data) {
+      try {
+        hiddenNodesData = JSON.parse(data);
+        if (!hiddenNodesData.hiddenNodes) {
+          hiddenNodesData.hiddenNodes = [];
+        }
+      } catch (parseErr) {
+        console.error('Error parsing HiddenNodes.json:', parseErr);
+        hiddenNodesData = { hiddenNodes: [] };
+      }
+    }
+    
+    // Remove the specified node from hidden nodes
+    const originalLength = hiddenNodesData.hiddenNodes.length;
+    hiddenNodesData.hiddenNodes = hiddenNodesData.hiddenNodes.filter(
+      hn => !(hn.key === key && hn.depth === depth)
+    );
+    
+    const wasRemoved = hiddenNodesData.hiddenNodes.length < originalLength;
+    
+    // Save the updated hidden nodes
+    fs.writeFile(hiddenNodesPath, JSON.stringify(hiddenNodesData, null, 2), writeErr => {
+      if (writeErr) {
+        console.error('Failed to save updated HiddenNodes.json:', writeErr);
+        return res.status(500).json({ 
+          error: 'Failed to save updated hidden nodes', 
+          details: writeErr.message 
+        });
+      }
+      
+      console.log(`Node successfully ${wasRemoved ? 'shown' : 'was already visible'}: key="${key}", depth=${depth}`);
+      res.json({ 
+        success: true, 
+        message: wasRemoved ? 'Node successfully shown' : 'Node was already visible',
+        wasRemoved,
+        remainingHiddenNodes: hiddenNodesData.hiddenNodes.length
+      });
+    });
+  });
+});
+
 // Smart parsing function to handle different data formats
 function smartParse(data, headers = {}) {
   // If data is already an object, return as is
@@ -704,6 +763,108 @@ app.post('/NodePosition.json', (req, res) => {
   });
 });
 
+// Endpoint to update Graphconf.json (replaces NodePosition.json)
+app.post('/Graphconf.json', (req, res) => {
+  console.log('Received Graphconf.json save request:', req.body); // Debug log
+  fs.writeFile(path.join(__dirname, 'Graphconf.json'), JSON.stringify(req.body, null, 2), err => {
+    if (err) {
+      console.error('Failed to save Graphconf.json:', err);
+      res.status(500).send('Write failed');
+    } else {
+      console.log('Graphconf.json saved successfully');
+      res.send('OK');
+    }
+  });
+});
+
+// Update Graph Configuration API
+app.post('/UpdateGraphConfiguration', (req, res) => {
+  console.log('Received UpdateGraphConfiguration request:', req.body);
+  
+  const graphConfigPath = path.join(__dirname, 'Graphconf.json');
+  
+  // Read existing configuration
+  fs.readFile(graphConfigPath, 'utf8', (err, data) => {
+    let graphConfig = { 
+      nodePositions: {},
+      graphControls: {
+        expandAll: false,
+        collapseAll: false,
+        nodeWidth: 110,
+        nodeSeparation: 60,
+        orientation: 'horizontal',
+        textSize: 12
+      },
+      hierarchicalControls: {
+        nodeSeparation: 100,
+        levelSeparation: 150,
+        nodeSize: 22,
+        treeOrientation: 'vertical',
+        zoomValue: 1
+      }
+    };
+    
+    if (!err && data) {
+      try {
+        graphConfig = JSON.parse(data);
+        if (!graphConfig.nodePositions) {
+          graphConfig.nodePositions = {};
+        }
+        if (!graphConfig.graphControls) {
+          graphConfig.graphControls = {
+            expandAll: false,
+            collapseAll: false,
+            nodeWidth: 110,
+            nodeSeparation: 60,
+            orientation: 'horizontal',
+            textSize: 12
+          };
+        }
+        if (!graphConfig.hierarchicalControls) {
+          graphConfig.hierarchicalControls = {
+            nodeSeparation: 100,
+            levelSeparation: 150,
+            nodeSize: 22,
+            treeOrientation: 'vertical',
+            zoomValue: 1
+          };
+        }
+      } catch (parseErr) {
+        console.error('Error parsing existing Graphconf.json:', parseErr);
+      }
+    }
+    
+    // Update with new values from request
+    if (req.body.nodePositions) {
+      graphConfig.nodePositions = { ...graphConfig.nodePositions, ...req.body.nodePositions };
+    }
+    if (req.body.graphControls) {
+      graphConfig.graphControls = { ...graphConfig.graphControls, ...req.body.graphControls };
+    }
+    if (req.body.hierarchicalControls) {
+      graphConfig.hierarchicalControls = { ...graphConfig.hierarchicalControls, ...req.body.hierarchicalControls };
+    }
+    
+    // Save the updated configuration
+    fs.writeFile(graphConfigPath, JSON.stringify(graphConfig, null, 2), writeErr => {
+      if (writeErr) {
+        console.error('Failed to save graph configuration:', writeErr);
+        return res.status(500).json({ 
+          error: 'Failed to save graph configuration', 
+          details: writeErr.message 
+        });
+      }
+      
+      console.log('Graph configuration saved successfully:', graphConfig);
+      res.json({ 
+        success: true, 
+        message: 'Graph configuration updated successfully',
+        configuration: graphConfig
+      });
+    });
+  });
+});
+
 // Endpoint to set starting node position based on monitor resolution
 app.post('/SetStartNodePosition', (req, res) => {
   console.log('Received SetStartNodePosition request:', req.body);
@@ -721,11 +882,17 @@ app.post('/SetStartNodePosition', (req, res) => {
   const startingNodeLeft = Math.floor(screenWidth / 2);
   const startingNodeTop = Math.floor(screenHeight / 2);
   
-  const nodePositionPath = path.join(__dirname, 'NodePosition.json');
+  const nodePositionPath = path.join(__dirname, 'Graphconf.json');
   
-  // Read existing NodePosition.json or create new structure
+  // Read existing Graphconf.json or create new structure
   fs.readFile(nodePositionPath, 'utf8', (err, data) => {
-    let nodePositions = { nodePositions: {} };
+    let nodePositions = { 
+      nodePositions: {},
+      graphControls: {
+        expandAll: false,
+        collapseAll: false
+      }
+    };
     
     if (!err && data) {
       try {
@@ -733,9 +900,21 @@ app.post('/SetStartNodePosition', (req, res) => {
         if (!nodePositions.nodePositions) {
           nodePositions.nodePositions = {};
         }
+        if (!nodePositions.graphControls) {
+          nodePositions.graphControls = {
+            expandAll: false,
+            collapseAll: false
+          };
+        }
       } catch (parseErr) {
-        console.error('Error parsing existing NodePosition.json:', parseErr);
-        nodePositions = { nodePositions: {} };
+        console.error('Error parsing existing Graphconf.json:', parseErr);
+        nodePositions = { 
+          nodePositions: {},
+          graphControls: {
+            expandAll: false,
+            collapseAll: false
+          }
+        };
       }
     }
     
@@ -791,6 +970,165 @@ app.post('/output.json', (req, res) => {
     } else {
       res.send('OK');
     }
+  });
+});
+
+// Endpoint to update RunConf.json
+app.post('/UpdateRunConfiguration', (req, res) => {
+  console.log('Received UpdateRunConfiguration request:', req.body);
+  
+  const runConfigPath = path.join(__dirname, 'RunConf.json');
+  
+  // Validate request body
+  if (!req.body.applications || !Array.isArray(req.body.applications)) {
+    return res.status(400).json({ 
+      error: 'Invalid request format', 
+      expected: 'applications array' 
+    });
+  }
+  
+  // Read existing configuration
+  fs.readFile(runConfigPath, 'utf8', (err, data) => {
+    let runConfig = { 
+      applications: [
+        {
+          id: "app_default",
+          name: "Default Application",
+          checked: false,
+          apiIds: []
+        }
+      ]
+    };
+    
+    if (!err && data) {
+      try {
+        runConfig = JSON.parse(data);
+        if (!runConfig.applications) {
+          runConfig.applications = [
+            {
+              id: "app_default",
+              name: "Default Application", 
+              checked: false,
+              apiIds: []
+            }
+          ];
+        }
+      } catch (parseErr) {
+        console.error('Error parsing existing RunConf.json:', parseErr);
+      }
+    }
+    
+    // Update with new applications data
+    runConfig.applications = req.body.applications;
+    
+    // Save the updated configuration
+    fs.writeFile(runConfigPath, JSON.stringify(runConfig, null, 2), writeErr => {
+      if (writeErr) {
+        console.error('Failed to save run configuration:', writeErr);
+        return res.status(500).json({ 
+          error: 'Failed to save run configuration', 
+          details: writeErr.message 
+        });
+      }
+      
+      console.log('Run configuration saved successfully:', runConfig);
+      res.json({ 
+        success: true, 
+        message: 'Run configuration updated successfully',
+        applications: runConfig.applications
+      });
+    });
+  });
+});
+
+// Serve RunConf.json for GET requests
+app.get('/RunConf.json', (req, res) => {
+  const filePath = path.join(__dirname, 'RunConf.json');
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      // If file doesn't exist, return default configuration
+      const defaultConfig = {
+        applications: [
+          {
+            id: "app_default",
+            name: "Default Application",
+            checked: false,
+            apiIds: []
+          }
+        ]
+      };
+      return res.json(defaultConfig);
+    }
+    res.type('application/json').send(data);
+  });
+});
+
+// Create a new application
+app.post('/CreateApplication', (req, res) => {
+  console.log('Received CreateApplication request:', req.body);
+  
+  const runConfigPath = path.join(__dirname, 'RunConf.json');
+  
+  // Read existing configuration
+  fs.readFile(runConfigPath, 'utf8', (err, data) => {
+    let runConfig = { 
+      applications: [
+        {
+          id: "app_default",
+          name: "Default Application",
+          checked: false,
+          apiIds: []
+        }
+      ]
+    };
+    
+    if (!err && data) {
+      try {
+        runConfig = JSON.parse(data);
+        if (!runConfig.applications) {
+          runConfig.applications = [
+            {
+              id: "app_default",
+              name: "Default Application", 
+              checked: false,
+              apiIds: []
+            }
+          ];
+        }
+      } catch (parseErr) {
+        console.error('Error parsing existing RunConf.json:', parseErr);
+      }
+    }
+    
+    // Create new application
+    const newApp = {
+      id: 'app_' + Date.now(),
+      name: 'New Application',
+      checked: false,
+      apiIds: []
+    };
+    
+    // Add the new application to the list
+    runConfig.applications.push(newApp);
+    
+    // Save the updated configuration
+    fs.writeFile(runConfigPath, JSON.stringify(runConfig, null, 2), writeErr => {
+      if (writeErr) {
+        console.error('Failed to save new application:', writeErr);
+        return res.status(500).json({ 
+          error: 'Failed to save new application', 
+          details: writeErr.message 
+        });
+      }
+      
+      console.log('New application created successfully:', newApp);
+      res.json({ 
+        success: true, 
+        message: 'New application created successfully',
+        application: newApp,
+        applications: runConfig.applications
+      });
+    });
   });
 });
 

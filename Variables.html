@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Variables - APIRunner</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .var-list { max-width: 800px; margin: 2rem auto; }
+        .var-item { border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); margin-bottom: 1rem; padding: 1rem; }
+        .drag-handle { cursor: grab; margin-right: 8px; }
+        .search-match { background-color: rgba(255, 193, 7, 0.15); }
+        .highlight { background-color: yellow; color: black; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">APIRunner</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="ManageAPI.html">Manage API</a></li>
+        <li class="nav-item"><a class="nav-link" href="view.html">Visualizer</a></li>
+        <li class="nav-item"><a class="nav-link active" href="Variables.html">Variables</a></li>
+        <li class="nav-item"><a class="nav-link" href="Run.html">Run</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<div class="container var-list">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Manage Variables</h2>
+        <div class="text-muted">
+            <small id="variableCount">0 variables</small>
+        </div>
+    </div>
+    
+    <!-- Search Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-8">
+                    <label for="searchInput" class="form-label">Search Variables</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search variable names or values...">
+                        <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn" onclick="clearSearch()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                <path d="m4.646 4.646.708.708L8 8l2.646-2.646.708.708L8.708 8.5l2.647 2.646-.707.708L8 9.207l-2.646 2.647-.708-.708L7.293 8.5 4.646 5.854z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="caseToggle">
+                        <label class="form-check-label" for="caseToggle">
+                            Case Sensitive
+                        </label>
+                    </div>
+                    <div id="searchStats" class="text-muted small mt-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Variable Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Add New Variable</h5>
+            <form id="addVarForm">
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <input type="text" class="form-control" id="varNameInput" placeholder="Variable Name" required>
+                    </div>
+                    <div class="col-md-5">
+                        <input type="text" class="form-control" id="varValueInput" placeholder="Value" required>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-success w-100" type="submit" title="Save/Add Variable">
+                            <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='currentColor' class='bi bi-plus-circle' viewBox='0 0 16 16'>
+                                <path d='M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z'/>
+                                <path d='M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z'/>
+                            </svg>
+                            Add
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Variables List -->
+    <div id="varListContainer"></div>
+    
+    <!-- Clear All Button -->
+    <div class="text-center mt-4">
+        <button class="btn btn-outline-danger" onclick="clearAllVariables()" id="clearAllBtn" style="display: none;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5.5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6zm3 .5a.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6z"/>
+                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1-1V1a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1H1v1h14V3h-1.5zm-1-1V1h-7v1h7zM1 4v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4H1zm2 10a1 1 0 0 1-1-1V4h12v9a1 1 0 0 1-1 1H3z"/>
+            </svg>
+            Clear All Variables
+        </button>
+    </div>
+</div>
+
+<script>
+const varFile = 'variables.json';
+let variables = [];
+let editingVarIdx = null;
+let currentSearchTerm = '';
+let searchMatches = [];
+
+// --- Utility Functions ---
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function highlightText(text, searchTerm, caseSensitive = false) {
+    if (!searchTerm || !text) return escapeHtml(text);
+    
+    const flags = caseSensitive ? 'g' : 'gi';
+    const regex = new RegExp(escapeRegex(searchTerm), flags);
+    const escapedText = escapeHtml(text);
+    
+    return escapedText.replace(regex, match => `<span class="highlight">${match}</span>`);
+}
+
+function escapeRegex(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// --- Search Functionality ---
+function handleSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchTerm = searchInput.value.trim();
+    const caseSensitive = document.getElementById('caseToggle').checked;
+    
+    currentSearchTerm = searchTerm;
+    searchMatches = [];
+
+    if (searchTerm) {
+        const flags = caseSensitive ? '' : 'i';
+        const regex = new RegExp(escapeRegex(searchTerm), flags);
+        
+        variables.forEach((variable, index) => {
+            const nameMatch = regex.test(variable.name);
+            const valueMatch = regex.test(variable.value);
+            
+            if (nameMatch || valueMatch) {
+                searchMatches.push(index);
+            }
+        });
+
+        // Update search stats
+        const searchStats = document.getElementById('searchStats');
+        searchStats.textContent = `${searchMatches.length} of ${variables.length} variables match`;
+    } else {
+        document.getElementById('searchStats').textContent = '';
+    }
+
+    renderVarList();
+}
+
+function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    currentSearchTerm = '';
+    searchMatches = [];
+    document.getElementById('searchStats').textContent = '';
+    renderVarList();
+}
+
+// --- Variable Management Functions ---
+function loadVars() {
+    fetch(varFile)
+        .then(r => r.json())
+        .then(data => {
+            variables = data.variables || [];
+            renderVarList();
+            updateVariableCount();
+        })
+        .catch(() => { 
+            variables = []; 
+            renderVarList(); 
+            updateVariableCount();
+        });
+}
+
+function updateVariableCount() {
+    const count = variables.length;
+    const countElement = document.getElementById('variableCount');
+    countElement.textContent = `${count} variable${count !== 1 ? 's' : ''}`;
+    
+    // Show/hide clear all button
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    clearAllBtn.style.display = count > 0 ? 'block' : 'none';
+}
+
+function renderVarList() {
+    const container = document.getElementById('varListContainer');
+    if (!container) return;
+    
+    if (variables.length === 0) {
+        container.innerHTML = '<div class="alert alert-info">No variables added.</div>';
+        return;
+    }
+
+    // Filter variables based on search if search is active
+    const varsToShow = currentSearchTerm ? 
+        variables.map((variable, index) => ({ variable, index })).filter(item => searchMatches.includes(item.index)) :
+        variables.map((variable, index) => ({ variable, index }));
+
+    if (currentSearchTerm && varsToShow.length === 0) {
+        container.innerHTML = '<div class="alert alert-warning">No variables match your search criteria.</div>';
+        return;
+    }
+
+    let html = '<ul class="list-group">';
+    varsToShow.forEach(({ variable, index }) => {
+        const isVisible = variable.visible === true;
+        const isMatch = searchMatches.includes(index);
+        const caseSensitive = document.getElementById('caseToggle')?.checked || false;
+
+        // Apply highlighting to searchable content
+        const highlightedName = highlightText(variable.name, currentSearchTerm, caseSensitive);
+        const highlightedValue = highlightText(variable.value, currentSearchTerm, caseSensitive);
+
+        if (editingVarIdx === index) {
+            html += `<li class="list-group-item d-flex align-items-center var-item ${isMatch ? 'search-match' : ''}">
+                <span class="drag-handle">&#x2630;</span>
+                <span class="flex-grow-1">
+                    <strong>${variable.name}</strong>: 
+                    <input type="text" class="form-control form-control-sm d-inline-block" style="max-width:220px;" id="editVarValue_${index}" value="${escapeHtml(variable.value)}">
+                </span>
+                <button class="btn btn-success btn-sm ms-2" onclick="saveVarEdit(${index})" title="Save">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-save" viewBox="0 0 16 16">
+                        <path d="M8.5 1.5v2h-1v-2h1z"/><path d="M3 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H3zm10 1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h10z"/><path d="M7.5 10.5v-2h1v2h-1z"/>
+                    </svg>
+                </button>
+                <button class="btn btn-secondary btn-sm ms-2" onclick="cancelEdit()" title="Cancel">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="m4.646 4.646.708.708L8 8l2.646-2.646.708.708L8.708 8.5l2.647 2.646-.707.708L8 9.207l-2.646 2.647-.708-.708L7.293 8.5 4.646 5.854z"/>
+                    </svg>
+                </button>
+            </li>`;
+        } else {
+            html += `<li class="list-group-item d-flex align-items-center var-item ${isMatch ? 'search-match' : ''}" draggable="true" ondragstart="dragStartVar(event, ${index})" ondragover="dragOverVar(event)" ondrop="dropVar(event, ${index})">
+                <span class="drag-handle">&#x2630;</span>
+                <span class="flex-grow-1">
+                    <strong>${highlightedName}</strong>: 
+                    <span id="varValue_${index}" style="${isVisible ? '' : 'display:none;'}">${highlightedValue}</span>
+                    ${!isVisible ? '<span class="text-muted">[Hidden]</span>' : ''}
+                </span>
+                <button class="btn btn-outline-secondary btn-sm ms-2" onclick="toggleVarVisibility(${index})" title="Show/Hide Value">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-eye${isVisible ? '' : '-slash'}" viewBox="0 0 16 16">
+                        ${isVisible ? 
+                            '<path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM8 13.5c-4.478 0-7.484-4.162-7.938-4.797a.5.5 0 0 1 0-.406C.516 7.662 3.522 3.5 8 3.5c4.478 0 7.484 4.162 7.938 4.797a.5.5 0 0 1 0 .406C15.484 11.338 12.478 13.5 8 13.5z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/>' :
+                            '<path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/><path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/><path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/>'
+                        }
+                    </svg>
+                </button>
+                <button class="btn btn-info btn-sm ms-2" onclick="copyVarValue(${index})" title="Copy Value">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+                        <path d="M10 1.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1A1.5 1.5 0 0 1 7.5 0h1A1.5 1.5 0 0 1 10 1.5z"/>
+                        <path d="M3.5 1A1.5 1.5 0 0 0 2 2.5v11A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 12.5 1h-9zm0 1h9A.5.5 0 0 1 13 2.5v11a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5v-11A.5.5 0 0 1 3.5 2z"/>
+                    </svg>
+                </button>
+                <button class="btn btn-secondary btn-sm ms-2" onclick="editVar(${index})" title="Edit Variable">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                        <path d="M12.146.854a.5.5 0 0 1 .708 0l2.292 2.292a.5.5 0 0 1 0 .708l-9.193 9.193a.5.5 0 0 1-.168.11l-4 1.5a.5.5 0 0 1-.65-.65l1.5-4a.5.5 0 0 1 .11-.168l9.193-9.193zm1.415 2.121L13 2.293 13.707 3l.561-.561a.5.5 0 0 0-.707-.707zm-1.768.768L2.5 12.146V13.5h1.354l8.293-8.293-1.354-1.354z"/>
+                    </svg>
+                </button>
+                <button class="btn btn-danger btn-sm ms-2" onclick="removeVar(${index})" title="Remove">
+                    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='currentColor' class='bi bi-trash' viewBox='0 0 16 16'>
+                        <path d='M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5.5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6zm3 .5a.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6z'/>
+                        <path fill-rule='evenodd' d='M14.5 3a1 1 0 0 1-1-1V1a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v1a1 1 0 0 1-1 1H1v1h14V3h-1.5zm-1-1V1h-7v1h7zM1 4v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4H1zm2 10a1 1 0 0 1-1-1V4h12v9a1 1 0 0 1-1 1H3z'/>
+                    </svg>
+                </button>
+            </li>`;
+        }
+    });
+    html += '</ul>';
+    container.innerHTML = html;
+}
+
+function addVar(name, value) {
+    // Check for duplicate names
+    const existingVar = variables.find(v => v.name.toLowerCase() === name.toLowerCase());
+    if (existingVar) {
+        if (!confirm(`A variable named "${name}" already exists. Do you want to update its value?`)) {
+            return;
+        }
+        existingVar.value = value;
+    } else {
+        variables.push({ name, value, visible: true });
+    }
+    renderVarList();
+    updateVariableCount();
+    saveVars();
+}
+
+function removeVar(idx) {
+    if (confirm('Are you sure you want to delete this variable?')) {
+        variables.splice(idx, 1);
+        renderVarList();
+        updateVariableCount();
+        saveVars();
+    }
+}
+
+function saveVars() {
+    fetch(varFile, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ variables })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Failed to save variables');
+    })
+    .catch(err => {
+        alert('Error saving variables: ' + err.message);
+    });
+}
+
+function toggleVarVisibility(idx) {
+    variables[idx].visible = !variables[idx].visible;
+    renderVarList();
+    saveVars();
+}
+
+function copyVarValue(idx) {
+    const value = variables[idx].value;
+    navigator.clipboard.writeText(value).then(() => {
+        // Show temporary feedback
+        const button = event.target.closest('button');
+        const originalTitle = button.title;
+        button.title = 'Copied!';
+        setTimeout(() => {
+            button.title = originalTitle;
+        }, 1000);
+    });
+}
+
+function editVar(idx) {
+    editingVarIdx = idx;
+    renderVarList();
+    
+    // Use setTimeout to ensure the input field is rendered before trying to access it
+    setTimeout(() => {
+        const editInput = document.getElementById('editVarValue_' + idx);
+        if (editInput) {
+            editInput.focus();
+            editInput.select();
+            editInput.setSelectionRange(editInput.value.length, editInput.value.length);
+        }
+    }, 10);
+}
+
+function saveVarEdit(idx) {
+    const newValue = document.getElementById('editVarValue_' + idx).value.trim();
+    if (!newValue) {
+        alert('Variable value cannot be empty.');
+        return;
+    }
+    variables[idx].value = newValue;
+    editingVarIdx = null;
+    renderVarList();
+    saveVars();
+}
+
+function cancelEdit() {
+    editingVarIdx = null;
+    renderVarList();
+}
+
+function clearAllVariables() {
+    if (variables.length === 0) return;
+    
+    if (confirm(`Are you sure you want to delete all ${variables.length} variables? This action cannot be undone.`)) {
+        variables = [];
+        renderVarList();
+        updateVariableCount();
+        saveVars();
+        clearSearch();
+    }
+}
+
+// Drag and drop reordering
+let dragVarIdx = null;
+function dragStartVar(e, idx) { dragVarIdx = idx; }
+function dragOverVar(e) { e.preventDefault(); }
+function dropVar(e, idx) {
+    e.preventDefault();
+    if (dragVarIdx === null || dragVarIdx === idx) return;
+    const moved = variables.splice(dragVarIdx, 1)[0];
+    variables.splice(idx, 0, moved);
+    dragVarIdx = null;
+    renderVarList();
+    saveVars();
+}
+
+// --- Event Listeners ---
+document.getElementById('addVarForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('varNameInput').value.trim();
+    const value = document.getElementById('varValueInput').value.trim();
+    if (name && value) {
+        addVar(name, value);
+        document.getElementById('varNameInput').value = '';
+        document.getElementById('varValueInput').value = '';
+    }
+});
+
+// Search event listeners
+document.getElementById('searchInput').addEventListener('input', handleSearch);
+document.getElementById('caseToggle').addEventListener('change', handleSearch);
+
+// Load variables on page load
+window.addEventListener('DOMContentLoaded', () => {
+    loadVars();
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
