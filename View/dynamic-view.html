@@ -7,48 +7,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.css" rel="stylesheet">
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: #212529;
-        }
-        
-        .main-container {
-            display: flex;
-            height: 100vh;
-            position: relative;
-        }
-        
-        /* Preview Panel (Left) */
-        .preview-panel {
-            width: 400px;
-            min-width: 300px;
-            max-width: 600px;
-            background: #1a1d20;
-            border-right: 1px solid #495057;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            resize: horizontal;
-        }
-        
-        .preview-header {
-            padding: 10px;
-            background: #343a40;
-            border-bottom: 1px solid #495057;
-            flex-shrink: 0;
-        }
-        
-        .preview-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-        }
-        
-        /* Main Visualization Area (Right) */
-        .main-view {
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -224,18 +182,18 @@
         }
     </style>
 </head>
-<body>
-    <div class="main-container">
+<body class="overflow-hidden bg-dark">
+    <div class="d-flex vh-100 position-relative">
         <!-- Preview Panel (Data Explorer) -->
-        <div class="preview-panel">
-            <div class="preview-header">
+        <div class="bg-secondary bg-opacity-25 border-end border-secondary d-flex flex-column overflow-hidden" style="width: 400px; min-width: 300px; max-width: 600px; resize: horizontal;">
+            <div class="p-2 bg-secondary border-bottom border-secondary flex-shrink-0">
                 <h6 class="mb-2">Data Explorer</h6>
                 <div class="input-group input-group-sm">
                     <span class="input-group-text"><i class="bi bi-search"></i></span>
                     <input type="text" id="searchBox" class="form-control" placeholder="Search data..." oninput="handleSearchInput(this.value)">
                 </div>
             </div>
-            <div class="preview-content">
+            <div class="flex-fill overflow-auto p-2">
                 <!-- Tree visualization will be rendered here -->
                 <div id="data-tree-container"></div>
                 
