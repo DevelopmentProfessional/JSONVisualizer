@@ -6,6 +6,9 @@
     <title>Variables - APIRunner</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .cursor-grab { cursor: grab; }
+    </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark header-section">
@@ -13,13 +16,14 @@
         <a class="navbar-brand" href="#"><i class="bi bi-api"></i> API Runner</a>
         <ul class="navbar-nav ms-auto">
             <li class="nav-item"><a class="nav-link" href="ManageAPI.html">Manage API</a></li>
-            <li class="nav-item"><a class="nav-link" href="view.html">Visualizer</a></li>
+            <li class="nav-item"><a class="nav-link" href="Graph.html">Visualizer</a></li>
+            <li class="nav-item"><a class="nav-link" href="GraphControls.html">Graph Controls</a></li>
             <li class="nav-item"><a class="nav-link active" href="Variables.html">Variables</a></li>
             <li class="nav-item"><a class="nav-link" href="Run.html">Run</a></li>
         </ul>
     </div>
 </nav>
-<div class="container" style="max-width: 800px; margin: 2rem auto;">
+<div class="container mx-auto my-4" style="max-width: 800px;">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Manage Variables</h2>
         <div class="text-muted">
@@ -70,7 +74,7 @@
                             <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
                         </svg>
                     </button>
-                    <button class="btn btn-outline-danger" onclick="clearVariable()" id="clearAllBtn" style="display: none;" title="Clear Form">
+                    <button class="btn btn-outline-danger d-none" onclick="clearVariable()" id="clearAllBtn" title="Clear Form">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
                             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                             <path d="m4.646 4.646.708.708L8 8l2.646-2.646.708.708L8.708 8.5l2.647 2.646-.707.708L8 9.207l-2.646 2.647-.708-.708L7.293 8.5 4.646 5.854z"/>
@@ -212,10 +216,10 @@ function renderVarList() {
 
         if (editingVarIdx === index) {
             html += `<li class="list-group-item d-flex align-items-center rounded shadow-sm mb-3 p-3 ${isMatch ? 'bg-warning bg-opacity-25' : ''}">
-                <span class="me-2" style="cursor: grab;">&#x2630;</span>
+                <span class="me-2 user-select-none cursor-grab">&#x2630;</span>
                 <span class="flex-grow-1">
                     <strong>${variable.name}</strong>: 
-                    <input type="text" class="form-control form-control-sm d-inline-block" style="max-width:220px;" id="editVarValue_${index}" value="${escapeHtml(variable.value)}">
+                    <input type="text" class="form-control form-control-sm d-inline-block w-auto" style="max-width:220px;" id="editVarValue_${index}" value="${escapeHtml(variable.value)}">
                 </span>
                 <button class="btn btn-success btn-sm ms-2" onclick="saveVarEdit(${index})" title="Save">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-save" viewBox="0 0 16 16">
@@ -231,10 +235,10 @@ function renderVarList() {
             </li>`;
         } else {
             html += `<li class="list-group-item d-flex align-items-center rounded shadow-sm mb-3 p-3 ${isMatch ? 'bg-warning bg-opacity-25' : ''}" draggable="true" ondragstart="dragStartVar(event, ${index})" ondragover="dragOverVar(event)" ondrop="dropVar(event, ${index})">
-                <span class="me-2" style="cursor: grab;">&#x2630;</span>
+                <span class="me-2 user-select-none cursor-grab">&#x2630;</span>
                 <span class="flex-grow-1">
                     <strong>${highlightedName}</strong>: 
-                    <span id="varValue_${index}" style="${isVisible ? '' : 'display:none;'}">${highlightedValue}</span>
+                    <span id="varValue_${index}" class="${isVisible ? '' : 'd-none'}">${highlightedValue}</span>
                     ${!isVisible ? '<span class="text-muted">[Hidden]</span>' : ''}
                 </span>
                 <button class="btn btn-outline-secondary btn-sm ms-2" onclick="toggleVarVisibility(${index})" title="Show/Hide Value">

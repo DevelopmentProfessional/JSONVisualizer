@@ -46,7 +46,11 @@ class GraphRegistry {
             
             // Check if module is already loaded
             if (!this.loadedModules.has(graphType)) {
-                const module = await import(`./graphs/${graphType}.js`);
+                // NOTE: registry.js resides inside the /graphs directory already, so the
+                // relative import should NOT include another 'graphs/' segment. The previous
+                // path `./graphs/${graphType}.js` produced requests like /graphs/graphs/bar-chart.js
+                // which 404'd. Correct path is just `./${graphType}.js`.
+                const module = await import(`./${graphType}.js`);
                 this.loadedModules.set(graphType, module);
                 
                 // Register the graph definition

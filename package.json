@@ -4,7 +4,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+  "start": "node server.js",
+  "generate:graph-configs": "node scripts/generateGraphConfigs.js",
+  "copy:d3": "node scripts/copy-d3.js",
+  "postinstall": "npm run copy:d3"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +16,10 @@
     "axios": "^1.11.0",
     "cheerio": "^1.1.2",
     "d3": "^7.9.0",
+  "d3-geo-projection": "^4.0.0",
+  "d3-hexbin": "^0.2.2",
+  "d3-cloud": "^1.2.7",
+  "topojson-client": "^3.1.0",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "fast-json-parse": "^1.0.3",

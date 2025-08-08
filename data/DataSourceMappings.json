@@ -1,0 +1,100 @@
+{
+  "dataSources": {
+    "countries-world.json": {
+      "mappings": {
+        "Country Longitudes": {
+          "graphs": {
+            "bar-chart": {
+              "mappings": {
+                "dataSource": "countries-world.json",
+                "rowPath": "wb:countries.wb:country",
+                "x": "wb:name",
+                "y": "wb:longitude"
+              }
+            }
+          },
+          "updatedAt": "2025-08-08T16:24:01.113Z",
+          "createdAt": "2025-08-08T16:24:01.113Z"
+        },
+        "World Country Location": {
+          "graphs": {
+            "map": {
+              "mappings": {
+                "rowPath": "wb:countries.wb:country",
+                "label": "wb:name",
+                "dataSource": "countries-world.json",
+                "longitude": "wb:longitude",
+                "latitude": "wb:latitude"
+              }
+            }
+          },
+          "updatedAt": "2025-08-08T17:17:44.692Z",
+          "createdAt": "2025-08-08T17:17:44.692Z"
+        },
+        "World Map full": {
+          "graphs": {
+            "world-map": {
+              "mappings": {
+                "rowPath": "wb:countries.wb:country",
+                "label": "wb:name",
+                "capital": "wb:capitalCity",
+                "dataSource": "countries-world.json",
+                "longitude": "wb:longitude",
+                "latitude": "wb:latitude",
+                "income": "wb:incomeLevel.content",
+                "region": "wb:region.content"
+              }
+            }
+          },
+          "updatedAt": "2025-08-08T18:17:54.586Z",
+          "createdAt": "2025-08-08T18:17:54.586Z"
+        }
+      }
+    },
+    "mirth-channel-ports.json": {
+      "mappings": {
+        "Mirth Ports": {
+          "graphs": {
+            "world-map": {
+              "mappings": {
+                "rowPath": "wb:countries.wb:country",
+                "label": "wb:name",
+                "capital": "wb:capitalCity",
+                "dataSource": "api-1754677764519.json",
+                "longitude": "wb:longitude",
+                "latitude": "wb:latitude",
+                "income": "wb:incomeLevel.content",
+                "region": "wb:region.content"
+              }
+            },
+            "bar-chart": {
+              "mappings": {
+                "rowPath": "list.com.mirth.connect.donkey.model.channel.Ports",
+                "dataSource": "mirth-channel-ports.json"
+              }
+            },
+            "tree": {
+              "mappings": {
+                "rowPath": "list.com.mirth.connect.donkey.model.channel.Ports"
+              }
+            },
+            "force-directed": {
+              "mappings": {
+                "rowPath": "list.com.mirth.connect.donkey.model.channel.Ports",
+                "source": "name",
+                "target": "port"
+              }
+            }
+          },
+          "updatedAt": "2025-08-08T18:40:48.133Z",
+          "createdAt": "2025-08-08T18:40:48.133Z"
+        }
+      }
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "createdAt": "2025-08-08T16:24:01.112Z",
+    "updatedAt": "2025-08-08T18:40:48.133Z"
+  }
+}

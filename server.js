@@ -1212,30 +1212,46 @@ app.post('/RenderGraph', (req, res) => {
       });
     }
     
-    if (!req.body.dataSource.apiResponse || !req.body.visualization.graphType) {
+  // Accept either legacy visualization.graphType or new visualization.activeGraphType
+  if (!req.body.dataSource.apiResponse || (!req.body.visualization.graphType && !req.body.visualization.activeGraphType)) {
       return res.status(400).json({ 
         error: 'Missing required fields: apiResponse and graphType are required' 
       });
     }
     
+    // Load existing to merge multi-graph mappings
+    let existing = {};
+    try {
+      if (fs.existsSync(graphControlsPath)) {
+        existing = JSON.parse(fs.readFileSync(graphControlsPath, 'utf8')) || {};
+      }
+    } catch {}
+
+    const graphs = req.body.visualization.graphs || existing.visualization?.graphs || {};
+    const activeGraphType = req.body.visualization.activeGraphType || req.body.visualization.graphType;
+    if (req.body.visualization.mappings && activeGraphType) {
+      graphs[activeGraphType] = { mappings: req.body.visualization.mappings };
+    }
+
     const configuration = {
       dataSource: {
         apiResponse: req.body.dataSource.apiResponse,
         lastLoaded: new Date().toISOString()
       },
       visualization: {
-        graphType: req.body.visualization.graphType,
-        mappings: req.body.visualization.mappings || {}
+        activeGraphType: activeGraphType,
+        graphs: graphs
       },
       explorerSettings: {
-        spacing: req.body.explorerSettings?.spacing || 100,
-        verticalSpacing: req.body.explorerSettings?.verticalSpacing || 40,
-        textSize: req.body.explorerSettings?.textSize || 11,
-        maxDepth: req.body.explorerSettings?.maxDepth || 8
+        spacing: req.body.explorerSettings?.spacing || existing.explorerSettings?.spacing || 100,
+        verticalSpacing: req.body.explorerSettings?.verticalSpacing || existing.explorerSettings?.verticalSpacing || 40,
+        textSize: req.body.explorerSettings?.textSize || existing.explorerSettings?.textSize || 11,
+        maxDepth: req.body.explorerSettings?.maxDepth || existing.explorerSettings?.maxDepth || 8
       },
       metadata: {
-        createdAt: new Date().toISOString(),
-        version: '1.0'
+        createdAt: existing.metadata?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        version: existing.metadata?.version || '1.0'
       }
     };
     
@@ -1297,6 +1313,198 @@ app.post('/SaveGraphControls', (req, res) => {
     res.json({ success: true, configuration: existing });
   } catch (err) {
     res.status(500).json({ error: 'Failed to save graph controls', details: err.message });
+  }
+});
+
+// Save a named mapping set per data source (DataSourceMappings.json)
+app.post('/SaveDataSourceMapping', (req, res) => {
+  try {
+    const { dataSource, mappingName, graphs } = req.body || {};
+    if (!dataSource || !mappingName || !graphs || typeof graphs !== 'object') {
+      return res.status(400).json({ error: 'dataSource, mappingName and graphs are required' });
+    }
+    const filePath = path.join(__dirname, 'data', 'DataSourceMappings.json');
+    let existing = { dataSources: {}, metadata: { version: '1.0', createdAt: new Date().toISOString() } };
+    if (fs.existsSync(filePath)) {
+      try { existing = JSON.parse(fs.readFileSync(filePath, 'utf8')) || existing; } catch {}
+    }
+    if (!existing.dataSources) existing.dataSources = {};
+    if (!existing.dataSources[dataSource]) existing.dataSources[dataSource] = { mappings: {} };
+    const now = new Date().toISOString();
+    existing.dataSources[dataSource].mappings[mappingName] = {
+      graphs: graphs,
+      updatedAt: now,
+      createdAt: existing.dataSources[dataSource].mappings[mappingName]?.createdAt || now
+    };
+    existing.metadata.updatedAt = now;
+    fs.writeFileSync(filePath, JSON.stringify(existing, null, 2));
+    res.json({ success: true, mappings: existing.dataSources[dataSource].mappings });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to save data source mapping', details: err.message });
+  }
+});
+
+// Validate Node Data Type API - Test if a field path contains compatible data
+app.post('/ValidateNodeDataType', (req, res) => {
+  console.log('Received ValidateNodeDataType request:', req.body);
+  
+  try {
+    const { fieldPath, rowPath, targetDataType, dataSource } = req.body;
+    
+    if (!fieldPath || !targetDataType || !dataSource) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: fieldPath, targetDataType, and dataSource are required' 
+      });
+    }
+    
+    // Load the JSON data from the specified data source
+    const apiResponsePath = path.join(__dirname, 'data', 'ApiResponse', dataSource);
+    
+    if (!fs.existsSync(apiResponsePath)) {
+      return res.status(404).json({ 
+        error: `Data source not found: ${dataSource}` 
+      });
+    }
+    
+    const jsonData = JSON.parse(fs.readFileSync(apiResponsePath, 'utf8'));
+    
+    // Helper function to resolve nested paths
+    function resolvePath(path, data = jsonData) {
+      if (!path) return data;
+      return path.split('.').reduce((obj, key) => {
+        if (obj && typeof obj === 'object') {
+          return obj[key];
+        }
+        return undefined;
+      }, data);
+    }
+    
+    // Get the row data if rowPath is specified
+    let rowData = jsonData;
+    if (rowPath) {
+      rowData = resolvePath(rowPath);
+      if (!Array.isArray(rowData)) {
+        return res.status(400).json({ 
+          error: 'Row path does not point to an array',
+          rowPath: rowPath,
+          actualType: typeof rowData
+        });
+      }
+    }
+    
+    // Extract field name from the full field path
+    let fieldName = fieldPath;
+    
+    if (rowPath && fieldPath.startsWith(rowPath)) {
+      // Standard case: remove row path prefix
+      const remainder = fieldPath.substring(rowPath.length + 1);
+      if (remainder.match(/^\d+\./)) {
+        fieldName = remainder.substring(remainder.indexOf('.') + 1);
+      } else {
+        fieldName = remainder;
+      }
+    } else {
+      // Extract field name from path like "data.0.wb:longitude"
+      const pathParts = fieldPath.split('.');
+      let lastNumericIndex = -1;
+      
+      for (let i = 0; i < pathParts.length; i++) {
+        if (/^\d+$/.test(pathParts[i])) {
+          lastNumericIndex = i;
+        }
+      }
+      
+      if (lastNumericIndex >= 0 && lastNumericIndex < pathParts.length - 1) {
+        fieldName = pathParts.slice(lastNumericIndex + 1).join('.');
+      } else {
+        fieldName = pathParts[pathParts.length - 1];
+      }
+    }
+    
+    // Test field access and data type compatibility
+    const results = [];
+    const testItems = Array.isArray(rowData) ? rowData.slice(0, 10) : [rowData];
+    
+    let validCount = 0;
+    let convertibleCount = 0;
+    
+    for (let i = 0; i < testItems.length; i++) {
+      const item = testItems[i];
+      let fieldValue;
+      
+      // Try to access the field
+      if (fieldName.includes('.')) {
+        fieldValue = resolvePath(fieldName, item);
+      } else {
+        fieldValue = item[fieldName];
+      }
+      
+      let isValid = false;
+      let isConvertible = false;
+      
+      // Check data type compatibility
+      if (targetDataType === 'number') {
+        if (typeof fieldValue === 'number' && !isNaN(fieldValue)) {
+          isValid = true;
+        } else if (typeof fieldValue === 'string') {
+          const numValue = parseFloat(fieldValue);
+          if (!isNaN(numValue) && isFinite(numValue)) {
+            isConvertible = true;
+          }
+        }
+      } else if (targetDataType === 'string') {
+        if (typeof fieldValue === 'string') {
+          isValid = true;
+        } else if (fieldValue !== null && fieldValue !== undefined) {
+          isConvertible = true;
+        }
+      } else if (targetDataType === 'any') {
+        isValid = true;
+      }
+      
+      if (isValid) validCount++;
+      if (isConvertible) convertibleCount++;
+      
+      results.push({
+        index: i,
+        fieldValue: fieldValue,
+        fieldType: typeof fieldValue,
+        isValid: isValid,
+        isConvertible: isConvertible
+      });
+    }
+    
+    const totalCount = testItems.length;
+    const validRate = totalCount > 0 ? validCount / totalCount : 0;
+    const convertibleRate = totalCount > 0 ? convertibleCount / totalCount : 0;
+    const overallCompatibility = validRate + convertibleRate;
+    
+    const response = {
+      success: true,
+      fieldPath: fieldPath,
+      fieldName: fieldName,
+      targetDataType: targetDataType,
+      totalItems: totalCount,
+      validItems: validCount,
+      convertibleItems: convertibleCount,
+      validRate: validRate,
+      convertibleRate: convertibleRate,
+      overallCompatibility: overallCompatibility,
+      isCompatible: overallCompatibility >= 0.8, // 80% threshold
+      sampleResults: results.slice(0, 5),
+      recommendation: overallCompatibility >= 0.8 ? 
+        (validRate >= 0.8 ? 'Direct mapping recommended' : 'Conversion mapping recommended') :
+        'Field not suitable for this data type'
+    };
+    
+    res.json(response);
+    
+  } catch (error) {
+    console.error('Error validating node data type:', error);
+    res.status(500).json({ 
+      error: 'Failed to validate data type',
+      details: error.message 
+    });
   }
 });
 

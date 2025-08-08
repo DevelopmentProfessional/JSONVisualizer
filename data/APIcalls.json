@@ -14,7 +14,7 @@
         "Username",
         "Password"
       ],
-      "checked": false,
+      "checked": true,
       "isLogin": true,
       "loginVar": "sessionId",
       "outputFileName": "mirth-login"
@@ -58,7 +58,7 @@
         "accept": "application/xml",
         "X-Requested-With": "OpenAPI"
       },
-      "checked": false,
+      "checked": true,
       "body": "",
       "outputFileName": "mirth-channel-ports"
     },
@@ -98,7 +98,7 @@
       "outputFileName": "countries-world"
     },
     {
-      "name": "News API : Breaking News",
+      "name": "News API : Newest News",
       "url": "https://newsdata.io/api/1/latest?apikey={{NewsAPI}}",
       "method": "GET",
       "body": "",
@@ -107,6 +107,14 @@
       },
       "outputFileName": "BreakingNews",
       "checked": false
+    },
+    {
+      "name": "World Data : Meat Consumption",
+      "url": "https://ourworldindata.org/grapher/meat-consumption-vs-gdp-per-capita.metadata.json?v=1&csvType=full&useColumnShortNames=true",
+      "method": "GET",
+      "body": "",
+      "headers": {},
+      "outputFileName": "Meat-Consumption"
     }
   ]
 }

@@ -7,183 +7,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.css" rel="stylesheet">
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #212529;
-            overflow: hidden;
-        }
-        
-        .main-header {
-            padding: 10px 20px;
-            background: #343a40;
-            border-bottom: 1px solid #495057;
-            flex-shrink: 0;
-            display: flex;
-            justify-content: between;
-            align-items: center;
-        }
-        
-        .main-content {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        /* Graph Controls Panel */
-        .graph-controls {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 320px;
-            background: rgba(0, 0, 0, 0.9);
-            border: 1px solid #495057;
-            border-radius: 8px;
-            z-index: 1000;
-            max-height: calc(100vh - 120px);
-            overflow-y: auto;
-        }
-        
-        /* Variable Selection Area */
-        .variable-list {
-            min-height: 100px;
-            border: 2px dashed #495057;
-            border-radius: 4px;
-            padding: 8px;
-            margin-bottom: 10px;
-            background: #2c2f33;
-        }
-        
-        .variable-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 10px;
-            margin: 4px 0;
-            background: #495057;
-            border-radius: 4px;
-            cursor: move;
-            user-select: none;
-        }
-        
-        .variable-item:hover {
-            background: #5a6268;
-        }
-        
-        .variable-item.dragging {
-            opacity: 0.5;
-        }
-        
-        /* Mapping Areas */
-        .mapping-area {
-            border: 2px dashed #6c757d;
-            border-radius: 4px;
-            padding: 10px;
-            margin: 5px 0;
-            min-height: 50px;
-            background: #1a1d20;
-            transition: all 0.2s;
-        }
-        
-        .mapping-area.drag-over {
-            border-color: #0d6efd;
-            background: rgba(13, 110, 253, 0.1);
-        }
-        
-        .mapping-area.filled {
-            border-color: #198754;
-            background: rgba(25, 135, 84, 0.1);
-        }
-        
-        .mapping-area.required {
-            border-color: #dc3545;
-        }
-        
-        .mapping-area.required.filled {
-            border-color: #198754;
-        }
-        
-        /* Tree Visualization */
-        .tree-node {
-            cursor: pointer;
-        }
-        
-        .tree-node .btn-add-variable {
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        
-        .tree-node:hover .btn-add-variable {
-            opacity: 1;
-        }
-        
-        /* Visualization Area */
-        #visualization-container {
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
-        
-        /* Resizer */
-        .resizer {
-            width: 4px;
-            background: #495057;
-            cursor: col-resize;
-            position: relative;
-        }
-        
-        .resizer:hover {
-            background: #0d6efd;
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 1200px) {
-            .preview-panel {
-                width: 350px;
-            }
-            .graph-controls {
-                width: 280px;
-            }
-        }
-        
-        @media (max-width: 992px) {
-            .main-container {
-                flex-direction: column;
-            }
-            .preview-panel {
-                width: 100%;
-                height: 300px;
-                resize: vertical;
-            }
-            .graph-controls {
-                position: relative;
-                width: 100%;
-                max-height: none;
-                margin: 10px 0;
-            }
-        }
-        
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #2c2f33;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #495057;
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #5a6268;
-        }
+    <style>
+        .cursor-col-resize { cursor: col-resize; }
     </style>
 </head>
-<body class="overflow-hidden bg-dark">
-    <div class="d-flex vh-100 position-relative">
+<body class="bg-dark overflow-hidden">
+    <div class="d-flex vh-100">
         <!-- Preview Panel (Data Explorer) -->
         <div class="bg-secondary bg-opacity-25 border-end border-secondary d-flex flex-column overflow-hidden" style="width: 400px; min-width: 300px; max-width: 600px; resize: horizontal;">
             <div class="p-2 bg-secondary border-bottom border-secondary flex-shrink-0">
@@ -205,11 +34,11 @@
         </div>
         
         <!-- Resizer -->
-        <div class="resizer" id="panel-resizer"></div>
+        <div class="bg-secondary cursor-col-resize" style="width: 4px;" id="panel-resizer" onmouseenter="this.classList.add('bg-primary')" onmouseleave="this.classList.remove('bg-primary')"></div>
         
         <!-- Main Visualization Area -->
-        <div class="main-view">
-            <div class="main-header">
+        <div class="flex-fill d-flex flex-column bg-dark overflow-hidden">
+            <div class="p-3 bg-secondary border-bottom border-secondary flex-shrink-0 d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="mb-0">Dynamic D3.js Visualizer</h5>
                     <small class="text-muted">Select variables from the data explorer and map them to graph inputs</small>
@@ -224,14 +53,14 @@
                 </div>
             </div>
             
-            <div class="main-content">
+            <div class="flex-fill position-relative overflow-hidden">
                 <!-- Visualization Container -->
-                <div id="visualization-container"></div>
+                <div id="visualization-container" class="w-100 h-100 position-relative"></div>
                 
                 <!-- Graph Controls Panel -->
-                <div class="graph-controls">
+                <div class="position-absolute top-0 end-0 m-2 bg-dark bg-opacity-75 border border-secondary rounded" style="width: 320px; max-height: calc(100vh - 120px); z-index: 1000;">
                     <!-- Graph Type Selection -->
-                    <div class="p-3 border-bottom">
+                    <div class="p-3 border-bottom border-secondary">
                         <h6 class="mb-2">Graph Type</h6>
                         <select id="graph-type-select" class="form-select" onchange="handleGraphTypeChange(this.value)">
                             <option value="">Select Graph Type...</option>
@@ -239,9 +68,9 @@
                     </div>
                     
                     <!-- Selected Variables -->
-                    <div class="p-3 border-bottom">
+                    <div class="p-3 border-bottom border-secondary">
                         <h6 class="mb-2">Selected Variables</h6>
-                        <div class="variable-list" id="selected-variables">
+                        <div class="border border-2 border-dashed border-secondary rounded p-2 mb-2 bg-secondary bg-opacity-25" style="min-height: 100px;" id="selected-variables">
                             <div class="text-center text-muted py-3">
                                 <i class="bi bi-plus-circle"></i><br>
                                 Click <i class="bi bi-plus-circle-fill text-primary"></i> buttons in the data tree to add variables
@@ -253,7 +82,7 @@
                     </div>
                     
                     <!-- Variable Mapping -->
-                    <div class="p-3" id="mapping-section" style="display: none;">
+                    <div class="p-3 overflow-auto" id="mapping-section" style="max-height: 300px;">
                         <h6 class="mb-2">Variable Mapping</h6>
                         <div id="mapping-areas"></div>
                     </div>
@@ -266,10 +95,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    
+ 
+
     <script type="module">
         // Import graph registry
-        import graphRegistry from './graphs/registry.js';
+        import graphRegistry from './../graphs/registry.js';
         
         // Global state
         let currentData = null;
@@ -309,7 +139,7 @@
         // Load configuration from GraphConf.json
         async function loadConfiguration() {
             try {
-                const response = await fetch('GraphConf.json');
+                const response = await fetch('../data/GraphConf.json');
                 if (response.ok) {
                     const config = await response.json();
                     selectedVariables = config.selectedVariables || [];
@@ -321,24 +151,7 @@
              }
         }
         
-        // Load data from output.json
-        async function loadData() {
-            try {
-                const response = await fetch('output.json');
-                if (!response.ok) {
-                    throw new Error(`Failed to load data: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                
-                // Process data for visualization
-                currentData = processDataForVisualization(data);
-                updateDebugInfo(`Data loaded: ${Array.isArray(data) ? data.length + ' items' : 'Object'}`);
-                
-            } catch (error) {
-                throw new Error(`Failed to load data: ${error.message}`);
-            }
-        }
+ 
         
         // Process data for visualization (similar to existing logic)
         function processDataForVisualization(data) {
@@ -391,7 +204,7 @@
             const section = document.getElementById('mapping-section');
             const mappingAreasContainer = document.getElementById('mapping-areas');
             
-            section.style.display = 'block';
+            section.classList.remove('d-none');
             mappingAreasContainer.innerHTML = '';
             
             const requirements = graphRegistry.getInputRequirements(graphType);
@@ -410,7 +223,8 @@
         
         // Hide mapping section
         function hideMappingSection() {
-            document.getElementById('mapping-section').style.display = 'none';
+            const section = document.getElementById('mapping-section');
+            section.classList.add('d-none');
         }
         
         // Create a mapping area for an input
@@ -418,7 +232,9 @@
             const container = document.getElementById('mapping-areas');
             
             const mappingDiv = document.createElement('div');
-            mappingDiv.className = `mapping-area ${isRequired ? 'required' : ''}`;
+            mappingDiv.className = `border border-2 border-dashed rounded p-2 mb-2 bg-dark bg-opacity-50 ${isRequired ? 'border-danger' : 'border-secondary'}`;
+            mappingDiv.style.minHeight = '50px';
+            mappingDiv.style.transition = 'all 0.2s';
             mappingDiv.dataset.role = input.role;
             
             const currentMapping = variableMappings[currentGraphType]?.[input.role];
@@ -430,14 +246,16 @@
                         <strong>${input.name} ${isRequired ? '<span class="text-danger">*</span>' : ''}</strong>
                         <br><small class="text-muted">${input.description}</small>
                     </div>
-                    <button class="btn btn-sm btn-outline-danger" onclick="clearMapping('${input.role}')" style="display: none;">
+                    <button class="btn btn-sm btn-outline-danger d-none" onclick="clearMapping('${input.role}')">
                         <i class="bi bi-x"></i>
                     </button>
                 </div>
-                <div class="mapped-variable mt-2" style="display: none;">
-                    <div class="variable-item">
-                        <span class="variable-name"></span>
-                        <span class="variable-path text-muted"></span>
+                <div class="mapped-variable mt-2 d-none">
+                    <div class="d-flex justify-content-between align-items-center p-2 bg-secondary rounded">
+                        <div>
+                            <span class="variable-name fw-bold"></span>
+                            <br><small class="variable-path text-muted"></small>
+                        </div>
                     </div>
                 </div>
                 <div class="drop-hint text-center text-muted py-2">
@@ -465,7 +283,8 @@
             mappedVarDiv.style.display = 'block';
             dropHint.style.display = 'none';
             clearBtn.style.display = 'block';
-            mappingArea.classList.add('filled');
+            mappingArea.classList.remove('border-danger', 'border-secondary');
+            mappingArea.classList.add('border-success');
             
             mappedVarDiv.querySelector('.variable-name').textContent = variable.displayName;
             mappedVarDiv.querySelector('.variable-path').textContent = variable.path;
@@ -482,11 +301,13 @@
                 const mappedVarDiv = mappingArea.querySelector('.mapped-variable');
                 const dropHint = mappingArea.querySelector('.drop-hint');
                 const clearBtn = mappingArea.querySelector('button');
+                const isRequired = mappingArea.innerHTML.includes('text-danger');
                 
                 mappedVarDiv.style.display = 'none';
                 dropHint.style.display = 'block';
                 clearBtn.style.display = 'none';
-                mappingArea.classList.remove('filled');
+                mappingArea.classList.remove('border-success');
+                mappingArea.classList.add(isRequired ? 'border-danger' : 'border-secondary');
             }
             
             saveConfiguration();
@@ -496,17 +317,17 @@
         function setupDropZone(mappingArea) {
             mappingArea.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                mappingArea.classList.add('drag-over');
+                mappingArea.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
             });
             
             mappingArea.addEventListener('dragleave', (e) => {
                 e.preventDefault();
-                mappingArea.classList.remove('drag-over');
+                mappingArea.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
             });
             
             mappingArea.addEventListener('drop', (e) => {
                 e.preventDefault();
-                mappingArea.classList.remove('drag-over');
+                mappingArea.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
                 
                 const variableId = e.dataTransfer.getData('text/plain');
                 const variable = selectedVariables.find(v => v.id === variableId);
@@ -698,28 +519,24 @@
         // Create tree node element
         function createTreeNode(node, index) {
             const nodeDiv = document.createElement('div');
-            nodeDiv.className = 'tree-node';
+            nodeDiv.className = 'd-flex align-items-center p-2 rounded mb-1';
             nodeDiv.style.marginLeft = (node.depth * 20) + 'px';
-            nodeDiv.style.padding = '4px';
-            nodeDiv.style.borderRadius = '4px';
-            nodeDiv.style.marginBottom = '2px';
+            nodeDiv.style.cursor = 'pointer';
             
             const typeIcon = getTypeIcon(node.type);
             const addButton = node.type !== 'placeholder' ? 
-                `<button class="btn btn-outline-primary btn-sm btn-add-variable ms-2" onclick="addVariable('${node.path}', '${escapeHtml(node.key)}')" title="Add as variable">
+                `<button class="btn btn-outline-primary btn-sm ms-2" onclick="addVariable('${node.path}', '${escapeHtml(node.key)}')" title="Add as variable">
                     <i class="bi bi-plus-circle-fill"></i>
                 </button>` : '';
             
             nodeDiv.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <i class="bi ${typeIcon} me-2"></i>
-                    <div class="flex-grow-1">
-                        <strong>${escapeHtml(node.key)}</strong>
-                        ${node.value ? `<span class="text-muted ms-2">${escapeHtml(truncateString(node.value, 50))}</span>` : ''}
-                        <br><small class="text-muted">${node.path}</small>
-                    </div>
-                    ${addButton}
+                <i class="bi ${typeIcon} me-2"></i>
+                <div class="flex-grow-1">
+                    <strong>${escapeHtml(node.key)}</strong>
+                    ${node.value ? `<span class="text-muted ms-2">${escapeHtml(truncateString(node.value, 50))}</span>` : ''}
+                    <br><small class="text-muted">${node.path}</small>
                 </div>
+                ${addButton}
             `;
             
             return nodeDiv;
@@ -775,7 +592,9 @@
             
             selectedVariables.forEach(variable => {
                 const variableDiv = document.createElement('div');
-                variableDiv.className = 'variable-item';
+                variableDiv.className = 'd-flex justify-content-between align-items-center p-2 mb-1 bg-secondary rounded';
+                variableDiv.style.cursor = 'move';
+                variableDiv.style.userSelect = 'none';
                 variableDiv.draggable = true;
                 variableDiv.dataset.variableId = variable.id;
                 
@@ -792,11 +611,20 @@
                 // Add drag event listeners
                 variableDiv.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('text/plain', variable.id);
-                    variableDiv.classList.add('dragging');
+                    variableDiv.style.opacity = '0.5';
                 });
                 
                 variableDiv.addEventListener('dragend', () => {
-                    variableDiv.classList.remove('dragging');
+                    variableDiv.style.opacity = '1';
+                });
+                
+                // Add hover effect
+                variableDiv.addEventListener('mouseenter', () => {
+                    variableDiv.classList.add('bg-secondary', 'bg-opacity-75');
+                });
+                
+                variableDiv.addEventListener('mouseleave', () => {
+                    variableDiv.classList.remove('bg-opacity-75');
                 });
                 
                 container.appendChild(variableDiv);
@@ -933,12 +761,12 @@
         // Handle search input
         window.handleSearchInput = function(searchTerm) {
             // Filter tree nodes based on search term
-            const treeNodes = document.querySelectorAll('.tree-node');
+            const treeNodes = document.querySelectorAll('#data-tree-container > .tree-structure > div');
             
             treeNodes.forEach(node => {
                 const text = node.textContent.toLowerCase();
                 if (searchTerm === '' || text.includes(searchTerm.toLowerCase())) {
-                    node.style.display = 'block';
+                    node.style.display = 'flex';
                 } else {
                     node.style.display = 'none';
                 }

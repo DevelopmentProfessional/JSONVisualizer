@@ -1,0 +1,2 @@
+export const graphDefinition = { name:'Stratify', description:'Builds hierarchy from tabular data.', requiredInputs:[ {role:'id', name:'ID', required:true}, {role:'parentId', name:'Parent ID', required:true} ], optionalInputs:[ {role:'value', name:'Value'} ] };
+export async function render(container){ d3.select(container).selectAll('*').remove(); d3.select(container).append('div').style('color','#ccc').text('Stratify placeholder'); }

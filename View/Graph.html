@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Viewer - APIRunner</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="overflow-auto min-vh-100"> 
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark position-fixed top-0 start-0 end-0" style="z-index: 999;">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#"><i class="bi bi-graph-up"></i> Graph Viewer</a>
+        <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="ManageAPI.html">Manage API</a></li>
+            <li class="nav-item"><a class="nav-link" href="GraphControls.html">Graph Controls</a></li>
+            <li class="nav-item"><a class="nav-link active" href="Graph.html">Visualizer</a></li>
+            <li class="nav-item"><a class="nav-link" href="Variables.html">Variables</a></li>
+            <li class="nav-item"><a class="nav-link" href="Run.html">Run</a></li>
+        </ul>
+    </div>
+  </nav>
+
+  <div id="graphContainer" class="position-fixed top-0 start-0 w-100 h-100" style="z-index:1; padding-top:70px;"></div>
+
+  <!-- Compact Top Control Bar -->
+  <div id="controlBar" class="position-fixed top-0 start-50 translate-middle-x bg-dark bg-opacity-75 border-bottom border-secondary w-100" style="padding-top:60px; z-index: 998;">
+    <div class="container-fluid py-2">
+      <div class="d-flex flex-wrap justify-content-center gap-2 align-items-end">
+        <div>
+          <label class="form-label small mb-1">Data Source</label>
+          <select id="dsSelect" class="form-select form-select-sm"></select>
+        </div>
+        <div>
+          <label class="form-label small mb-1">Mapping</label>
+          <select id="mappingSelect" class="form-select form-select-sm" disabled></select>
+        </div>
+        <div class="d-flex flex-column">
+          <label class="form-label small mb-1">Charts</label>
+          <div class="d-flex gap-2">
+            <button id="openChartPicker" type="button" class="btn btn-sm btn-outline-secondary">Select…</button>
+            <select id="chartTypeSelect" class="form-select form-select-sm d-none" disabled></select>
+          </div>
+        </div>
+        <div>
+          <label class="form-label small mb-1">Search</label>
+          <input id="chartSearch" type="text" class="form-control form-control-sm" placeholder="Filter charts" oninput="filterCharts()" />
+        </div>
+        <div class="align-self-center">
+          <span class="badge bg-secondary" id="mappingStatus"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="statusArea" class="position-fixed" style="bottom:10px; left:10px; z-index:2000; max-width:400px;"></div>
+
+  <!-- Floating Chart Picker Panel -->
+  <div id="chartPickerPanel" class="card shadow border-secondary d-none" style="position:fixed; top:120px; left:50%; transform:translateX(-50%); width: min(1000px,90%); max-height:60vh; overflow:auto; z-index:1999; background:#1a1d21;">
+    <div class="card-header py-2 d-flex justify-content-between align-items-center">
+      <strong class="small">Chart Library</strong>
+      <div class="d-flex align-items-center gap-2">
+        <small class="text-secondary" id="chartCount"></small>
+        <button type="button" id="closeChartPicker" class="btn btn-sm btn-outline-light"><i class="bi bi-x"></i></button>
+      </div>
+    </div>
+    <div class="card-body py-2">
+      <div class="accordion" id="chartCategoriesAccordion"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Local offline D3 & geo-projection vendored in /vendor (see scripts/copy-d3.js) -->
+  <script src="../vendor/d3/d3.min.js"></script>
+  <script src="../vendor/d3-geo-projection/d3-geo-projection.min.js"></script>
+  <script type="module" src="graphLoader.js"></script>
+  <script>
+    // Adjust graph container top padding (nav ~56px + control bar height)
+    function adjustGraphContainerPadding(){
+      const gc = document.getElementById('graphContainer');
+      gc.style.paddingTop = '120px';
+    }
+    document.addEventListener('DOMContentLoaded', adjustGraphContainerPadding);
+    // Category and chart definitions
+    const chartCategories = {
+      'Animation': [ 'Animated treemap','Temporal force-directed graph','Connected scatterplot','The wealth & health of nations','Scatterplot tour','Bar chart race','Stacked-to-grouped bars','Streamgraph transitions','Smooth zooming','Zoom to bounding box','Orthographic to equirectangular','World tour','Walmart’s growth','Hierarchical bar chart','Zoomable treemap','Zoomable circle packing','Collapsible tree','Zoomable icicle','Zoomable sunburst','Sortable bar chart','Icelandic population by age 1841–2019','Pie chart update','Arc tween' ],
+      'Interaction': [ 'Versor dragging','Index chart','Sequences sunburst','Brushable scatterplot','Brushable scatterplot matrix','Pannable chart','Zoomable area chart','Zoomable bar chart','Seamless zoomable map tiles' ],
+      'Analysis': [ 'Moving average','Bollinger bands','Box plot','Histogram','Kernel density estimation','Density contours','Volcano contours','Contours','Hexbin','Hexbin (area)','Hexbin map','Q–Q plot','Normal quantile plot','Parallel sets' ],
+      'Hierarchies': [ 'Treemap','Cascaded treemap','Nested treemap','Circle packing','Indented tree','Tidy tree','Radial tidy tree','Cluster dendrogram','Radial dendrogram','Sunburst','Icicle','Tangled tree visualization','Phylogenetic tree','Force-directed tree' ],
+      'Networks': [ 'Force-directed graph','Disjoint force-directed graph','Mobile patent suits','Arc diagram','Sankey diagram','Hierarchical edge bundling','Chord diagram','Directed chord diagram','Chord dependency diagram' ],
+      'Bars': [ 'Bar chart','Horizontal bar chart','Diverging bar chart','Stacked bar chart','Stacked horizontal bar chart','Stacked normalized horizontal bar chart','Grouped bar chart','Diverging stacked bar chart','Marimekko chart','World history timeline','Calendar','The impact of vaccines','Electricity usage 2019','Revenue by music format 1973–2018' ],
+      'Lines': [ 'Line chart','Line with missing data','Multi-line chart','Change line chart','Slope chart','Slope chart II','Marey’s trains','Candlestick chart','Variable-color line','Gradient encoding','Threshold encoding','Parallel coordinates','Inequality in American cities','New Zealand tourists 1921–2018','Sea ice extent 1978–2017' ],
+      'Areas': [ 'Area chart','Area with missing data','Stacked area chart','Normalized stacked area chart','U.S. population by state 1790–1990','Streamgraph','Difference chart','Band chart','Ridgeline (joy) plot','Horizon chart','Realtime horizon chart' ],
+      'Dots': [ 'Scatterplot','Scatterplot with shapes','Scatterplot matrix','Dot plot','Global temperature trends','Bubble map','Spike map','Bubble chart','Beeswarm','Mirrored beeswarm','Hertzsprung–Russell diagram' ],
+      'Radial': [ 'Pie chart','Donut chart','Radial area chart','Radial stacked bar chart','Radial stacked bar chart (sorted)' ],
+      'Annotation': [ 'Inline labels','Directly labeling lines','Line chart with tooltip','Voronoi labels','Occlusion','Graticule labels','Styled axes','Color legend' ],
+      'Maps': [ 'Choropleth','Bivariate choropleth','State choropleth','World choropleth','World map','Projection transitions','Projection comparison','Antimeridian cutting','Tissot’s indicatrix','Web Mercator tiles','Raster tiles','Vector tiles','Clipped map tiles','Raster & vector','Vector field','GeoTIFF contours','U.S. airports voronoi','World airports voronoi','Solar terminator','Solar path','Star map','Non-contiguous cartogram' ],
+      'Essays': [ 'd3.packEnclose','Centerline labeling','Methods of comparison compared','Predator and prey' ],
+      'Just for Fun': [ 'Polar clock','Stern–Brocot tree','Voronoi stippling','Watercolor','PSR B1919+21','Epicyclic gearing','Owls to the max','Tadpoles','Word cloud','Spilhaus shoreline map','Phases of the moon','Color schemes' ],
+      'd3-contour': [ 'Contour polygons','Density estimation' ],
+      'd3-delaunay': [ 'Delaunay triangulations','Voronoi diagrams' ],
+      'd3-force': [ 'Force simulations','Center force','Collide force','Link force','Many-body force','Position forces' ],
+      'd3-geo': [ 'Paths','Projections','Streams','Spherical shapes','Spherical math' ],
+      'd3-hierarchy': [ 'Hierarchies','Stratify','Tree','Cluster','Partition','Pack','Treemap' ]
+    };
+
+  // Utility slugify & alias maps hoisted for reuse
+  const slugify = str => str.toLowerCase()
+      .replace(/[’']/g,'')
+      .replace(/&/g,' and ')
+      .replace(/[^a-z0-9]+/g,'-')
+      .replace(/-+/g,'-')
+      .replace(/^-|-$/g,'');
+  const alias = {
+    'force-directed-graph':'force-directed',
+    'collapsible-tree':'tree',
+    'tidy-tree':'tree',
+    'radial-tidy-tree':'tree',
+    'cluster-dendrogram':'tree',
+    'radial-dendrogram':'tree',
+    'indented-tree':'tree',
+    'force-directed-tree':'tree',
+  'bar-chart':'bar-chart',
+  // Treemap variants map to hierarchy-treemap implementation
+  'treemap':'hierarchy-treemap',
+  'zoomable-treemap':'hierarchy-treemap',
+  'cascaded-treemap':'hierarchy-treemap',
+  'nested-treemap':'hierarchy-treemap'
+  };
+
+  let allowedGraphTypes = null; // Set of graph type slugs allowed by current mapping
+  let selectedGraphType = null; // currently selected (normalized) graph type
+  let activeGenericMapping = null; // unified mapping (rowPath + field roles) reused across any chart
+  let activeMappingName = null;
+
+  // Extract array of rows based on a dot/bracket path (simple implementation)
+  function extractRows(raw, rowPath) {
+    if (!rowPath) return raw;
+    try {
+      const clean = rowPath.replace(/^\$\./,'');
+      const parts = clean.split('.').filter(Boolean);
+      let ref = raw;
+      for (const p of parts) {
+        if (ref == null) return [];
+        // Handle namespace-like keys with colon e.g. 'wb:countries'
+        if (Object.prototype.hasOwnProperty.call(ref, p)) {
+          ref = ref[p];
+        } else if (p.includes(':')) {
+          // Try without namespace prefix
+            const withoutNs = p.split(':').pop();
+            if (Object.prototype.hasOwnProperty.call(ref, withoutNs)) {
+              ref = ref[withoutNs];
+            } else {
+              return [];
+            }
+        } else {
+          return [];
+        }
+      }
+      if (Array.isArray(ref)) return ref;
+      return [];
+    } catch { return []; }
+  }
+
+  // Deep search fallback: find first array of objects containing candidate keys
+  function findArrayWithKeys(obj, candidateKeys, maxDepth=6) {
+    if (maxDepth < 0 || obj == null) return null;
+    if (Array.isArray(obj)) {
+      if (obj.length && typeof obj[0] === 'object') {
+        const hasKey = candidateKeys.some(k => k && k in obj[0]);
+        if (hasKey) return obj;
+      }
+    }
+    if (typeof obj === 'object') {
+      for (const k of Object.keys(obj)) {
+        const found = findArrayWithKeys(obj[k], candidateKeys, maxDepth-1);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  async function renderGraphWithMapping(graphType, ds) {
+    if (!ds) { statusMsg('Select a data source first.', 'warning'); return; }
+    if (!activeGenericMapping) { statusMsg('Select and apply a mapping first.', 'warning'); return; }
+    const rowPath = activeGenericMapping.rowPath;
+    const mappings = { ...activeGenericMapping };
+    // Prepare namespace fallbacks
+  ['x','y','label','color','source','target','longitude','latitude'].forEach(r => {
+      if (mappings[r] && mappings[r].includes(':')) {
+        const noNs = mappings[r].split(':').pop();
+        mappings[r + '_fallback'] = noNs;
+      }
+    });
+    try {
+      const resp = await fetch('../data/ApiResponse/' + ds);
+      if (!resp.ok) throw new Error('Data load failed');
+      const raw = await resp.json();
+      let rows = rowPath ? extractRows(raw, rowPath) : (Array.isArray(raw) ? raw : raw); // if no rowPath assume raw
+      if ((!rows || !rows.length) && rowPath && raw.response && raw.response.data) {
+        const prefixed = 'response.data.' + rowPath;
+        rows = extractRows(raw, prefixed);
+        if (rows && rows.length) statusMsg('Applied response.data prefix to rowPath', 'warning');
+      }
+      if ((!rows || !rows.length) && rowPath && rowPath.includes(':')) {
+        const alt = rowPath.split('.').map(seg => seg.includes(':') ? seg.split(':').pop() : seg).join('.');
+        rows = extractRows(raw, alt);
+        if (rows && rows.length) statusMsg('Used namespace-stripped rowPath variant', 'warning');
+      }
+      if ((!rows || !rows.length)) {
+        const candidateKeys = Object.values(mappings).filter(v => typeof v === 'string');
+        const found = findArrayWithKeys(raw, candidateKeys);
+        if (found) { rows = found; statusMsg('Deep search located candidate data array', 'warning'); }
+      }
+      if (!rows || !rows.length) statusMsg('No rows resolved for rowPath; rendering with empty dataset', 'danger');
+      await window.graphRegistry.loadAndRender(graphType, document.getElementById('graphContainer'), rows, mappings, { width: window.innerWidth, height: window.innerHeight - 80 });
+    } catch (err) { statusMsg('Render failed: ' + err.message, 'danger'); }
+  }
+
+  function canRenderGraphType(graphType) {
+    if (!activeGenericMapping) return false;
+    const def = window.graphRegistry.getDefinition(graphType);
+    if (!def) return true; // if unknown, let it attempt
+    const missing = (def.requiredInputs || []).filter(inp => inp.required).map(i=>i.role).filter(role => !activeGenericMapping[role]);
+    return missing.length === 0;
+  }
+
+  function listMissingRoles(graphType) {
+    const def = window.graphRegistry.getDefinition(graphType);
+    if (!def) return [];
+    return (def.requiredInputs||[]).filter(i=>i.required && !activeGenericMapping[i.role]).map(i=>i.role);
+  }
+
+    function buildChartAccordion(){
+      const panel = document.getElementById('chartCategoriesAccordion');
+      if(!panel) return;
+      const searchVal = document.getElementById('chartSearch').value.trim().toLowerCase();
+      panel.innerHTML = '';
+      const categoryNames = Object.keys(chartCategories).sort((a,b)=>a.localeCompare(b));
+      let totalCharts = 0, visibleCharts = 0;
+      categoryNames.forEach(cat => {
+        const charts = [...chartCategories[cat]].sort((a,b)=>a.localeCompare(b));
+        totalCharts += charts.length;
+        const catSlug = 'cat-' + slugify(cat);
+        let itemsHtml = '';
+        let catVisible = false;
+        charts.forEach(ch => {
+          const slug = slugify(ch);
+          if(!searchVal || ch.toLowerCase().includes(searchVal)) {
+            catVisible = true; visibleCharts++;
+            itemsHtml += `<button type="button" class="list-group-item list-group-item-action py-1 px-2 small chart-item" data-slug="${slug}">${ch}</button>`;
+          }
+        });
+        if(!catVisible) return; // skip category with no visible charts under search
+        const item = document.createElement('div');
+        item.className = 'accordion-item';
+        item.innerHTML = `
+          <h2 class="accordion-header" id="heading-${catSlug}">
+            <button class="accordion-button collapsed py-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${catSlug}" aria-expanded="false" aria-controls="collapse-${catSlug}">
+              <span class="small">${cat}</span>
+            </button>
+          </h2>
+          <div id="collapse-${catSlug}" class="accordion-collapse collapse" data-bs-parent="#chartCategoriesAccordion">
+            <div class="accordion-body py-2 pt-1">
+              <div class="list-group list-group-flush">${itemsHtml}</div>
+            </div>
+          </div>`;
+        panel.appendChild(item);
+      });
+      document.getElementById('chartCount').textContent = visibleCharts !== totalCharts && searchVal ? `${visibleCharts} / ${totalCharts}` : `${totalCharts}`;
+      updateChartSelectionHighlight();
+    }
+
+    function updateChartSelectionHighlight() {
+      const items = document.querySelectorAll('#chartCategoriesAccordion .chart-item');
+      items.forEach(i => {
+        const slug = i.getAttribute('data-slug');
+        const norm = alias[slug] || slug;
+        i.classList.toggle('active', norm === selectedGraphType);
+      });
+    }
+
+    function applyMappingFiltering() { buildChartAccordion(); }
+
+    function statusMsg(msg, type='info') {
+      const statusArea = document.getElementById('statusArea');
+      const div = document.createElement('div');
+      div.className = `alert alert-${type} py-1 px-2 mb-1`;
+      div.style.fontSize = '12px';
+      div.textContent = msg;
+      statusArea.appendChild(div);
+      setTimeout(()=>div.remove(), 5000);
+    }
+
+  function filterCharts(){ buildChartAccordion(); }
+  document.addEventListener('DOMContentLoaded', () => { buildChartAccordion(); });
+    // Supplemental logic to load DataSourceMappings.json and feed graphLoader
+    let dataSourceMappings = {};
+    async function loadDataSourceMappings() {
+      try {
+        const resp = await fetch('../data/DataSourceMappings.json?_=' + Date.now());
+        if (!resp.ok) return;
+        const json = await resp.json();
+        dataSourceMappings = json.dataSources || {};
+        populateDataSources();
+      } catch {}
+    }
+    async function loadApiResponses() {
+      try {
+        const resp = await fetch('../data/ApiResponse');
+        if (!resp.ok) return;
+        const files = await resp.json();
+        const sel = document.getElementById('dsSelect');
+        sel.innerHTML = '<option value="">-- Select Data Source --</option>';
+        files.filter(f=>f.endsWith('.json')).forEach(f => {
+          const opt = document.createElement('option');
+          opt.value = f; opt.textContent = f;
+          sel.appendChild(opt);
+        });
+      } catch {}
+    }
+    function populateDataSources() {
+      const dsSel = document.getElementById('dsSelect');
+      const current = dsSel.value;
+      if (current) populateMappings(current);
+    }
+    function populateMappings(ds) {
+      const mapSel = document.getElementById('mappingSelect');
+      mapSel.innerHTML = '';
+      if (!ds || !dataSourceMappings[ds]) { mapSel.disabled = true; return; }
+      const entries = Object.entries(dataSourceMappings[ds].mappings || {});
+      if (entries.length === 0) { mapSel.disabled = true; return; }
+      mapSel.disabled = false;
+      entries.forEach(([name, def]) => {
+        const opt = document.createElement('option');
+        opt.value = name; opt.textContent = name;
+        mapSel.appendChild(opt);
+      });
+      // auto-select first and apply generic mapping without rendering
+      if (mapSel.options.length) {
+        mapSel.selectedIndex = 0;
+        applyGenericMapping();
+      }
+    }
+    function applyGenericMapping() {
+      const ds = document.getElementById('dsSelect').value;
+      const mappingName = document.getElementById('mappingSelect').value;
+      activeGenericMapping = null;
+      selectedGraphType = null;
+      updateChartSelectionHighlight();
+      if (!ds || !mappingName || !dataSourceMappings[ds]) return;
+      const mappingDef = dataSourceMappings[ds].mappings[mappingName];
+      if (!mappingDef) return;
+      activeMappingName = mappingName;
+      const unified = {};
+      const graphs = mappingDef.graphs || {};
+      Object.values(graphs).forEach(g => {
+        const mm = g.mappings || {};
+  ['rowPath','x','y','label','color','source','target','value','parent','children','longitude','latitude','capital','income','region'].forEach(k => {
+          if (mm[k] && unified[k] == null) unified[k] = mm[k];
+        });
+      });
+      if (!unified.rowPath && mappingDef.rowPath) unified.rowPath = mappingDef.rowPath;
+      activeGenericMapping = unified;
+      allowedGraphTypes = null;
+  applyMappingFiltering();
+      statusMsg('Mapping ready. Choose a graph to render.', 'info');
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      loadApiResponses();
+      loadDataSourceMappings();
+      document.getElementById('dsSelect').addEventListener('change', e => {
+        activeGenericMapping = null;
+        populateMappings(e.target.value);
+      });
+      document.getElementById('mappingSelect').addEventListener('change', applyGenericMapping);
+      // Floating picker open/close
+      const openBtn = document.getElementById('openChartPicker');
+      const panel = document.getElementById('chartPickerPanel');
+      const closeBtn = document.getElementById('closeChartPicker');
+      openBtn.addEventListener('click', () => { panel.classList.remove('d-none'); buildChartAccordion(); });
+      closeBtn.addEventListener('click', () => { panel.classList.add('d-none'); });
+      document.addEventListener('click', e => {
+        if(panel.classList.contains('d-none')) return;
+        if(panel.contains(e.target) || e.target === openBtn) return;
+        panel.classList.add('d-none');
+      });
+      // Delegate chart selection
+      panel.addEventListener('click', e => {
+        const btn = e.target.closest('.chart-item');
+        if(!btn) return;
+        const slug = btn.getAttribute('data-slug');
+        if(!slug) return;
+        const graphType = alias[slug] || slug;
+        const ds = document.getElementById('dsSelect').value;
+        if (!ds) { statusMsg('Select a data source first.', 'warning'); return; }
+        selectedGraphType = graphType;
+        updateChartSelectionHighlight();
+        if (!canRenderGraphType(graphType)) {
+          const missing = listMissingRoles(graphType).join(', ');
+          statusMsg('Cannot render ' + graphType + ' missing roles: ' + missing, 'warning');
+          return;
+        }
+        panel.classList.add('d-none');
+        renderGraphWithMapping(graphType, ds);
+      });
+    });
+  </script>
+  <style>
+    .panel-header:hover { background:#1d1f23; }
+    .panel-header .btn { pointer-events:auto; }
+    /* Highlight selected chart */
+    #chartCategoriesAccordion .chart-item.active { font-weight:600; background:#2b3035; }
+    #chartPickerPanel::-webkit-scrollbar { width: 8px; }
+    #chartPickerPanel::-webkit-scrollbar-thumb { background:#333; border-radius:4px; }
+    #chartPickerPanel .accordion-button { background:#212529; color:#ddd; }
+    #chartPickerPanel .accordion-button:not(.collapsed) { background:#2b3035; color:#fff; }
+    #chartPickerPanel .list-group-item { background:transparent; color:#ddd; border:none; border-radius:0; }
+    #chartPickerPanel .list-group-item:hover { background:#343a40; }
+    #chartPickerPanel .list-group-item.active { background:#495057; color:#fff; }
+  </style>
+</body>
+</html>

@@ -6,206 +6,40 @@
     <title>Graph Controls - JSON Visualizer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-            flex: 1;
-            background: #1a1a1a;
-            border-radius: 0 0 8px 8px;
-            border: 2px solid #555;
-            border-top: none;
-            padding: 15px;
-            overflow: auto;
-            position: relative;
-        }
+    <style>
+        /* Custom utility classes for dynamic popup content */
+        .popup-header { color: #fff; font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #444; padding-bottom: 6px; }
+        .popup-field-info { margin-bottom: 12px; padding: 6px; background: #1a1a1a; border-radius: 4px; border: 1px solid #666; }
+        .popup-field-details { color: #ccc; font-size: 11px; margin-bottom: 2px; }
+        .popup-array-source { margin-bottom: 12px; padding: 8px; background: #1a1a1a; border-radius: 4px; border: 1px solid #ffc107; }
+        .popup-array-header { color: #ffc107; font-size: 12px; font-weight: bold; margin-bottom: 4px; }
+        .popup-array-desc { font-size: 11px; color: #ccc; }
+        .popup-section { margin-bottom: 8px; }
+        .popup-section-header { font-size: 12px; font-weight: bold; margin-bottom: 4px; }
+        .popup-required-header { color: #dc3545; }
+        .popup-optional-header { color: #17a2b8; }
+        .popup-field-desc { font-size: 11px; }
+        .popup-field-req { font-size: 10px; margin-top: 2px; }
+        .popup-field-warning { font-size: 10px; color: #ff9999; margin-top: 2px; }
+        .popup-field-mapped { font-size: 10px; color: #000; margin-top: 2px; }
+        .popup-footer { border-top: 1px solid #444; padding-top: 8px; margin-top: 8px; }
+        .cursor-grab { cursor: grab; }
+        .cursor-col-resize { cursor: col-resize; }
         
-        .section-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid #444;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-        
-        .section-header {
-            background: #333;
-            padding: 12px 15px;
-            border-bottom: 1px solid #555;
-            font-weight: 600;
-        }
-        
-        .section-body {
-            padding: 15px;
-        }
-        
-        .render-btn-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-        
-        .render-btn {
-            background: linear-gradient(45deg, #28a745, #20c997);
-            border: none;
-            padding: 12px 25px;
-            border-radius: 50px;
-            color: white;
-            font-weight: bold;
-            font-size: 16px;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-            transition: all 0.3s ease;
-        }
-        
-        .render-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-        }
-        
-        .variables-preview {
-            max-height: 300px;
-            overflow-y: auto;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 6px;
-            padding: 10px;
-            margin-top: 15px;
-            display: none;
-        }
-        
-        .variable-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px 12px;
-            margin: 5px 0;
-            border-radius: 4px;
-            border-left: 4px solid #17a2b8;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .variable-path {
-            font-family: 'Courier New', monospace;
-            color: #ffd700;
-        }
-        
-        .variable-type {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-        }
-        
-        .drop-zone {
-            border: 2px dashed #666;
-            border-radius: 6px;
-            padding: 15px;
-            text-align: center;
-            color: #999;
-            transition: all 0.3s ease;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .drop-zone.dragover {
-            border-color: #28a745;
-            background: rgba(40, 167, 69, 0.1);
-            color: #28a745;
-        }
-        
-        .drop-zone.has-value {
-            border-color: #17a2b8;
-            background: rgba(23, 162, 184, 0.1);
-            color: #17a2b8;
-        }
-        
-        .navbar {
-            background: #343a40 !important;
-            border-bottom: 2px solid #495057;
-        }
-        
-        .navbar-brand {
-            font-weight: bold;
-            color: #fff !important;
-        }
-        
-        .nav-link {
-            color: #adb5bd !important;
-            transition: color 0.3s ease;
-        }
-        
-        .nav-link:hover {
-            color: #fff !important;
-        }
-        
-        .nav-link.active {
-            color: #17a2b8 !important;
-            font-weight: 600;
-        }
-        
-        #jsonExplorerChart {
-            height: calc(100vh - 200px);
-            background: #2d2d2d;
-            border-radius: 8px;
-            border: 1px solid #555;
-            user-select: none; /* Disable text selection in the entire chart */
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-        }
-        
-        .mapping-input {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #666;
-            color: #fff;
-        }
-        
-        .mapping-input:focus {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: #17a2b8;
-            color: #fff;
-            box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
-        }
-        
-        .status-indicator {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            padding: 10px 15px;
-            border-radius: 6px;
-            font-size: 0.9em;
-            opacity: 0;
-            transition: all 0.3s ease;
-            z-index: 1001;
-        }
-        
-        .status-indicator.show {
-            opacity: 1;
-        }
-        
-        .status-success {
-            background: rgba(40, 167, 69, 0.9);
-            color: white;
-        }
-        
-        .status-error {
-            background: rgba(220, 53, 69, 0.9);
-            color: white;
-        }
-        
-        .status-info {
-            background: rgba(23, 162, 184, 0.9);
-            color: white;
-        }
+        /* Range input width utilities */
+        .w-range-sm { width: 60px; }
+        .w-range-md { width: 80px; }
     </style>
 </head>
-<body class="bg-dark text-light" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+<body class="bg-dark text-light">
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-secondary border-bottom border-secondary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">
+            <a class="navbar-brand fw-bold" href="#">
                 <i class="bi bi-graph-up"></i> JSON Visualizer - Graph Controls
             </a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="view.html">
+                <a class="nav-link text-light" href="Graph.html">
                     <i class="bi bi-eye"></i> View Charts
                 </a>
                 <a class="nav-link active" href="GraphControls.html">
@@ -219,7 +53,7 @@
     </nav>
 
     <!-- Status Indicator -->
-    <div id="statusIndicator" class="position-fixed top-50 start-50 translate-middle p-3 rounded"></div>
+    <div id="statusIndicator" class="position-fixed p-3 rounded opacity-0" style="top: 80px; right: 20px; z-index: 1001; transition: opacity 0.3s ease;"></div>
 
     <!-- Main Container -->
     <div class="d-flex vh-100 overflow-hidden">
@@ -237,6 +71,12 @@
                             <option value="">-- Select API Response --</option>
                         </select>
                     </div>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Existing Mapping</span>
+                        <select id="existingMappingSelector" class="form-select" onchange="loadExistingMappingForEdit()" disabled>
+                            <option value="">-- None / New Mapping --</option>
+                        </select>
+                    </div>
                     <div class="mb-2">
                         <small class="text-muted">
                             <i class="bi bi-info-circle"></i> 
@@ -248,10 +88,10 @@
 
             <!-- Visualization Configuration Section -->
             <div class="card bg-secondary mb-3">
-                <div class="section-header">
+                <div class="card-header bg-dark">
                     <i class="bi bi-bar-chart"></i> Visualization
                 </div>
-                <div class="section-body">
+                <div class="card-body">
                     <div class="input-group input-group-sm mb-3">
                         <span class="input-group-text">Graph Type</span>
                         <select id="graphTypeSelector" class="form-select" onchange="selectGraphType()">
@@ -259,19 +99,19 @@
                             <option value="tree">Tree (Hierarchical)</option>
                             <option value="force-directed">Force-Directed Network</option>
                             <option value="bar-chart">Bar Chart</option>
-                            <option value="map">Map Chart</option>
+                            <option value="world-map">World Map</option>
                         </select>
                     </div>
 
                     <!-- Graph Input Mappings -->
-                    <div id="graphInputMappings" style="display: none;">
+                    <div id="graphInputMappings">
                         <div class="mb-2">
                             <label class="form-label small">Field Mappings:</label>
                         </div>
                         <div id="mappingControls"></div>
                         
                         <!-- Variables Preview Table -->
-                        <div id="variablesPreview" class="variables-preview">
+                        <div id="variablesPreview" class="bg-dark bg-opacity-50 rounded p-3 mt-3 overflow-auto d-none" style="max-height: 300px;">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <strong>Selected Variables Preview</strong>
                                 <button class="btn btn-sm btn-outline-secondary" onclick="clearAllMappings()">
@@ -294,8 +134,8 @@
         </div>
 
         <!-- JSON Explorer Container -->
-        <div class="json-explorer-container">
-            <div class="explorer-header">
+        <div class="flex-fill d-flex flex-column">
+            
                 <div class="d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">
                         <i class="bi bi-list-nested"></i> JSON Explorer
@@ -310,48 +150,45 @@
                         <button class="btn btn-outline-light" onclick="centerExplorerView()" title="Center View">
                             <i class="bi bi-bullseye"></i>
                         </button>
-                        <button class="btn btn-outline-light" onclick="toggleAdvancedControls()" title="Advanced Controls">
-                            <i class="bi bi-gear"></i>
-                        </button>
                     </div>
                 </div>
-            </div>
-            <div class="explorer-content">
+            
+            <div class="flex-fill overflow-hidden p-3">
                 <!-- Advanced Controls (Initially Hidden) -->
-                <div id="advancedExplorerControls" class="mb-3" style="display: none;">
+                <div id="advancedExplorerControls" class="mb-3">
                     <div class="row g-2">
                         <div class="col-md-3">
                             <label class="form-label small">Node Spacing:</label>
                             <div class="d-flex align-items-center">
-                                <input type="range" id="explorerSpacingSlider" class="form-range me-2" min="50" max="500" value="100" step="10" style="width: 80px;" oninput="updateExplorerSpacing(this.value)">
+                                <input type="range" id="explorerSpacingSlider" class="form-range me-2 w-range-md" min="50" max="500" value="100" step="10" oninput="updateExplorerSpacing(this.value)">
                                 <small id="explorerSpacingValue" class="text-muted">100</small>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small">Vertical Spacing:</label>
                             <div class="d-flex align-items-center">
-                                <input type="range" id="explorerVerticalSpacingSlider" class="form-range me-2" min="20" max="300" value="40" step="5" style="width: 80px;" oninput="updateExplorerVerticalSpacing(this.value)">
+                                <input type="range" id="explorerVerticalSpacingSlider" class="form-range me-2 w-range-md" min="20" max="300" value="40" step="5" oninput="updateExplorerVerticalSpacing(this.value)">
                                 <small id="explorerVerticalSpacingValue" class="text-muted">40</small>
                             </div>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small">Text Size:</label>
                             <div class="d-flex align-items-center">
-                                <input type="range" id="explorerTextSizeSlider" class="form-range me-2" min="8" max="20" value="11" step="1" style="width: 60px;" oninput="updateExplorerTextSize(this.value)">
+                                <input type="range" id="explorerTextSizeSlider" class="form-range me-2 w-range-sm" min="8" max="20" value="11" step="1" oninput="updateExplorerTextSize(this.value)">
                                 <small id="explorerTextSizeValue" class="text-muted">11</small>
                             </div>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small">Max Depth:</label>
                             <div class="d-flex align-items-center">
-                                <input type="range" id="explorerMaxDepthSlider" class="form-range me-2" min="2" max="10" value="8" step="1" style="width: 60px;" oninput="updateExplorerMaxDepth(this.value)">
+                                <input type="range" id="explorerMaxDepthSlider" class="form-range me-2 w-range-sm" min="2" max="10" value="8" step="1" oninput="updateExplorerMaxDepth(this.value)">
                                 <small id="explorerMaxDepthValue" class="text-muted">8</small>
                             </div>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small">Node Size:</label>
                             <div class="d-flex align-items-center">
-                                <input type="range" id="explorerNodeSizeSlider" class="form-range me-2" min="3" max="20" value="6" step="1" style="width: 60px;" oninput="updateExplorerNodeSize(this.value)">
+                                <input type="range" id="explorerNodeSizeSlider" class="form-range me-2 w-range-sm" min="3" max="20" value="6" step="1" oninput="updateExplorerNodeSize(this.value)">
                                 <small id="explorerNodeSizeValue" class="text-muted">6</small>
                             </div>
                         </div>
@@ -382,7 +219,7 @@
                         <div class="col-md-2">
                             <label class="form-label small">Chart Size</label>
                             <div class="d-flex align-items-center">
-                                <input type="range" id="explorerChartSizeSlider" class="form-range me-2" min="300" max="1200" value="450" step="50" style="width: 80px;" oninput="updateExplorerChartSize(this.value)">
+                                <input type="range" id="explorerChartSizeSlider" class="form-range me-2 w-range-md" min="300" max="1200" value="450" step="50" oninput="updateExplorerChartSize(this.value)">
                                 <small id="explorerChartSizeValue" class="text-muted">450</small>
                             </div>
                         </div>
@@ -396,10 +233,10 @@
                 </div>
 
                 <!-- JSON Explorer Chart -->
-                <div id="jsonExplorerChart">
+                <div id="jsonExplorerChart" class="bg-secondary bg-opacity-25 rounded border border-secondary user-select-none w-100 h-100">
                     <div class="d-flex align-items-center justify-content-center h-100 text-muted">
                         <div class="text-center">
-                            <i class="bi bi-file-earmark-code" style="font-size: 3rem;"></i>
+                            <i class="bi bi-file-earmark-code display-1"></i>
                             <p class="mt-2">Select an API response to explore its structure</p>
                         </div>
                     </div>
@@ -408,10 +245,10 @@
         </div>
     </div>
 
-    <!-- Render Button -->
-    <div class="render-btn-container">
-        <button id="renderBtn" class="btn render-btn" onclick="renderGraph()" disabled>
-            <i class="bi bi-play-circle-fill"></i> Render Graph
+    <!-- Save Mapping Button -->
+    <div class="position-fixed bottom-0 end-0 m-3" style="z-index: 1000;">
+        <button id="renderBtn" class="btn btn-success btn-lg rounded-pill px-4 py-2 fw-bold shadow" onclick="saveCurrentMapping()" disabled>
+            <i class="bi bi-save"></i> Save Mapping
         </button>
     </div>
 
@@ -421,7 +258,10 @@
         // Global variables
         let currentApiData = null;
         let currentGraphType = null;
-        let graphMappings = {};
+    // Current in-edit mappings for selected graph type
+    let graphMappings = {};
+    // All saved mappings per graph type: { graphType: { mappings: {role:path,...} } }
+    let savedGraphMappings = {};
         let availableJsonPaths = [];
         let explorerZoom = null;
         let explorerRoot = null;
@@ -438,9 +278,12 @@
         let explorerShowLabels = true;
         let explorerChartSize = 450;
         let saveExplorerConfigDebounce = null;
+    // Existing mapping management
+    let existingDataSourceMappings = {}; // contents of DataSourceMappings.json
+    let currentLoadedMappingName = null; // name of mapping loaded for edit
 
         // Button state updater (re-added)
-        function updateRenderButtonState() {
+    function updateRenderButtonState() {
             const renderBtn = document.getElementById('renderBtn');
             const previewBtn = document.getElementById('previewBtn');
             if (!renderBtn || !previewBtn) return;
@@ -451,15 +294,111 @@
                 'tree': ['label'],
                 'force-directed': ['source','target'],
                 'bar-chart': ['x','y'],
-                'map': ['latitude','longitude']
+                'world-map': ['longitude','latitude','label']
             };
             let hasRequired = true;
             if (hasGraphType && requiredRolesMap[currentGraphType]) {
                 hasRequired = requiredRolesMap[currentGraphType].every(r => graphMappings[r] && graphMappings[r].trim() !== '');
             }
-            const canRender = hasData && hasGraphType && hasRowPath && hasRequired;
-            renderBtn.disabled = !canRender;
+            const canSave = hasData && hasGraphType && hasRowPath && hasRequired;
+            renderBtn.disabled = !canSave;
             previewBtn.disabled = !hasData || !hasGraphType || !hasRowPath || Object.keys(graphMappings).filter(k => graphMappings[k] && k !== 'rowPath').length === 0;
+        }
+
+        async function saveCurrentMapping() {
+            const mappingName = prompt('Enter a name for this mapping configuration:');
+            if (!mappingName) return;
+            try {
+                // Ensure current graph type mapping stored
+                if (currentGraphType) {
+                    if (!savedGraphMappings[currentGraphType]) savedGraphMappings[currentGraphType] = { mappings: {} };
+                    savedGraphMappings[currentGraphType].mappings = { ...graphMappings };
+                }
+                const dataSourceSelect = document.getElementById('apiResponseSelector');
+                const ds = dataSourceSelect.value;
+                if (!ds) {
+                    alert('Select a data source first.');
+                    return;
+                }
+                const body = {
+                    dataSource: ds,
+                    mappingName: mappingName.trim(),
+                    graphs: savedGraphMappings
+                };
+                const resp = await fetch('/SaveDataSourceMapping', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (!resp.ok) throw new Error('Save failed');
+                const json = await resp.json();
+                showStatus(`Saved mapping '${mappingName}' for ${ds}`, 'success');
+                currentLoadedMappingName = mappingName.trim();
+                // Reload mappings file and refresh selector
+                await loadDataSourceMappingsFile();
+                populateExistingMappingsSelector(ds);
+                const existingSel = document.getElementById('existingMappingSelector');
+                if (existingSel) existingSel.value = currentLoadedMappingName;
+            } catch (e) {
+                showStatus('Save mapping failed: ' + e.message, 'danger');
+            }
+        }
+
+        async function loadDataSourceMappingsFile() {
+            try {
+                const resp = await fetch('/data/DataSourceMappings.json?_=' + Date.now());
+                if (!resp.ok) return;
+                const json = await resp.json();
+                existingDataSourceMappings = json.dataSources || {};
+                // Refresh selector if a data source already selected
+                const dsSel = document.getElementById('apiResponseSelector');
+                if (dsSel && dsSel.value) populateExistingMappingsSelector(dsSel.value);
+            } catch {}
+        }
+
+        function populateExistingMappingsSelector(ds) {
+            const sel = document.getElementById('existingMappingSelector');
+            if (!sel) return;
+            sel.innerHTML = '<option value="">-- None / New Mapping --</option>';
+            if (!ds || !existingDataSourceMappings[ds] || !existingDataSourceMappings[ds].mappings) {
+                sel.disabled = true; return;
+            }
+            const entries = Object.keys(existingDataSourceMappings[ds].mappings);
+            if (!entries.length) { sel.disabled = true; return; }
+            entries.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name; opt.textContent = name;
+                sel.appendChild(opt);
+            });
+            sel.disabled = false;
+            if (currentLoadedMappingName && entries.includes(currentLoadedMappingName)) {
+                sel.value = currentLoadedMappingName;
+            }
+        }
+
+        function loadExistingMappingForEdit() {
+            const dsSel = document.getElementById('apiResponseSelector');
+            const ds = dsSel ? dsSel.value : null;
+            const mapSel = document.getElementById('existingMappingSelector');
+            const mappingName = mapSel ? mapSel.value : '';
+            currentLoadedMappingName = mappingName || null;
+            if (!ds || !mappingName || !existingDataSourceMappings[ds]) return; // nothing selected
+            const mappingDef = existingDataSourceMappings[ds].mappings[mappingName];
+            if (!mappingDef) return;
+            savedGraphMappings = {};
+            const graphs = mappingDef.graphs || {};
+            Object.entries(graphs).forEach(([gType, gConf]) => {
+                savedGraphMappings[gType] = { mappings: { ...(gConf.mappings || {}) } };
+            });
+            const graphTypes = Object.keys(savedGraphMappings);
+            if (!graphTypes.includes(currentGraphType)) {
+                currentGraphType = graphTypes[0] || null;
+                const gtSelector = document.getElementById('graphTypeSelector');
+                if (gtSelector && currentGraphType) gtSelector.value = currentGraphType;
+            }
+            if (currentGraphType) loadGraphMappingControls(currentGraphType, true);
+            showStatus(`Loaded mapping '${mappingName}' for editing`, 'info');
+            updateRenderButtonState();
         }
 
         // Initialize the page
@@ -467,6 +406,9 @@
             loadAvailableApiResponses();
             loadSavedConfiguration();
             loadExplorerControlsFromGraphconf();
+            loadDataSourceMappingsFile();
+            const existingSel = document.getElementById('existingMappingSelector');
+            if (existingSel) existingSel.addEventListener('change', loadExistingMappingForEdit);
         });
 
         // Load available API response files
@@ -502,6 +444,12 @@
                 currentApiData = null;
                 clearJsonExplorer();
                 updateRenderButtonState();
+                
+                // Clear the data source from mappings
+                if (graphMappings.dataSource) {
+                    delete graphMappings.dataSource;
+                }
+                
                 return;
             }
             
@@ -513,6 +461,12 @@
                 currentApiData = await response.json();
                 displayJsonExplorer(currentApiData);
                 updateRenderButtonState();
+                
+                // Store the data source name for validation
+                graphMappings.dataSource = selectedFile;
+                // Refresh existing mappings selector for this data source
+                populateExistingMappingsSelector(selectedFile);
+                
                 showStatus('API response loaded successfully', 'success');
             } catch (error) {
                 console.error('Error loading API response:', error);
@@ -529,7 +483,7 @@
             chart.innerHTML = `
                 <div class="d-flex align-items-center justify-content-center h-100 text-muted">
                     <div class="text-center">
-                        <i class="bi bi-file-earmark-code" style="font-size: 3rem;"></i>
+                        <i class="bi bi-file-earmark-code display-1"></i>
                         <p class="mt-2">Select an API response to explore its structure</p>
                     </div>
                 </div>
@@ -581,7 +535,7 @@
                         type: node.type,
                         sample: Array.isArray(obj) ? `[${obj.length} items]` : 
                                typeof obj === 'object' ? '[object]' : 
-                               String(obj).length > 50 ? String(obj).substring(0, 50) + '...' : String(obj)
+                               String(obj)
                     });
                 }
                 
@@ -629,8 +583,9 @@
 
             const svg = d3.select('#jsonExplorerChart')
                 .append('svg')
-                .attr('width', width)
-                .attr('height', height)
+                .attr('viewBox', `0 0 ${width} ${height}`)
+                .attr('preserveAspectRatio', 'xMidYMid meet')
+                .classed('w-100 h-100', true)
                 .style('background', '#2d2d2d')
                 .style('border-radius', '4px')
                 .style('cursor', 'grab');
@@ -753,26 +708,31 @@
                     .style('cursor', 'pointer')
                     .attr('draggable', false); // Explicitly not draggable
                 
-                // Add expand/collapse indicators
-                nodeEnter.append('text')
-                    .attr('dy', '0.35em')
-                    .attr('x', d => d.children || d._children ? -12 : 0)
-                    .style('text-anchor', 'middle')
-                    .style('font-size', `${explorerTextSize}px`)
-                    .style('font-weight', 'bold')
-                    .style('fill', '#ffd700')
+                // Add expand/collapse indicators (moved to right side)
+                const expander = nodeEnter.append('foreignObject')
+                    .attr('class', 'expand-indicator')
+                    .attr('x', d => {
+                        // place to right of text (reuse width logic below). We'll adjust later in update section too.
+                        const name = d.data.name === 'root' ? 'data' : d.data.name;
+                        let displayText = name;
+                        if (d.data.value !== null && d.data.value !== undefined) {
+                            const valueStr = String(d.data.value);
+                            displayText = valueStr.length > 20 ? `${name}: ${valueStr.substring(0,20)}...` : `${name}: ${valueStr}`;
+                        }
+                        return 8 + (displayText.length * (explorerTextSize * 0.6)) + 10; // to right of text
+                    })
+                    .attr('y', -12)
+                    .attr('width', 20)
+                    .attr('height', 20)
                     .style('cursor', 'pointer')
-                    .attr('draggable', false) // Not draggable
-                    .text(d => {
-                        if (d.children) return '▼';
-                        if (d._children) return '▶';
+                    .style('pointer-events', 'all')
+                    .html(d => {
+                        if (d.children) return '<i class="bi bi-chevron-down" style="color: #ffd700;"></i>';
+                        if (d._children) return '<i class="bi bi-arrows-expand" style="color: #ffd700;"></i>';
                         return '';
                     })
-                    .each(function(d) {
-                        // Prevent zoom when clicking expand/collapse
-                        this.addEventListener('mousedown', e => {
-                            e.stopPropagation();
-                        });
+                    .each(function() {
+                        this.addEventListener('mousedown', e => { e.stopPropagation(); });
                     });
                 
                 // Add draggable labels
@@ -801,78 +761,49 @@
                         return name;
                     });
                 
-                // Add click handle circle for non-array, non-object fields (positioned to the right)
+                // Add click handle for non-array, non-object fields (moved to left side next to circle)
                 nodeEnter.filter(d => d.data.type !== 'array' && d.data.type !== 'object' && d.data.type !== 'placeholder')
-                    .append('circle')
+                    .append('foreignObject')
                     .attr('class', 'click-handle')
-                    .attr('cx', d => {
-                        // Calculate text width to position click handle to the right
-                        const name = d.data.name === 'root' ? 'data' : d.data.name;
-                        let displayText = name;
-                        if (d.data.value !== null && d.data.value !== undefined) {
-                            const valueStr = String(d.data.value);
-                            if (valueStr.length > 20) {
-                                displayText = `${name}: ${valueStr.substring(0, 20)}...`;
-                            } else {
-                                displayText = `${name}: ${valueStr}`;
-                            }
-                        }
-                        // Rough text width calculation (8px per character for monospace)
-                        return 8 + (displayText.length * (explorerTextSize * 0.6)) + 10;
-                    })
-                    .attr('cy', 0)
-                    .attr('r', d => Math.max(explorerNodeSize, 6)) // Same size as main node or minimum 6px
-                    .style('fill', '#007bff')
-                    .style('stroke', '#fff')
-                    .style('stroke-width', '2px')
+                    .attr('x', -40) // left side
+                    .attr('y', -10)
+                    .attr('width', 20)
+                    .attr('height', 20)
                     .style('cursor', 'pointer')
-                    .style('opacity', '0.9')
-                    .on('mouseenter', function() {
-                        d3.select(this)
-                            .style('opacity', '1')
-                            .attr('r', d => Math.max(explorerNodeSize + 2, 8))
-                            .style('fill', '#0056b3');
-                    })
-                    .on('mouseleave', function() {
-                        d3.select(this)
-                            .style('opacity', '0.9')
-                            .attr('r', d => Math.max(explorerNodeSize, 6))
-                            .style('fill', '#007bff');
-                    })
+                    .style('pointer-events', 'all')
+                    .html('<i class="bi bi-plus-square" style="color: #007bff;"></i>')
+                    .on('mouseenter', function() { d3.select(this).select('i').style('color', '#0056b3'); })
+                    .on('mouseleave', function() { d3.select(this).select('i').style('color', '#007bff'); })
                     .on('click', function(event, d) {
                         event.stopPropagation();
-                        showFieldMappingPopup(d.data.path, event.pageX, event.pageY);
+                        const fieldPath = d.data.path;
+                        showFieldMappingPopup(fieldPath, event.pageX, event.pageY);
                     });
                 
-                // Add click icon overlay for better visibility
-                nodeEnter.filter(d => d.data.type !== 'array' && d.data.type !== 'object' && d.data.type !== 'placeholder')
-                    .append('text')
-                    .attr('class', 'click-icon')
-                    .attr('x', d => {
-                        // Position icon in the center of the click handle
-                        const name = d.data.name === 'root' ? 'data' : d.data.name;
-                        let displayText = name;
-                        if (d.data.value !== null && d.data.value !== undefined) {
-                            const valueStr = String(d.data.value);
-                            if (valueStr.length > 20) {
-                                displayText = `${name}: ${valueStr.substring(0, 20)}...`;
-                            } else {
-                                displayText = `${name}: ${valueStr}`;
-                            }
-                        }
-                        return 8 + (displayText.length * (explorerTextSize * 0.6)) + 10;
-                    })
-                    .attr('y', 0)
-                    .attr('dy', '0.35em')
-                    .style('text-anchor', 'middle')
-                    .style('font-size', '10px')
-                    .style('fill', '#fff')
-                    .style('pointer-events', 'none')
-                    .style('user-select', 'none')
-                    .style('font-weight', 'bold')
-                    .text('◐');
+                // Add click handle for array nodes (moved to left side, different color)
+                nodeEnter.filter(d => d.data.type === 'array' && d.data.type !== 'placeholder')
+                    .append('foreignObject')
+                    .attr('class', 'array-click-handle')
+                    .attr('x', -40)
+                    .attr('y', -10)
+                    .attr('width', 20)
+                    .attr('height', 20)
+                    .style('cursor', 'pointer')
+                    .style('pointer-events', 'all')
+                    .html('<i class="bi bi-table" style="color: #ffc107;"></i>')
+                    .on('mouseenter', function() { d3.select(this).select('i').style('color', '#e0a800'); })
+                    .on('mouseleave', function() { d3.select(this).select('i').style('color', '#ffc107'); })
+                    .on('click', function(event, d) {
+                        event.stopPropagation();
+                        const cleanPath = cleanArrayPath(d.data.path);
+                        graphMappings.rowPath = cleanPath;
+                        let rowPathInput = document.querySelector('[data-role="rowPath"]');
+                        if (rowPathInput) { rowPathInput.value = cleanPath; rowPathInput.dispatchEvent(new Event('change')); }
+                        updateRenderButtonState();
+                        showStatus(`Set ${cleanPath} as row data source`, 'success');
+                    });
                 
-                // Click to expand/collapse - attach to circles and expand/collapse indicators
+                // Click to expand/collapse - attach to main circles and expand/collapse indicators
                 nodeEnter.select('circle').on('click', function(event, d) {
                     event.stopPropagation();
                     if (d.children) {
@@ -886,7 +817,7 @@
                 });
                 
                 // Also add click to expand/collapse indicators
-                nodeEnter.selectAll('text:first-of-type').on('click', function(event, d) {
+                nodeEnter.select('foreignObject').on('click', function(event, d) {
                     event.stopPropagation();
                     if (d.children) {
                         d._children = d.children;
@@ -904,10 +835,9 @@
                 // Update main circles
                 nodeUpdate.select('circle:not(.drag-handle)').attr('r', explorerNodeSize);
                 
-                // Update click handles to match node size
+                // Update click handles position
                 nodeUpdate.selectAll('.click-handle')
-                    .attr('r', d => Math.max(explorerNodeSize, 6))
-                    .attr('cx', d => {
+                    .attr('x', d => {
                         // Recalculate position based on current text size
                         const name = d.data.name === 'root' ? 'data' : d.data.name;
                         let displayText = name;
@@ -919,25 +849,14 @@
                                 displayText = `${name}: ${valueStr}`;
                             }
                         }
-                        return 8 + (displayText.length * (explorerTextSize * 0.6)) + 10;
+                        return 8 + (displayText.length * (explorerTextSize * 0.6)) + 10 - 8;
                     })
                     .style('display', explorerShowLabels ? null : 'none');
                 
-                // Update click icons position
-                nodeUpdate.selectAll('.click-icon')
-                    .attr('x', d => {
-                        const name = d.data.name === 'root' ? 'data' : d.data.name;
-                        let displayText = name;
-                        if (d.data.value !== null && d.data.value !== undefined) {
-                            const valueStr = String(d.data.value);
-                            if (valueStr.length > 20) {
-                                displayText = `${name}: ${valueStr.substring(0, 20)}...`;
-                            } else {
-                                displayText = `${name}: ${valueStr}`;
-                            }
-                        }
-                        return 8 + (displayText.length * (explorerTextSize * 0.6)) + 10;
-                    })
+                // Update array click handles position
+                nodeUpdate.selectAll('.array-click-handle')
+                    // Keep the array add button icon anchored to the left of the node circle
+                    .attr('x', d => -(explorerNodeSize + 28))
                     .style('display', explorerShowLabels ? null : 'none');
                 
                 // Update text
@@ -951,6 +870,34 @@
             
             explorerUpdate = update;
             update(root);
+            
+            // Add resize handler to update SVG dimensions
+            function handleResize() {
+                const newContainerRect = chartContainer.getBoundingClientRect();
+                const newWidth = newContainerRect.width - 20;
+                const newHeight = newContainerRect.height - 20;
+                
+                svg.attr('viewBox', `0 0 ${newWidth} ${newHeight}`);
+                
+                // Update tree layout size
+                const layout = (explorerTreeShape === 'cluster' ? d3.cluster() : d3.tree())
+                    .size([
+                        explorerOrientation === 'vertical' ? newWidth - margin.left - margin.right : newHeight - margin.top - margin.bottom,
+                        explorerOrientation === 'vertical' ? newHeight - margin.top - margin.bottom : newWidth - margin.left - margin.right
+                    ]);
+                
+                // Re-run the update if we have data
+                if (root) {
+                    update(root);
+                }
+            }
+            
+            // Debounced resize handler
+            let resizeTimeout;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(handleResize, 150);
+            });
         }
 
         // Show field mapping popup menu
@@ -973,41 +920,45 @@
             const graphRequirements = {
                 'tree': {
                     required: [
-                        { role: 'label', name: 'Label', description: 'Text to display for each node', dataType: 'any' }
+                        { role: 'label', name: 'Label', description: '', dataType: 'any' }
                     ],
                     optional: [
-                        { role: 'parent', name: 'Parent', description: 'Parent node reference', dataType: 'any' },
-                        { role: 'value', name: 'Value', description: 'Numeric value for sizing', dataType: 'number' }
+                        { role: 'parent', name: 'Parent', description: '', dataType: 'any' },
+                        { role: 'value', name: 'Value', description: 'Numeric', dataType: 'number' }
                     ]
                 },
                 'force-directed': {
                     required: [
-                        { role: 'source', name: 'Source', description: 'Source node identifier', dataType: 'any' },
-                        { role: 'target', name: 'Target', description: 'Target node identifier', dataType: 'any' }
+                        { role: 'source', name: 'Source', description: '', dataType: 'any' },
+                        { role: 'target', name: 'Target', description: '', dataType: 'any' }
                     ],
                     optional: [
-                        { role: 'weight', name: 'Weight', description: 'Connection strength', dataType: 'number' },
-                        { role: 'label', name: 'Label', description: 'Edge label', dataType: 'any' }
+                        { role: 'weight', name: 'Weight', description: '', dataType: 'number' },
+                        { role: 'label', name: 'Label', description: '', dataType: 'any' }
                     ]
                 },
                 'bar-chart': {
                     required: [
-                        { role: 'x', name: 'X-Axis (Category)', description: 'Categories for X-axis', dataType: 'any' },
-                        { role: 'y', name: 'Y-Axis (Value)', description: 'Numeric values for Y-axis', dataType: 'number' }
+                        { role: 'x', name: 'X-Axis (Category)', description: '', dataType: 'any' },
+                        { role: 'y', name: 'Y-Axis (Value)', description: '', dataType: 'number' }
                     ],
                     optional: [
-                        { role: 'color', name: 'Color', description: 'Category for coloring', dataType: 'any' },
-                        { role: 'tooltip', name: 'Tooltip', description: 'Additional info on hover', dataType: 'any' }
+                        { role: 'color', name: 'Color', description: '', dataType: 'any' },
+                        { role: 'tooltip', name: 'Tooltip', description: '', dataType: 'any' }
                     ]
                 },
-                'map': {
+                'world-map': {
                     required: [
-                        { role: 'latitude', name: 'Latitude', description: 'Latitude coordinates', dataType: 'number' },
-                        { role: 'longitude', name: 'Longitude', description: 'Longitude coordinates', dataType: 'number' }
+                        { role: 'longitude', name: 'Longitude', description: '', dataType: 'number' },
+                        { role: 'latitude', name: 'Latitude', description: '', dataType: 'number' },
+                        { role: 'label', name: 'Label', description: '', dataType: 'any' }
                     ],
                     optional: [
-                        { role: 'label', name: 'Label', description: 'Location label', dataType: 'any' },
-                        { role: 'value', name: 'Value', description: 'Numeric value for sizing', dataType: 'number' }
+                        { role: 'value', name: 'Value', description: 'Numeric', dataType: 'number' },
+                        { role: 'color', name: 'Color', description: '', dataType: 'any' },
+                        { role: 'capital', name: 'Capital', description: '', dataType: 'any' },
+                        { role: 'income', name: 'Income', description: '', dataType: 'any' },
+                        { role: 'region', name: 'Region', description: '', dataType: 'any' }
                     ]
                 }
             };
@@ -1020,8 +971,9 @@
             popup.id = 'fieldMappingPopup';
             popup.style.cssText = `
                 position: fixed;
-                left: ${Math.min(x, window.innerWidth - 280)}px;
-                top: ${Math.min(y, window.innerHeight - 300)}px;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
                 background: #2d2d2d;
                 border: 2px solid #007bff;
                 border-radius: 8px;
@@ -1029,6 +981,9 @@
                 box-shadow: 0 4px 12px rgba(0,0,0,0.4);
                 z-index: 1000;
                 min-width: 260px;
+                max-width: 90vw;
+                max-height: 90vh;
+                overflow-y: auto;
                 font-family: inherit;
             `;
             
@@ -1047,8 +1002,11 @@
                 let relativePath = jsonPath;
                 if (jsonPath.startsWith(graphMappings.rowPath)) {
                     relativePath = jsonPath.substring(graphMappings.rowPath.length + 1);
-                    if (relativePath.startsWith('[0].')) {
-                        relativePath = relativePath.substring(4);
+                    
+                    // If the remaining path starts with an array index (like "0.wb:longitude"),
+                    // remove the array index part to get just the field name (like "wb:longitude")
+                    if (relativePath.match(/^\d+\./)) {
+                        relativePath = relativePath.substring(relativePath.indexOf('.') + 1);
                     }
                 }
                 fieldDataType = analyzeFieldDataType(relativePath);
@@ -1058,9 +1016,7 @@
                 if (Array.isArray(rowDataArray) && rowDataArray.length > 0) {
                     const sampleValue = resolvePath(relativePath, rowDataArray[0]);
                     if (sampleValue !== null && sampleValue !== undefined) {
-                        fieldSample = String(sampleValue).length > 30 ? 
-                            String(sampleValue).substring(0, 30) + '...' : 
-                            String(sampleValue);
+                        fieldSample = String(sampleValue);
                     }
                 }
             }
@@ -1104,23 +1060,32 @@
                 html += '<div style="margin-bottom: 8px;">';
                 html += '<div style="color: #dc3545; font-size: 12px; font-weight: bold; margin-bottom: 4px;">Required Fields:</div>';
                 requirements.required.forEach(field => {
-                    // Check compatibility for this field
-                    let isCompatible = true;
+                    // Check compatibility for this field with conversion support
+                    let compatibilityResult = { compatible: true, needsConversion: false };
                     let warningMessage = '';
+                    let infoMessage = '';
+                    
                     if (!isArrayPath && field.dataType && fieldDataType !== 'unknown') {
-                        isCompatible = isFieldCompatible(fieldDataType, field.dataType);
-                        if (!isCompatible) {
-                            warningMessage = `This field contains ${fieldDataType} data, but ${field.name} requires ${field.dataType} data.`;
+                        compatibilityResult = isFieldCompatibleWithConversion(fieldDataType, field.dataType);
+                        
+                        if (!compatibilityResult.compatible) {
+                            if (compatibilityResult.conversionInfo) {
+                                warningMessage = `Cannot convert: Only ${compatibilityResult.conversionInfo.successCount}/${compatibilityResult.conversionInfo.totalCount} values can be converted to ${field.dataType}.`;
+                            } else {
+                                warningMessage = `This field contains ${fieldDataType} data, but ${field.name} requires ${field.dataType} data.`;
+                            }
+                        } else if (compatibilityResult.needsConversion) {
+                            infoMessage = `✓ Can convert string values to ${field.dataType} (${compatibilityResult.conversionInfo.successCount}/${compatibilityResult.conversionInfo.totalCount} convertible)`;
                         }
                     }
                     
                     const isSelected = graphMappings[field.role] === jsonPath;
                     const backgroundColor = isSelected ? '#4fc3f7' : 
-                                          isCompatible ? '#444' : '#6a2828';
+                                          compatibilityResult.compatible ? '#444' : '#6a2828';
                     const textColor = isSelected ? '#000' : 
-                                     isCompatible ? '#fff' : '#ff9999';
+                                     compatibilityResult.compatible ? '#fff' : '#ff9999';
                     const borderColor = isSelected ? 'transparent' : 
-                                       isCompatible ? 'transparent' : '#ff6666';
+                                       compatibilityResult.compatible ? 'transparent' : '#ff6666';
                     
                     html += `
                         <div class="popup-field-option" data-role="${field.role}" style="
@@ -1136,7 +1101,8 @@
                             <strong>${field.name}</strong>
                             <div style="font-size: 11px; color: ${isSelected ? '#333' : '#ccc'};">${field.description}</div>
                             ${field.dataType && field.dataType !== 'any' ? `<div style="font-size: 10px; color: ${isSelected ? '#333' : '#888'}; margin-top: 2px;">Requires: ${field.dataType}</div>` : ''}
-                            ${!isCompatible ? `<div style="font-size: 10px; color: #ff9999; margin-top: 2px;">⚠ ${warningMessage}</div>` : ''}
+                            ${!compatibilityResult.compatible && !compatibilityResult.needsConversion ? `<div style="font-size: 10px; color: #ff9999; margin-top: 2px;">⚠ ${warningMessage}</div>` : ''}
+                            ${compatibilityResult.needsConversion ? `<div style="font-size: 10px; color: #32cd32; margin-top: 2px;">${infoMessage}</div>` : ''}
                             ${isSelected ? '<div style="font-size: 10px; color: #000; margin-top: 2px;">✓ Currently mapped</div>' : ''}
                         </div>
                     `;
@@ -1149,23 +1115,27 @@
                 html += '<div style="margin-bottom: 8px;">';
                 html += '<div style="color: #17a2b8; font-size: 12px; font-weight: bold; margin-bottom: 4px;">Optional Fields:</div>';
                 requirements.optional.forEach(field => {
-                    // Check compatibility for this field
-                    let isCompatible = true;
+                    // Check compatibility for this field using new conversion-aware function
+                    let compatibilityResult = {compatible: true, needsConversion: false, conversionInfo: null};
                     let warningMessage = '';
+                    let infoMessage = '';
+                    
                     if (!isArrayPath && field.dataType && fieldDataType !== 'unknown') {
-                        isCompatible = isFieldCompatible(fieldDataType, field.dataType);
-                        if (!isCompatible) {
+                        compatibilityResult = isFieldCompatibleWithConversion(fieldDataType, field.dataType);
+                        if (!compatibilityResult.compatible && !compatibilityResult.needsConversion) {
                             warningMessage = `This field contains ${fieldDataType} data, but ${field.name} requires ${field.dataType} data.`;
+                        } else if (compatibilityResult.needsConversion) {
+                            infoMessage = `✓ Can convert string values to ${field.dataType} (${compatibilityResult.conversionInfo.successCount}/${compatibilityResult.conversionInfo.totalCount} convertible)`;
                         }
                     }
                     
                     const isSelected = graphMappings[field.role] === jsonPath;
                     const backgroundColor = isSelected ? '#4fc3f7' : 
-                                          isCompatible ? '#444' : '#6a2828';
+                                          compatibilityResult.compatible ? '#444' : '#6a2828';
                     const textColor = isSelected ? '#000' : 
-                                     isCompatible ? '#fff' : '#ff9999';
+                                     compatibilityResult.compatible ? '#fff' : '#ff9999';
                     const borderColor = isSelected ? 'transparent' : 
-                                       isCompatible ? 'transparent' : '#ff6666';
+                                       compatibilityResult.compatible ? 'transparent' : '#ff6666';
                     
                     html += `
                         <div class="popup-field-option" data-role="${field.role}" style="
@@ -1181,7 +1151,8 @@
                             <strong>${field.name}</strong>
                             <div style="font-size: 11px; color: ${isSelected ? '#333' : '#ccc'};">${field.description}</div>
                             ${field.dataType && field.dataType !== 'any' ? `<div style="font-size: 10px; color: ${isSelected ? '#333' : '#888'}; margin-top: 2px;">Requires: ${field.dataType}</div>` : ''}
-                            ${!isCompatible ? `<div style="font-size: 10px; color: #ff9999; margin-top: 2px;">⚠ ${warningMessage}</div>` : ''}
+                            ${!compatibilityResult.compatible && !compatibilityResult.needsConversion ? `<div style="font-size: 10px; color: #ff9999; margin-top: 2px;">⚠ ${warningMessage}</div>` : ''}
+                            ${compatibilityResult.needsConversion ? `<div style="font-size: 10px; color: #32cd32; margin-top: 2px;">${infoMessage}</div>` : ''}
                             ${isSelected ? '<div style="font-size: 10px; color: #000; margin-top: 2px;">✓ Currently mapped</div>' : ''}
                         </div>
                     `;
@@ -1247,16 +1218,106 @@
                             // If we have a row path, make this a relative path
                             let finalPath = jsonPath;
                             if (graphMappings.rowPath && jsonPath.startsWith(graphMappings.rowPath)) {
+                                // Remove the row path prefix
                                 finalPath = jsonPath.substring(graphMappings.rowPath.length + 1);
-                                if (finalPath.startsWith('[0].')) {
-                                    finalPath = finalPath.substring(4); // Remove [0].
+                                
+                                // If the remaining path starts with an array index (like "0.wb:longitude"),
+                                // remove the array index part to get just the field name (like "wb:longitude")
+                                if (finalPath.match(/^\d+\./)) {
+                                    finalPath = finalPath.substring(finalPath.indexOf('.') + 1);
                                 }
                             }
                             
-                            // Validate data type compatibility
+                            // If this field requires a number, attempt server-side validation
+                            if (fieldRequirement && fieldRequirement.dataType === 'number') {
+                                // Check if we have a row path set
+                                if (!graphMappings.rowPath) {
+                                    showStatus(`⚠️ Please set a row data source first before mapping numeric fields`, 'warning');
+                                    popup.remove();
+                                    return;
+                                }
+                                
+                                // Ensure data source; fall back to selector value if not yet stored in graphMappings
+                                if (!graphMappings.dataSource) {
+                                    const sel = document.getElementById('apiResponseSelector');
+                                    if (sel && sel.value) {
+                                        graphMappings.dataSource = sel.value;
+                                    }
+                                }
+                                if (!graphMappings.dataSource) {
+                                    showStatus(`⚠️ Please choose an API Response file first`, 'warning');
+                                    popup.remove();
+                                    return;
+                                }
+                                
+                                console.log('Validating field with server API:', {
+                                    originalPath: jsonPath,
+                                    finalPath: finalPath,
+                                    rowPath: graphMappings.rowPath,
+                                    dataSource: graphMappings.dataSource,
+                                    fieldRequirement: fieldRequirement
+                                });
+                                
+                                // Use server-side validation for more reliable results
+                                fetch('/ValidateNodeDataType', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        fieldPath: jsonPath,
+                                        rowPath: graphMappings.rowPath,
+                                        targetDataType: 'number',
+                                        dataSource: graphMappings.dataSource
+                                    })
+                                })
+                                .then(response => response.json())
+                                .then(result => {
+                                    // Always attempt to map the path regardless of validation outcome
+                                    if (result.success) {
+                                        if (result.fieldName) {
+                                            finalPath = result.fieldName; // prefer cleaned field name
+                                        }
+                                        if (result.isCompatible) {
+                                            showStatus(`✓ Value matches and mapped (${Math.round(result.overallCompatibility * 100)}% compatibility)`, 'success');
+                                        } else {
+                                            showStatus(`⚠️ Datatype mismatched but still mapped (${Math.round(result.overallCompatibility * 100)}% compatibility)`, 'warning');
+                                        }
+                                    } else {
+                                        showStatus(`⚠️ Datatype mismatched but still mapped (validation error: ${result.error || 'Unknown error'})`, 'warning');
+                                    }
+
+                                    // Complete the mapping (always)
+                                    input.value = finalPath;
+                                    input.dispatchEvent(new Event('change'));
+                                    showStatus(`Mapped ${finalPath} to ${role}`, 'success');
+                                    popup.remove();
+                                })
+                                .catch(error => {
+                                    console.error('Server validation failed:', error);
+                                    showStatus(`⚠️ Datatype mismatched but still mapped (server validation failed)`, 'warning');
+                                    // Optional client-side attempt for info only
+                                    try {
+                                        const conversionResult = attemptFieldConversion(jsonPath, 'number');
+                                        if (conversionResult.success) {
+                                            finalPath = conversionResult.fieldName || finalPath;
+                                            showStatus(`✓ Local numeric parse sample: ${conversionResult.convertedCount}/${conversionResult.totalCount} convertible`, 'info');
+                                        }
+                                    } catch (_) {}
+                                    // Map regardless
+                                    input.value = finalPath;
+                                    input.dispatchEvent(new Event('change'));
+                                    showStatus(`Mapped ${finalPath} to ${role}`, 'success');
+                                    popup.remove();
+                                });
+                                
+                                return; // Exit early since we're handling the validation asynchronously
+                            }
+                            
+                            // Validate data type compatibility after conversion
                             if (fieldRequirement && fieldRequirement.dataType !== 'any') {
-                                const isCompatible = isFieldCompatible(finalPath, fieldRequirement.dataType);
-                                if (!isCompatible) {
+                                const compatibilityResult = isFieldCompatibleWithConversion(finalPath, fieldRequirement.dataType);
+                                if (!compatibilityResult.compatible) {
                                     const fieldDataType = analyzeFieldDataType(finalPath);
                                     showStatus(`⚠️ Data type mismatch: ${fieldRequirement.name} requires ${fieldRequirement.dataType} data, but this field contains ${fieldDataType} data`, 'warning');
                                     popup.remove();
@@ -1336,8 +1397,16 @@
             let booleanCount = 0;
             
             values.forEach(val => {
-                if (typeof val === 'number' || (!isNaN(parseFloat(val)) && isFinite(val))) {
-                    numericCount++;
+                // More lenient numeric detection for coordinates and decimal numbers
+                const numVal = parseFloat(val);
+                if (!isNaN(numVal) && isFinite(numVal)) {
+                    // Check if it's a valid number format (supports negative, positive, decimals, scientific notation)
+                    const valStr = String(val).trim();
+                    if (/^-?\d*\.?\d+([eE][+-]?\d+)?$/.test(valStr) || typeof val === 'number') {
+                        numericCount++;
+                    } else {
+                        stringCount++;
+                    }
                 } else if (typeof val === 'boolean') {
                     booleanCount++;
                 } else {
@@ -1361,7 +1430,7 @@
             
             switch (requiredDataType) {
                 case 'number':
-                    return fieldDataType === 'number';
+                    return fieldDataType === 'number' || fieldDataType === 'mixed';
                 case 'string':
                     return fieldDataType === 'string' || fieldDataType === 'mixed';
                 case 'boolean':
@@ -1371,26 +1440,344 @@
             }
         }
 
+        // Function to attempt converting string values to numbers for numeric fields
+        function attemptNumericConversion(fieldPath, requiredDataType) {
+            if (requiredDataType !== 'number') return { canConvert: false, dataType: analyzeFieldDataType(fieldPath) };
+            
+            let dataArray = null;
+            if (graphMappings.rowPath) {
+                dataArray = resolvePath(graphMappings.rowPath);
+                if (!Array.isArray(dataArray)) dataArray = null;
+            }
+            
+            if (!dataArray || !dataArray.length) return { canConvert: false, dataType: 'unknown' };
+            
+            // Sample first few items to test conversion
+            const sampleSize = Math.min(10, dataArray.length);
+            let successfulConversions = 0;
+            let totalSamples = 0;
+            
+            for (let i = 0; i < sampleSize; i++) {
+                const value = resolvePath(fieldPath, dataArray[i]);
+                if (value !== null && value !== undefined && value !== '') {
+                    totalSamples++;
+                    
+                    // Try to convert to number
+                    const numVal = parseFloat(String(value).trim());
+                    if (!isNaN(numVal) && isFinite(numVal)) {
+                        // Additional validation for string representations of numbers
+                        const valStr = String(value).trim();
+                        if (/^-?\d*\.?\d+([eE][+-]?\d+)?$/.test(valStr) || typeof value === 'number') {
+                            successfulConversions++;
+                        }
+                    }
+                }
+            }
+            
+            if (totalSamples === 0) return { canConvert: false, dataType: 'empty' };
+            
+            // If 80% or more values can be converted to numbers, consider it convertible
+            const conversionRate = successfulConversions / totalSamples;
+            const canConvert = conversionRate >= 0.8;
+            
+            return { 
+                canConvert: canConvert, 
+                dataType: canConvert ? 'convertible-number' : 'string',
+                conversionRate: conversionRate,
+                successCount: successfulConversions,
+                totalCount: totalSamples
+            };
+        }
+
+        // Enhanced field compatibility check with conversion support
+        function isFieldCompatibleWithConversion(fieldPath, requiredDataType) {
+            if (requiredDataType === 'any') return { compatible: true, needsConversion: false };
+            
+            const originalDataType = analyzeFieldDataType(fieldPath);
+            
+            // If already compatible, no conversion needed
+            if (originalDataType === requiredDataType) {
+                return { compatible: true, needsConversion: false, dataType: originalDataType };
+            }
+            
+            // For mixed data types, allow them through
+            if (originalDataType === 'mixed') {
+                return { compatible: true, needsConversion: false, dataType: originalDataType };
+            }
+            
+            // If we need a number but have string/mixed, try conversion
+            if (requiredDataType === 'number' && (originalDataType === 'string' || originalDataType === 'mixed')) {
+                const conversionResult = attemptNumericConversion(fieldPath, requiredDataType);
+                if (conversionResult.canConvert) {
+                    return { 
+                        compatible: true, 
+                        needsConversion: true, 
+                        dataType: conversionResult.dataType,
+                        conversionInfo: conversionResult
+                    };
+                } else {
+                    return { 
+                        compatible: false, 
+                        needsConversion: false, 
+                        dataType: originalDataType,
+                        conversionInfo: conversionResult
+                    };
+                }
+            }
+            
+            // For other data types, use original logic
+            switch (requiredDataType) {
+                case 'string':
+                    return { compatible: true, needsConversion: false, dataType: originalDataType }; // Strings can accept most things
+                case 'boolean':
+                    return { compatible: originalDataType === 'boolean', needsConversion: false, dataType: originalDataType };
+                default:
+                    return { compatible: true, needsConversion: false, dataType: originalDataType };
+            }
+        }
+
+        // Function to directly test field access at the selected JSON path
+        function testFieldAccess(fullFieldPath) {
+            console.log(`Testing direct field access for path: "${fullFieldPath}"`);
+            
+            try {
+                // First, get the exact value at this path
+                const directValue = resolvePath(fullFieldPath);
+                console.log(`Direct value at path "${fullFieldPath}":`, directValue, typeof directValue);
+                
+                // If we have a row path set, we need to understand the relationship
+                if (graphMappings.rowPath) {
+                    console.log(`Row path: "${graphMappings.rowPath}"`);
+                    const rowData = resolvePath(graphMappings.rowPath);
+                    console.log(`Row data type:`, Array.isArray(rowData) ? `Array with ${rowData.length} items` : typeof rowData);
+                    
+                    if (Array.isArray(rowData) && rowData.length > 0) {
+                        console.log(`First row item structure:`, Object.keys(rowData[0] || {}));
+                        
+                        // Extract the field name from the full path
+                        // Handle different path formats:
+                        // Case 1: fullFieldPath is like "response.data.wb:countries.wb:country.0.wb:longitude" and rowPath is like "response.data.wb:countries.wb:country"
+                        // Case 2: fullFieldPath is like "data.0.wb:longitude" when using array-based data
+                        
+                        let fieldName = '';
+                        
+                        if (fullFieldPath.startsWith(graphMappings.rowPath)) {
+                            // Standard case: path starts with row path
+                            const remainder = fullFieldPath.substring(graphMappings.rowPath.length + 1);
+                            // Remove array index if present (e.g., "0.wb:longitude" -> "wb:longitude")
+                            if (remainder.match(/^\d+\./)) {
+                                fieldName = remainder.substring(remainder.indexOf('.') + 1);
+                            } else {
+                                fieldName = remainder;
+                            }
+                        } else {
+                            // Fallback: try to extract field name from paths that don't align perfectly
+                            // Look for the pattern: "some.path.{number}.{fieldname}"
+                            const pathParts = fullFieldPath.split('.');
+                            
+                            // Find the last numeric index in the path
+                            let lastNumericIndex = -1;
+                            for (let i = 0; i < pathParts.length; i++) {
+                                if (/^\d+$/.test(pathParts[i])) {
+                                    lastNumericIndex = i;
+                                }
+                            }
+                            
+                            if (lastNumericIndex >= 0 && lastNumericIndex < pathParts.length - 1) {
+                                // Take everything after the last numeric index
+                                fieldName = pathParts.slice(lastNumericIndex + 1).join('.');
+                            } else {
+                                // Last resort: take the last part of the path
+                                fieldName = pathParts[pathParts.length - 1];
+                            }
+                        }
+                        
+                        console.log(`Extracted field name: "${fieldName}"`);
+                        
+                        // Test accessing this field in each row item
+                        const testResults = [];
+                        for (let i = 0; i < Math.min(3, rowData.length); i++) {
+                            const item = rowData[i];
+                            const fieldValue = resolvePath(fieldName, item);
+                            testResults.push({
+                                index: i,
+                                fieldValue: fieldValue,
+                                fieldType: typeof fieldValue
+                            });
+                            console.log(`Row ${i}, field "${fieldName}":`, fieldValue, typeof fieldValue);
+                        }
+                        
+                        return {
+                            success: true,
+                            fieldName: fieldName,
+                            testResults: testResults,
+                            rowDataLength: rowData.length
+                        };
+                    }
+                }
+                
+                return {
+                    success: false,
+                    error: 'No valid row data found',
+                    directValue: directValue
+                };
+                
+            } catch (error) {
+                console.error('Error testing field access:', error);
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        // Function to attempt conversion of field values for mapping to numeric roles
+        function attemptFieldConversion(fullFieldPath, targetDataType) {
+            if (targetDataType !== 'number') {
+                return { success: false, message: 'Only numeric conversions are supported', convertedCount: 0, totalCount: 0 };
+            }
+            
+            console.log(`\n=== Starting conversion test for "${fullFieldPath}" ===`);
+            
+            // First, test direct field access
+            const fieldTest = testFieldAccess(fullFieldPath);
+            if (!fieldTest.success) {
+                console.log('Field access test failed:', fieldTest.error);
+                return { success: false, message: fieldTest.error, convertedCount: 0, totalCount: 0 };
+            }
+            
+            console.log(`Field access test successful. Field name: "${fieldTest.fieldName}"`);
+            
+            // Get the row data array
+            let dataArray = null;
+            if (graphMappings.rowPath) {
+                dataArray = resolvePath(graphMappings.rowPath);
+                if (!Array.isArray(dataArray)) dataArray = null;
+            }
+            
+            if (!dataArray || !dataArray.length) {
+                console.log('No data array found. Row path:', graphMappings.rowPath);
+                return { success: false, message: 'No data array found', convertedCount: 0, totalCount: 0 };
+            }
+            
+            // Test conversion on all available data using the extracted field name
+            let successfulConversions = 0;
+            let totalItems = 0;
+            let sampleValues = [];
+            
+            dataArray.forEach((item, index) => {
+                const value = resolvePath(fieldTest.fieldName, item);
+                
+                // Log first few values for debugging
+                if (index < 3) {
+                    console.log(`Item ${index}, field "${fieldTest.fieldName}":`, value, typeof value);
+                    sampleValues.push(value);
+                }
+                
+                if (value !== null && value !== undefined && value !== '') {
+                    totalItems++;
+                    
+                    // Convert value to string and trim
+                    let stringValue = String(value).trim();
+                    
+                    // Handle different possible formats:
+                    // 1. If the string contains field name and value (like "wb:longitude: -70.0167")
+                    // 2. If it's just the raw value (like "-70.0167")
+                    // 3. If it's in some other format
+                    
+                    if (stringValue.includes(':')) {
+                        // Split by colon and take the last numeric-looking part
+                        const parts = stringValue.split(':');
+                        for (let i = parts.length - 1; i >= 0; i--) {
+                            const trimmedPart = parts[i].trim();
+                            const testNum = parseFloat(trimmedPart);
+                            if (!isNaN(testNum) && isFinite(testNum) && /^-?\d*\.?\d+([eE][-+]?\d+)?$/.test(trimmedPart)) {
+                                stringValue = trimmedPart;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Skip if still empty after processing
+                    if (stringValue === '') {
+                        return;
+                    }
+                    
+                    const numValue = parseFloat(stringValue);
+                    
+                    // Check if conversion was successful
+                    if (!isNaN(numValue) && isFinite(numValue)) {
+                        // More lenient regex to accept decimal numbers, negative numbers, etc.
+                        const isValidNumber = /^-?\d*\.?\d+([eE][-+]?\d+)?$/.test(stringValue);
+                        if (isValidNumber) {
+                            successfulConversions++;
+                            if (index < 3) {
+                                console.log(`✓ Successfully converted "${value}" -> "${stringValue}" -> ${numValue}`);
+                            }
+                        } else {
+                            if (index < 3) {
+                                console.log(`✗ Failed regex validation for "${stringValue}"`);
+                            }
+                        }
+                    } else {
+                        if (index < 3) {
+                            console.log(`✗ Failed numeric conversion for "${stringValue}" -> ${numValue}`);
+                        }
+                    }
+                }
+            });
+            
+            console.log(`\n=== Conversion Results ===`);
+            console.log(`Total items processed: ${totalItems}`);
+            console.log(`Successful conversions: ${successfulConversions}`);
+            console.log(`Sample values:`, sampleValues);
+            console.log(`=========================\n`);
+            
+            if (totalItems === 0) {
+                return { success: false, message: 'No values found to convert', convertedCount: 0, totalCount: 0 };
+            }
+            
+            // Require at least 80% success rate for conversion
+            const conversionRate = successfulConversions / totalItems;
+            const success = conversionRate >= 0.8;
+            
+            return {
+                success: success,
+                message: success ? 
+                    `Successfully converted ${successfulConversions}/${totalItems} values to numbers` :
+                    `Only ${successfulConversions}/${totalItems} values could be converted to numbers (${Math.round(conversionRate * 100)}% success rate)`,
+                convertedCount: successfulConversions,
+                totalCount: totalItems,
+                conversionRate: conversionRate,
+                fieldName: fieldTest.fieldName
+            };
+        }
+
         // Graph type selection
         function selectGraphType() {
             const selector = document.getElementById('graphTypeSelector');
-            currentGraphType = selector.value;
-            
+            const newType = selector.value;
+            // Persist current mappings into savedGraphMappings before switching
+            if (currentGraphType) {
+                if (!savedGraphMappings[currentGraphType]) savedGraphMappings[currentGraphType] = { mappings: {} };
+                savedGraphMappings[currentGraphType].mappings = { ...graphMappings };
+            }
+            currentGraphType = newType;
             if (!currentGraphType) {
-                document.getElementById('graphInputMappings').style.display = 'none';
                 hideVariablesPreview();
                 updateRenderButtonState();
                 return;
             }
-            
-            loadGraphMappingControls(currentGraphType);
-            document.getElementById('graphInputMappings').style.display = 'block';
+            loadGraphMappingControls(currentGraphType, true);
             updateRenderButtonState();
+            // Auto-save active graph type change
+            scheduleMultiGraphSave();
         }
 
         // Load mapping controls for selected graph type
-        function loadGraphMappingControls(graphType) {
+        function loadGraphMappingControls(graphType, restoreExisting=false) {
             const container = document.getElementById('mappingControls');
+            // Reset current mappings, will repopulate after inputs created
             graphMappings = {};
             
             const graphRequirements = {
@@ -1423,14 +1810,18 @@
                         { role: 'tooltip', name: 'Tooltip', description: 'Additional info on hover' }
                     ]
                 },
-                'map': {
+                'world-map': {
                     required: [
-                        { role: 'latitude', name: 'Latitude', description: 'Latitude coordinates' },
-                        { role: 'longitude', name: 'Longitude', description: 'Longitude coordinates' }
+                        { role: 'longitude', name: 'Longitude', description: 'Longitude coordinate' },
+                        { role: 'latitude', name: 'Latitude', description: 'Latitude coordinate' },
+                        { role: 'label', name: 'Label', description: 'Point label (e.g., country name)' }
                     ],
                     optional: [
-                        { role: 'label', name: 'Label', description: 'Location label' },
-                        { role: 'value', name: 'Value', description: 'Numeric value for sizing' }
+                        { role: 'value', name: 'Value', description: 'Numeric value (point size/color)' },
+                        { role: 'color', name: 'Color', description: 'Color category field' },
+                        { role: 'capital', name: 'Capital', description: 'Capital city' },
+                        { role: 'income', name: 'Income', description: 'Income level classification' },
+                        { role: 'region', name: 'Region', description: 'Geographic region' }
                     ]
                 }
             };
@@ -1450,7 +1841,7 @@
                     <div class="mb-2">
                         <div class="input-container">
                             <input type="text" 
-                                   class="form-control mapping-input" 
+                                   class="form-control" 
                                    data-role="rowPath"
                                    placeholder="Path to array containing row data (e.g., response.data.wb:countries.wb:country)"
                                    style="background: #333; border-color: #ffc107;">
@@ -1486,16 +1877,31 @@
             container.innerHTML = html;
             
             // Add event listeners for input changes
-            container.querySelectorAll('.mapping-input').forEach(input => {
+            container.querySelectorAll('.form-control').forEach(input => {
                 input.addEventListener('change', function() {
                     const role = this.dataset.role;
                     const path = this.value;
                     graphMappings[role] = path || null;
+                    // Keep savedGraphMappings in sync for current graph type
+                    if (currentGraphType) {
+                        if (!savedGraphMappings[currentGraphType]) savedGraphMappings[currentGraphType] = { mappings: {} };
+                        savedGraphMappings[currentGraphType].mappings = { ...graphMappings };
+                    }
                     updateRenderButtonState();
                     updateVariablesPreview();
-                    autoSaveGraphControls();
+                    scheduleMultiGraphSave();
                 });
             });
+
+            // Restore saved mappings for this graph type if present
+            if (restoreExisting && savedGraphMappings[graphType] && savedGraphMappings[graphType].mappings) {
+                Object.entries(savedGraphMappings[graphType].mappings).forEach(([role, path]) => {
+                    graphMappings[role] = path;
+                    const input = container.querySelector(`[data-role="${role}"]`);
+                    if (input) input.value = path;
+                });
+                updateVariablesPreview();
+            }
             
             // Enable drag from JSON explorer nodes (removed old timeout)
         }
@@ -1505,9 +1911,9 @@
                 <div class="mb-2">
                     <div class="input-container">
                         <input type="text" 
-                               class="form-control mapping-input" 
+                               class="form-control" 
                                data-role="${input.role}"
-                               placeholder="Field path relative to each row (e.g., wb:name, wb:incomeLevel.content)"
+                               placeholder=""
                                ${required ? 'required' : ''}>
                     </div>
                     <small class="text-muted">
@@ -1628,30 +2034,37 @@
             return { columns, rows, truncated: rowDataArray.length > limit };
         }
 
+        // Schedule save for explorer-only changes (legacy)
         function autoSaveGraphControls() {
+            scheduleMultiGraphSave();
+        }
+
+        function scheduleMultiGraphSave() {
             clearTimeout(saveExplorerConfigDebounce);
             saveExplorerConfigDebounce = setTimeout(() => {
+                if (currentGraphType) {
+                    if (!savedGraphMappings[currentGraphType]) savedGraphMappings[currentGraphType] = { mappings: {} };
+                    savedGraphMappings[currentGraphType].mappings = { ...graphMappings };
+                }
                 const payload = {
-                    visualization: { graphType: currentGraphType, mappings: graphMappings },
-                    explorerControls: {
-                        nodeSpacing: explorerSpacing,
+                    dataSource: graphMappings.dataSource ? { apiResponse: graphMappings.dataSource } : undefined,
+                    visualization: {
+                        activeGraphType: currentGraphType,
+                        graphs: savedGraphMappings
+                    },
+                    explorerSettings: {
+                        spacing: explorerSpacing,
                         verticalSpacing: explorerVerticalSpacing,
                         textSize: explorerTextSize,
-                        nodeSize: explorerNodeSize,
-                        maxDepth: explorerMaxDepth,
-                        chartSize: explorerChartSize,
-                        orientation: explorerOrientation,
-                        treeShape: explorerTreeShape,
-                        linkStyle: explorerLinkStyle,
-                        showLabels: explorerShowLabels
+                        maxDepth: explorerMaxDepth
                     }
                 };
-                fetch('/UpdateGraphControls', {
+                fetch('/SaveGraphControls', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 }).catch(()=>{});
-            }, 300);
+            }, 400);
         }
         async function loadExplorerControlsFromGraphconf() {
             try {
@@ -1696,6 +2109,10 @@
                 const response = await fetch('/data/GraphControls.json');
                 if (!response.ok) return; // silently ignore if not present
                 const config = await response.json();
+                // Multi-graph: capture saved graphs
+                if (config.visualization && config.visualization.graphs) {
+                    savedGraphMappings = config.visualization.graphs;
+                }
                 // Restore data source
                 if (config.dataSource && config.dataSource.apiResponse) {
                     const sel = document.getElementById('apiResponseSelector');
@@ -1711,24 +2128,20 @@
                     ensureOption();
                 }
                 // Visualization
-                if (config.visualization && config.visualization.graphType) {
-                    document.getElementById('graphTypeSelector').value = config.visualization.graphType;
-                    selectGraphType();
-                    if (config.visualization.mappings) {
-                        setTimeout(() => {
-                            Object.entries(config.visualization.mappings).forEach(([role, path]) => {
-                                const input = document.querySelector(`[data-role="${role}"]`);
-                                if (input && path) {
-                                    input.value = path;
-                                    // Remove old drop-zone class logic since we no longer use drop zones
-                                    graphMappings[role] = path;
-                                }
-                            });
-                            updateVariablesPreview();
-                            updateRenderButtonState();
-                        }, 300);
-                    }
+                // Determine initial active graph type
+                let initialType = config.visualization?.activeGraphType || config.visualization?.graphType;
+                if (initialType === 'map') initialType = 'world-map';
+                if (!initialType && config.visualization?.graphs) {
+                    const keys = Object.keys(config.visualization.graphs);
+                    if (keys.length) initialType = keys[0];
                 }
+                if (initialType) {
+                    const selector = document.getElementById('graphTypeSelector');
+                    selector.value = initialType;
+                    currentGraphType = initialType;
+                    loadGraphMappingControls(initialType, true);
+                }
+                updateRenderButtonState();
                 // Explorer settings (subset stored in GraphControls.json)
                 if (config.explorerSettings) {
                     if (config.explorerSettings.spacing !== undefined) {
@@ -1761,8 +2174,22 @@
             const indicator = document.getElementById('statusIndicator');
             if (!indicator) return;
             indicator.textContent = message;
-            indicator.className = `status-indicator status-${type} show`;
-            setTimeout(() => indicator.classList.remove('show'), 3000);
+            
+            // Remove existing classes
+            indicator.classList.remove('bg-success', 'bg-danger', 'bg-info', 'text-white', 'opacity-0');
+            
+            // Add appropriate Bootstrap classes based on type
+            const colorClass = type === 'success' ? 'bg-success' : 
+                              type === 'error' ? 'bg-danger' : 'bg-info';
+            indicator.className = `position-fixed p-3 rounded text-white ${colorClass}`;
+            indicator.style.top = '80px';
+            indicator.style.right = '20px';
+            indicator.style.zIndex = '1001';
+            indicator.style.opacity = '1';
+            
+            setTimeout(() => {
+                indicator.style.opacity = '0';
+            }, 3000);
         }
 
         // Explorer button functions
@@ -1794,8 +2221,21 @@
             if (explorerZoom && d3.select('#jsonExplorerChart svg').node()) {
                 const svg = d3.select('#jsonExplorerChart svg');
                 const bounds = svg.select('g').node().getBBox();
-                const svgWidth = +svg.attr('width');
-                const svgHeight = +svg.attr('height');
+                
+                // Get dimensions from viewBox or container
+                const viewBox = svg.attr('viewBox');
+                let svgWidth, svgHeight;
+                
+                if (viewBox) {
+                    const [,, width, height] = viewBox.split(' ').map(Number);
+                    svgWidth = width;
+                    svgHeight = height;
+                } else {
+                    // Fallback to container dimensions
+                    const containerRect = document.getElementById('jsonExplorerChart').getBoundingClientRect();
+                    svgWidth = containerRect.width;
+                    svgHeight = containerRect.height;
+                }
                 
                 const centerX = svgWidth / 2;
                 const centerY = svgHeight / 2;
@@ -1805,11 +2245,6 @@
                 svg.transition().duration(750)
                     .call(explorerZoom.transform, d3.zoomIdentity.translate(x, y));
             }
-        }
-
-        function toggleAdvancedControls() {
-            const controls = document.getElementById('advancedExplorerControls');
-            controls.style.display = controls.style.display === 'none' ? 'block' : 'none';
         }
 
         // Missing utility functions
@@ -1837,16 +2272,16 @@
         }
 
         function showVariablesPreview() {
-            document.getElementById('variablesPreview').style.display = 'block';
+            document.getElementById('variablesPreview').classList.remove('d-none');
         }
 
         function hideVariablesPreview() {
-            document.getElementById('variablesPreview').style.display = 'none';
+            document.getElementById('variablesPreview').classList.add('d-none');
         }
 
         function clearAllMappings() {
             graphMappings = {};
-            document.querySelectorAll('.mapping-input').forEach(input => {
+            document.querySelectorAll('.form-control').forEach(input => {
                 input.value = '';
                 // Remove drop-zone class logic since we no longer use drop zones
             });
@@ -1965,14 +2400,22 @@
             try {
                 showStatus('Saving configuration...', 'info');
                 
+                // Build multi-graph structure (merge existing if any)
+                let existingCfg = null;
+                try {
+                    const existingResp = await fetch('../data/GraphControls.json?_=' + Date.now());
+                    if (existingResp.ok) existingCfg = await existingResp.json();
+                } catch {}
+                let graphs = existingCfg?.visualization?.graphs || {};
+                if (!graphs[currentGraphType]) graphs[currentGraphType] = { mappings: {} };
+                graphs[currentGraphType].mappings = { ...graphMappings };
                 const configuration = {
                     dataSource: {
-                        apiResponse: document.getElementById('apiResponseSelector').value,
-                        data: currentApiData
+                        apiResponse: document.getElementById('apiResponseSelector').value
                     },
                     visualization: {
-                        graphType: currentGraphType,
-                        mappings: graphMappings
+                        activeGraphType: currentGraphType,
+                        graphs: graphs
                     },
                     explorerSettings: {
                         spacing: explorerSpacing,
@@ -1998,7 +2441,7 @@
                 
                 // Redirect to view page after a brief delay
                 setTimeout(() => {
-                    window.location.href = 'view.html';
+                    window.location.href = 'Graph.html';
                 }, 1500);
                 
             } catch (error) {

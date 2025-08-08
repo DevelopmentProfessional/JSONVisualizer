@@ -1,0 +1,97 @@
+{
+  "status": "success",
+  "request": {
+    "method": "GET",
+    "originalUrl": "https://ourworldindata.org/grapher/meat-consumption-vs-gdp-per-capita.metadata.json?v=1&csvType=full&useColumnShortNames=true",
+    "interpolatedUrl": "https://ourworldindata.org/grapher/meat-consumption-vs-gdp-per-capita.metadata.json?v=1&csvType=full&useColumnShortNames=true",
+    "headers": {},
+    "body": ""
+  },
+  "variables": {},
+  "response": {
+    "status": 200,
+    "statusText": "OK",
+    "headers": {
+      "date": "Fri, 08 Aug 2025 18:37:17 GMT",
+      "content-type": "application/json",
+      "transfer-encoding": "chunked",
+      "connection": "close",
+      "strict-transport-security": "max-age=15552000; preload",
+      "x-content-type-options": "nosniff",
+      "access-control-allow-origin": "*",
+      "report-to": "{\"endpoints\":[{\"url\":\"https:\\/\\/a.nel.cloudflare.com\\/report\\/v4?s=%2Bsh%2B1Pl%2B5NE15EYT7mpuQ%2BWztJQcdMwsL08fx6DevFBJ8rbgncmMYO7jh3SAvvZ46LbdKc%2BBAGoEfndaBv%2F4ez8LohWpKDWEewB0l3hcS%2BjpFacJyWJ4NwrHuIuM2s%2FyfVe9y3s%3D\"}],\"group\":\"cf-nel\",\"max_age\":604800}",
+      "nel": "{\"success_fraction\":0,\"report_to\":\"cf-nel\",\"max_age\":604800}",
+      "vary": "Accept-Encoding",
+      "server": "cloudflare",
+      "cf-cache-status": "DYNAMIC",
+      "cf-ray": "96c11fc14bdfc335-EWR"
+    },
+    "data": {
+      "chart": {
+        "title": "Meat supply vs. GDP per capita",
+        "subtitle": "Average meat supply per capita, measured in kilograms per year, versus GDP per capita, adjusted for inflation and for differences in living costs between countries. Figures do not include fish or seafood.",
+        "note": "GDP per capita is expressed in [international-$](#dod:int_dollar_abbreviation) at 2021 prices.",
+        "citation": "Food and Agriculture Organization of the United Nations (2024); Eurostat, OECD, and World Bank (2025)",
+        "originalChartUrl": "https://ourworldindata.org/grapher/meat-consumption-vs-gdp-per-capita?v=1&csvType=full&useColumnShortNames=true",
+        "selection": []
+      },
+      "columns": {
+        "meat__total__00002943__food_available_for_consumption__0645pc__kilograms_per_year_per_capita": {
+          "titleShort": "Yearly per capita supply of all meat",
+          "titleLong": "Yearly per capita supply of all meat",
+          "descriptionShort": "Quantity that is available for consumption at the end of the supply chain. It does not account for consumer waste, so the quantity that is actually consumed may be lower.",
+          "descriptionProcessing": "* This data was originally given per-capita by FAOSTAT. We converted this data into total figures by multiplying by FAOSTAT's population.\n* Per-capita values were obtained by dividing total figures by Our World in Data's population.\n* For regions defined by FAOSTAT, per-capita values were calculated using FAOSTAT's original population data, if available.\n",
+          "shortUnit": "kg",
+          "unit": "kilograms per year per capita",
+          "timespan": "1961-2022",
+          "type": "Numeric",
+          "owidVariableId": 1021084,
+          "shortName": "meat__total__00002943__food_available_for_consumption__0645pc__kilograms_per_year_per_capita",
+          "lastUpdated": "2025-03-17",
+          "nextUpdate": "2026-03-17",
+          "citationShort": "Food and Agriculture Organization of the United Nations (2024) – processed by Our World in Data",
+          "citationLong": "Food and Agriculture Organization of the United Nations (2024) – processed by Our World in Data. “Yearly per capita supply of all meat” [dataset]. Food and Agriculture Organization of the United Nations, “Food Balances: Food Balances (-2013, old methodology and population)”; Food and Agriculture Organization of the United Nations, “Food Balances: Food Balances (2010-)” [original data].",
+          "fullMetadata": "https://api.ourworldindata.org/v1/indicators/1021084.metadata.json"
+        },
+        "ny_gdp_pcap_pp_kd": {
+          "titleShort": "GDP per capita",
+          "titleLong": "GDP per capita - World Bank – In constant international-$",
+          "descriptionShort": "Average economic output per person in a country or region per year. This data is adjusted for inflation and differences in living costs between countries.",
+          "descriptionKey": [
+            "Gross domestic product (GDP) is a measure of the total value added from the production of goods and services in a country or region each year. GDP per capita is GDP divided by population.",
+            "This GDP per capita indicator provides information on economic growth and income levels from 1990.",
+            "This data is adjusted for inflation and differences in living costs between countries.",
+            "This data is expressed in [international-$](#dod:int_dollar_abbreviation) at 2021 prices.",
+            "For GDP per capita estimates in the long run, explore the [Maddison Project Database's indicator](https://ourworldindata.org/grapher/gdp-per-capita-maddison)."
+          ],
+          "shortUnit": "$",
+          "unit": "international-$ in 2021 prices",
+          "timespan": "1990-2023",
+          "type": "Numeric",
+          "owidVariableId": 1008370,
+          "shortName": "ny_gdp_pcap_pp_kd",
+          "lastUpdated": "2025-01-24",
+          "nextUpdate": "2026-01-24",
+          "citationShort": "Eurostat, OECD, and World Bank (2025) – with minor processing by Our World in Data",
+          "citationLong": "Eurostat, OECD, and World Bank (2025) – with minor processing by Our World in Data. “GDP per capita – World Bank – In constant international-$” [dataset]. Eurostat, OECD, and World Bank, “World Development Indicators” [original data].",
+          "fullMetadata": "https://api.ourworldindata.org/v1/indicators/1008370.metadata.json"
+        },
+        "owid_region": {
+          "titleShort": "World regions according to OWID",
+          "titleLong": "World regions according to OWID",
+          "unit": "",
+          "timespan": "2023-2023",
+          "type": "Continent",
+          "owidVariableId": 900801,
+          "shortName": "owid_region",
+          "lastUpdated": "2023-01-01",
+          "citationShort": "Our World in Data – processed by Our World in Data",
+          "citationLong": "Our World in Data – processed by Our World in Data. “World regions according to OWID” [dataset]. Our World in Data, “Regions” [original data].",
+          "fullMetadata": "https://api.ourworldindata.org/v1/indicators/900801.metadata.json"
+        }
+      },
+      "dateDownloaded": "2025-08-08",
+      "activeFilters": {}
+    }
+  }
+}

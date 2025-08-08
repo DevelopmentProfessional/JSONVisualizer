@@ -1,0 +1,2 @@
+export const graphDefinition = { name:'Position Forces', description:'Demonstrates x/y position forces.', requiredInputs:[ {role:'nodes', name:'Nodes', required:true} ], optionalInputs:[ {role:'x', name:'X target'}, {role:'y', name:'Y target'} ] };
+export async function render(container){ d3.select(container).selectAll('*').remove(); d3.select(container).append('div').style('color','#ccc').text('Position forces placeholder'); }

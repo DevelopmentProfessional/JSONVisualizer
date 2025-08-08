@@ -16,7 +16,8 @@
                     <a class="navbar-brand" href="#"><i class="bi bi-play-circle"></i> API Runner</a>
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item"><a class="nav-link" href="ManageAPI.html">Manage API</a></li>
-                        <li class="nav-item"><a class="nav-link" href="view.html">Visualizer</a></li>
+                        <li class="nav-item"><a class="nav-link" href="Graph.html">Visualizer</a></li>
+                        <li class="nav-item"><a class="nav-link" href="GraphControls.html">Graph Controls</a></li>
                         <li class="nav-item"><a class="nav-link" href="Variables.html">Variables</a></li>
                         <li class="nav-item"><a class="nav-link active" href="Run.html">Run</a></li>
                     </ul>
@@ -87,7 +88,7 @@
                         </div>
 
                         <!-- Execution Summary -->
-                        <div class="card mt-3" id="summaryCard" style="display: none;">
+                        <div class="card mt-3 d-none" id="summaryCard">
                             <div class="card-header">
                                 <h6 class="card-title mb-0">
                                     <i class="bi bi-graph-up"></i> Execution Summary
@@ -190,7 +191,7 @@
             if (apiCalls.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-4 text-muted">
-                        <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                        <i class="bi bi-inbox display-1"></i>
                         <div class="mt-2">No API calls available</div>
                         <div class="small">Go to <a href="ManageAPI.html">Manage API</a> to add some API calls</div>
                     </div>
@@ -217,7 +218,7 @@
                                     <div class="d-flex align-items-center mb-2">
                                         <h6 class="mb-0 me-2 text-light">${escapeHtml(apiName)}</h6>
                                         <span class="badge bg-${getMethodColor(method)} me-2">${method}</span>
-                                        <span class="badge bg-secondary me-2" style="font-size: 0.75rem;">
+                                        <span class="badge bg-secondary me-2 small">
                                             <i class="bi bi-file-earmark-text"></i> ${outputFileName}.json
                                         </span>
                                         <div class="ms-auto">

@@ -1,0 +1,2 @@
+export const graphDefinition = { name:'Geo Paths', description:'Basic GeoJSON path rendering.', requiredInputs:[ {role:'features', name:'Features', required:true} ], optionalInputs:[ {role:'projection', name:'Projection'} ] };
+export async function render(container){ d3.select(container).selectAll('*').remove(); d3.select(container).append('div').style('color','#ccc').text('Geo paths placeholder'); }
