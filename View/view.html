@@ -10,7 +10,9 @@
         body {
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Prevent scrollbars on body */
+            overflow-x: auto; /* Allow horizontal scrolling if needed */
+            overflow-y: auto; /* Allow vertical scrolling */
+            min-height: 100vh;
         }
         
         #output-graph {
@@ -32,7 +34,32 @@
             background: rgba(0, 0, 0, 0.8);
             border-radius: 8px;
             padding: 10px;
-            max-width: 300px;
+            min-width: 280px;
+            width: 320px; /* Default width */
+            min-height: 200px;
+            height: 600px; /* Default height */
+            overflow: auto; /* Allow scrolling within the control panel */
+            resize: both; /* Make resizable */
+            border: 2px solid #444;
+        }
+        
+        .control-panel-header {
+            background: #333;
+            margin: -10px -10px 10px -10px;
+            padding: 8px 15px;
+            border-radius: 6px 6px 0 0;
+            border-bottom: 1px solid #555;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .control-panel-content {
+            display: block;
+            transition: all 0.3s ease;
+        }
+        
+        .control-panel-content.collapsed {
+            display: none;
         }
         
         .navbar {
@@ -70,9 +97,26 @@
         
         #filterDropdownContainer {
             position: fixed;
+            top: 380px;
+            right: 10px;
+            z-index: 1000;
+            max-height: calc(100vh - 390px); /* Ensure it doesn't exceed viewport */
+            overflow-y: auto; /* Allow scrolling within the filter dropdown */
+        }
+        
+        #savedVisualizationsPanel {
+            position: fixed;
             top: 70px;
             right: 10px;
             z-index: 1000;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 8px;
+            padding: 10px;
+            max-width: 320px;
+            min-width: 280px;
+            border: 1px solid #444;
+            max-height: calc(100vh - 80px); /* Ensure it doesn't exceed viewport */
+            overflow-y: auto; /* Allow scrolling within the panel */
         }
     </style>
             overflow-x: auto;
@@ -194,129 +238,263 @@
     </style>
 </head>
 <body> 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">APIRunner</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="ManageAPI.html">Manage API</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="view.html">Visualizer</a></li>
-                    <li class="nav-item"><a class="nav-link" href="Variables.html">Variables</a></li>
-                    <li class="nav-item"><a class="nav-link" href="Run.html">Run</a></li>
-      </ul>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark header-section">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#"><i class="bi bi-api"></i> API Runner</a>
+        <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="ManageAPI.html">Manage API</a></li>
+            <li class="nav-item"><a class="nav-link" href="GraphControls.html">Graph Controls</a></li>
+            <li class="nav-item"><a class="nav-link active" href="view.html">Visualizer</a></li>
+            <li class="nav-item"><a class="nav-link" href="Variables.html">Variables</a></li>
+            <li class="nav-item"><a class="nav-link" href="Run.html">Run</a></li>
+        </ul>
     </div>
-  </div>
 </nav>
     <div id="controlNav" class="sticky-top">
+        <div class="control-panel-header" onclick="toggleControlPanel()">
+            <span id="controlPanelTitle"><i class="bi bi-sliders"></i> Control Panel</span>
+            <span id="controlPanelToggle" class="float-end"><i class="bi bi-chevron-down"></i></span>
+        </div>
+        <div id="controlPanelContent" class="control-panel-content">
+        <!-- Data Source Selection -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-database"></i> Data Source</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">API Response</span>
+                            <select id="apiResponseSelector" class="form-select" onchange="loadSelectedApiResponse()">
+                                <option value="">-- Select API Response --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graph Configuration -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Visualization</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">Graph Type</span>
+                            <select id="graphTypeSelector" class="form-select" onchange="selectGraphType()">
+                                <option value="">-- Select Graph Type --</option>
+                                <option value="tree">Tree (Hierarchical)</option>
+                                <option value="force-directed">Force-Directed Network</option>
+                                <option value="bar-chart">Bar Chart</option>
+                                <option value="map">Map Chart</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div id="graphInputMappings" class="mt-3" style="display: none;">
+                    <div id="mappingControls"></div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <button id="renderGraphBtn" class="btn btn-primary" onclick="renderSelectedGraph()" disabled>
+                            <i class="bi bi-play-circle"></i> Render Visualization
+                        </button>
+                        <button id="resetViewBtn" class="btn btn-outline-secondary ms-2" onclick="resetToTreeView()">
+                            <i class="bi bi-arrow-clockwise"></i> Tree View
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- JSON Explorer -->
+        <div class="card mb-3" id="jsonExplorerCard" style="display: none;">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-list-nested"></i> JSON Explorer</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="explorerSearchBox" class="form-control" placeholder="Search in JSON structure..." onkeyup="searchJsonExplorer(this.value)">
+                        <button class="btn btn-outline-secondary" onclick="clearExplorerSearch()" title="Clear Search">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Advanced Explorer Controls (moved above chart) -->
+                <div class="collapse" id="advancedExplorerControls">
+                    <div class="card card-body bg-dark border-secondary p-2 mb-2">
+                        <!-- Spacing Controls Row -->
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label class="form-label" style="font-size: 0.8em;">Node Spacing:</label>
+                                <div class="d-flex align-items-center">
+                                    <input type="range" id="explorerSpacingSlider" class="form-range me-2" min="50" max="500" value="100" step="10" style="width: 80px;" oninput="updateExplorerSpacing(this.value)">
+                                    <small id="explorerSpacingValue" class="text-muted" style="font-size: 0.75em; min-width: 30px;">100</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" style="font-size: 0.8em;">Vertical Spacing:</label>
+                                <div class="d-flex align-items-center">
+                                    <input type="range" id="explorerVerticalSpacingSlider" class="form-range me-2" min="20" max="300" value="40" step="5" style="width: 80px;" oninput="updateExplorerVerticalSpacing(this.value)">
+                                    <small id="explorerVerticalSpacingValue" class="text-muted" style="font-size: 0.75em; min-width: 30px;">40</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Layout Controls Row 1 -->
+                        <div class="row g-2 mb-2">
+                            <!-- Text Size Control -->
+                            <div class="col-md-3">
+                                <label class="form-label" style="font-size: 0.8em;">Text Size:</label>
+                                <div class="d-flex align-items-center">
+                                    <input type="range" class="form-range me-2" id="explorerTextSizeSlider" min="8" max="20" value="11" step="1" style="width: 60px;" oninput="updateExplorerTextSize(this.value)">
+                                    <small id="explorerTextSizeValue" class="text-muted" style="font-size: 0.75em;">11</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Node Size Control -->
+                            <div class="col-md-3">
+                                <label class="form-label" style="font-size: 0.8em;">Node Size:</label>
+                                <div class="d-flex align-items-center">
+                                    <input type="range" class="form-range me-2" id="explorerNodeSizeSlider" min="3" max="10" value="5" step="1" style="width: 60px;" oninput="updateExplorerNodeSize(this.value)">
+                                    <small id="explorerNodeSizeValue" class="text-muted" style="font-size: 0.75em;">5</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Max Depth Control -->
+                            <div class="col-md-3">
+                                <label class="form-label" style="font-size: 0.8em;">Max Depth:</label>
+                                <div class="d-flex align-items-center">
+                                    <input type="range" class="form-range me-2" id="explorerMaxDepthSlider" min="2" max="10" value="8" step="1" style="width: 60px;" oninput="updateExplorerMaxDepth(this.value)">
+                                    <small id="explorerMaxDepthValue" class="text-muted" style="font-size: 0.75em;">8</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Chart Size Control -->
+                            <div class="col-md-3">
+                                <label class="form-label" style="font-size: 0.8em;">Chart Size:</label>
+                                <div class="d-flex align-items-center">
+                                    <input type="range" class="form-range me-2" id="explorerChartSizeSlider" min="300" max="600" value="400" step="50" style="width: 60px;" oninput="updateExplorerChartSize(this.value)">
+                                    <small id="explorerChartSizeValue" class="text-muted" style="font-size: 0.75em;">400</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Layout Controls Row 2 -->
+                        <div class="row g-2 mb-2">
+                            <!-- Orientation Control -->
+                            <div class="col-md-4">
+                                <label class="form-label" style="font-size: 0.8em;">Orientation:</label>
+                                <select id="explorerOrientation" class="form-select form-select-sm" onchange="updateExplorerOrientation(this.value)">
+                                    <option value="vertical">Vertical</option>
+                                    <option value="horizontal">Horizontal</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Tree Shape Control -->
+                            <div class="col-md-4">
+                                <label class="form-label" style="font-size: 0.8em;">Tree Shape:</label>
+                                <select id="explorerTreeShape" class="form-select form-select-sm" onchange="updateExplorerTreeShape(this.value)">
+                                    <option value="tree">Tree Layout</option>
+                                    <option value="cluster">Cluster Layout</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Link Style Control -->
+                            <div class="col-md-4">
+                                <label class="form-label" style="font-size: 0.8em;">Link Style:</label>
+                                <select id="explorerLinkStyle" class="form-select form-select-sm" onchange="updateExplorerLinkStyle(this.value)">
+                                    <option value="curved">Curved</option>
+                                    <option value="straight">Straight</option>
+                                    <option value="stepped">Stepped</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-center gap-1">
+                                    <button class="btn btn-success btn-sm" onclick="expandAllExplorerNodes()" title="Expand All Nodes">
+                                        <i class="bi bi-chevron-expand"></i>
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="collapseAllExplorerNodes()" title="Collapse All Nodes">
+                                        <i class="bi bi-chevron-contract"></i>
+                                    </button>
+                                    <button id="toggleLabelsBtn" class="btn btn-secondary btn-sm" onclick="toggleExplorerLabels()" title="Toggle Labels">
+                                        Hide Labels
+                                    </button>
+                                    <button class="btn btn-info btn-sm" onclick="exportJsonExplorer()" title="Export Chart">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                    <button class="btn btn-warning btn-sm" onclick="centerExplorerView()" title="Center View">
+                                        <i class="bi bi-bullseye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Toggle Advanced Controls -->
+                <div class="text-center mb-2">
+                    <button class="btn btn-link btn-sm text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#advancedExplorerControls" aria-expanded="false">
+                        <i class="bi bi-gear"></i> Advanced Controls
+                    </button>
+                </div>
+                
+                <div id="jsonExplorerChart" style="height: 400px; overflow: auto; background: #1a1a1a; border-radius: 4px; position: relative;">
+                    <!-- D3 hierarchical chart will be displayed here -->
+                </div>
+            </div>
+        </div>
+        </div> <!-- End control panel content -->
+    </div> <!-- End control nav -->
          <!-- Search Box -->
     <div class=" input-group-sm d-flex align-items-center">
         <input type="text" id="searchBox" class="input-group-text " placeholder="Search all node values..." oninput="handleSearchInput(this.value)">
         <button class=" btn btn-outline-primary btn-sm "  onclick="searchBoxSearch()"><i class="bi bi-search"></i></button>
         <button class="btn btn-outline-secondary btn-sm" onclick="clearSearchBox()"><i class="bi bi-x-circle"></i></button>
     </div>
-      <!-- Controls Accordion -->
-    <div class="accordion mb-3" id="controlsAccordion">
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="controlsHeading">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#controlsCollapse" aria-expanded="true" aria-controls="controlsCollapse">
-                    Graph Controls
-                </button>
-            </h2>
-            <div id="controlsCollapse" class="accordion-collapse collapse hide" aria-labelledby="controlsHeading" data-bs-parent="#controlsAccordion">
-                <div class="accordion-body">
-                    <div class="alert alert-info alert-sm mb-3" style="font-size: 0.85em; padding: 8px;">
-                        <strong>💡 Navigation:</strong> Pan canvas by dragging empty space • Drag nodes to reposition • Scroll to zoom
-                    </div>
-                    <div class="d-flex flex-wrap gap-2 justify-content-start">
-                        <!-- Text Size -->
-                        <div class="input-group input-group-sm" style="max-width: 200px;">
-                            <span class="input-group-text" title="Text Size">
-                                <i class="bi bi-fonts"></i>
-                            </span>
-                            <input type="number" class="form-control" id="textSizeInput" min="8" max="48" value="12" step="1" style="width: 60px;" oninput="updateTextSize(this.value)">
-                            <input type="range" class="form-range" id="textSizeSlider" min="8" max="48" value="12" step="1" oninput="updateTextSize(this.value)" style="width: 80px;">
-                        </div>
-                        <!-- Node Width -->
-                        <div class="input-group input-group-sm" style="max-width: 200px;">
-                            <span class="input-group-text" title="Node Width">
-                                <i class="bi bi-arrows-expand"></i>
-                            </span>
-                            <input type="number" class="form-control" id="nodeWidthInput" min="60" max="1200" value="110" step="5" style="width: 60px;" oninput="updateNodeWidth(this.value)">
-                            <input type="range" class="form-range" id="nodeWidthSlider" min="60" max="1200" value="110" step="5" oninput="updateNodeWidth(this.value)" style="width: 80px;">
-                        </div>
-                        <!-- Node Separation -->
-                        <div class="input-group input-group-sm" style="max-width: 200px;">
-                            <span class="input-group-text" title="Node Separation">
-                                <i class="bi bi-distribute-vertical"></i>
-                            </span>
-                            <input type="number" class="form-control" id="nodeSeparationInput" min="20" max="200" value="60" step="5" style="width: 60px;" oninput="updateNodeSeparation(this.value)">
-                            <input type="range" class="form-range" id="nodeSeparationSlider" min="20" max="200" value="60" step="5" oninput="updateNodeSeparation(this.value)" style="width: 80px;">
-                        </div>
-                        <!-- Orientation -->
-                        <div class="input-group input-group-sm" style="max-width: 150px;">
-                            <span class="input-group-text" title="Orientation">
-                                <i class="bi bi-arrow-repeat"></i>
-                            </span>
-                            <select id="treeOrientation" class="form-select" onchange="updateTreeOrientation(this.value)">
-                                <option value="vertical">Vertical</option>
-                                <option value="horizontal">Horizontal</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="d-flex flex-wrap gap-2 justify-content-start mt-3">
-                        <!-- Expand/Collapse Toggle -->
-                        <button id="expandCollapseToggleBtn" class="btn btn-success btn-sm" onclick="toggleExpandCollapse()" title="Expand All">
-                            <i class="bi bi-plus-square" id="expandCollapseIcon"></i>
-                            <span id="expandCollapseText" class="d-none d-md-inline ms-1">Expand All</span>
-                        </button>
-                        <!-- Reset Positions -->
-                        <button class="btn btn-outline-info btn-sm" onclick="resetPositions()" title="Reset Positions">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
-                        <!-- Reset Starting Position -->
-                        <button class="btn btn-outline-success btn-sm" onclick="resetStartingPosition()" title="Reset Starting Position">
-                            <i class="bi bi-house"></i>
-                        </button>
-                        <!-- Center View -->
-                        <button class="btn btn-outline-primary btn-sm" onclick="centerView()" title="Center View">
-                            <i class="bi bi-bullseye"></i>
-                        </button>
-                        <!-- Force Center Tree -->
-                        <button class="btn btn-outline-primary btn-sm" onclick="forceCenterTree()" title="Reset positions and center tree">
-                            <i class="bi bi-pip"></i>
-                        </button>
-                        <!-- Reset Filter -->
-                        <button class="btn btn-outline-warning btn-sm" onclick="resetFilter()" title="Reset Filter">
-                            <i class="bi bi-funnel-fill"></i>
-                        </button>
-                        <!-- Clear JSON Output -->
-                        <button class="btn btn-outline-danger btn-sm" onclick="clearJsonOutput()" title="Clear JSON Output">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                        <!-- Fix Overlaps -->
-                        <button class="btn btn-outline-success btn-sm" onclick="fixOverlaps()" title="Fix Overlaps">
-                            <i class="bi bi-grid-3x3-gap"></i>
-                        </button>
-                        <!-- Show All Nodes -->
-                        <button class="btn btn-outline-secondary btn-sm" onclick="showAllNodes()" title="Show All Nodes">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-   
     </div>
 
 
 
     <div id="output-graph"></div>
-    <div id="debug-info" style="position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; font-family: monospace; font-size: 12px; z-index: 1000; max-width: 300px;">
-        Debug Info: Loading...
+    <!-- Saved Visualizations Panel -->
+    <div id="savedVisualizationsPanel">
+        <div class="accordion" id="savedVisualizationsAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="savedVisualizationsHeading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#savedVisualizationsCollapse" aria-expanded="false" aria-controls="savedVisualizationsCollapse">
+                        <i class="bi bi-bookmark-star"></i> Saved Visualizations
+                    </button>
+                </h2>
+                <div id="savedVisualizationsCollapse" class="accordion-collapse collapse" aria-labelledby="savedVisualizationsHeading" data-bs-parent="#savedVisualizationsAccordion">
+                    <div class="accordion-body">
+                        <div class="mb-3">
+                            <button id="saveVisualizationBtn" class="btn btn-success btn-sm w-100" onclick="saveCurrentVisualization()">
+                                <i class="bi bi-save"></i> Save Current
+                            </button>
+                        </div>
+                        <div id="savedVisualizationsList">
+                            <!-- Saved visualizations will be displayed here -->
+                            <p class="text-muted small">No saved visualizations yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <!-- Filter dropdown checklist will be rendered here by ProcessFilter() -->
     <div id="filterDropdownContainer"></div>
@@ -325,2581 +503,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://d3js.org/d3.v7.min.js"></script>
-<script>
-// Helper to load JSON file (returns Promise)
-function loadJSON(path) {
-    console.log('Loading JSON file:', path);
-    
-    // Use relative path for server-based loading
-    return fetch(path).then(r => {
-        console.log('Fetch response for', path, ':', r);
-        if (!r.ok) {
-            console.error('Failed to load', path, 'Status:', r.status, r.statusText);
-            throw new Error('Failed to load ' + path + ' (Status: ' + r.status + ')');
-        }
-        return r.json();
-    }).then(data => {
-        console.log('JSON parsed successfully for', path, ':', data);
-        return data;
-    }).catch(err => {
-        console.error('Error loading', path, ':', err);
-        throw err;
-    });
-}
-
-// Helper to save JSON file to server (no download)
-async function saveJSONToServer(filename, data) {
-    try {
-        const response = await fetch(`/${filename}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        
-        if (!response.ok) {
-            throw new Error(`Failed to save ${filename}: ${response.status}`);
-        }
-        
-        console.log(`Successfully saved ${filename} to server`);
-        return true;
-    } catch (error) {
-        console.error(`Error saving ${filename}:`, error);
-        return false;
-    }
-}
-
-// Legacy function kept for compatibility (now uses server)
-async function saveJSON(path, data) {
-    return await saveJSONToServer(path, data);
-}
-
-let hiddenNodes = [];
-let nodePositions = {}; // Store position offsets for nodes
-let graphControls = { expandAll: false, collapseAll: false }; // Store graph control states
-
-// Function to check and set starting node position if not already set
-async function checkAndSetStartingPosition() {
-    // Check if StartingNodeLeft and StartingNodeTop already exist
-    if (nodePositions.StartingNodeLeft !== undefined && nodePositions.StartingNodeTop !== undefined) {
-        console.log('Starting node position already set:', {
-            StartingNodeLeft: nodePositions.StartingNodeLeft,
-            StartingNodeTop: nodePositions.StartingNodeTop
-        });
-        return;
-    }
-    
-    // Get screen resolution
-    const screenWidth = window.screen.width;
-    const screenHeight = window.screen.height;
-    
-    console.log('Setting starting node position for screen resolution:', { screenWidth, screenHeight });
-    
-    try {
-        const response = await fetch('/SetStartNodePosition', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ screenWidth, screenHeight })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`Failed to set starting node position: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log('Starting node position set successfully:', result);
-        
-        // Update local nodePositions with the new values
-        nodePositions.StartingNodeLeft = result.position.StartingNodeLeft;
-        nodePositions.StartingNodeTop = result.position.StartingNodeTop;
-        
-    } catch (error) {
-        console.error('Error setting starting node position:', error);
-    }
-}
-
-// Function to reset starting node position (called by button)
-window.resetStartingPosition = async function() {
-    try {
-        const screenWidth = window.screen.width;
-        const screenHeight = window.screen.height;
-        
-        console.log('Resetting starting node position for screen resolution:', { screenWidth, screenHeight });
-        
-        const response = await fetch('/SetStartNodePosition', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ screenWidth, screenHeight })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`Failed to reset starting node position: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log('Starting node position reset successfully:', result);
-        
-        // Update local nodePositions with the new values
-        nodePositions.StartingNodeLeft = result.position.StartingNodeLeft;
-        nodePositions.StartingNodeTop = result.position.StartingNodeTop;
-        
-        // Reload the tree to apply the new centered position
-        updateTree();
-        
-    } catch (error) {
-        console.error('Error resetting starting node position:', error);
-        alert('Failed to reset starting node position. Please try again.');
-    }
-};
-
-// Fix overlaps functionality
-window.fixOverlaps = function() {
-    console.log('Fixing overlapping nodes...');
-    
-    // Save current expanded state before fixing overlaps
-    const currentExpanded = {...expanded};
-    
-    // Clear any saved positions that might be causing issues
-    nodePositions = {};
-    
-    // Force a fresh layout calculation
-    flatNodes = [];
-    let y = 20;
-    treeRoots.forEach(root => {
-        y = flattenTree(root, flatNodes, y, 0);
-    });
-    
-    // Resolve overlaps using the existing function
-    resolveNodeOverlaps(flatNodes);
-    
-    // Save the new positions
-    saveNodePositions();
-    
-    // Restore expanded state
-    expanded = currentExpanded;
-    
-    // Re-render the tree with fixed positions
-    renderTree();
-    
-    console.log('Overlaps fixed and nodes properly spaced');
-    
-    // Show confirmation
-    const overlappingPairs = [];
-    for (let i = 0; i < flatNodes.length; i++) {
-        for (let j = i + 1; j < flatNodes.length; j++) {
-            if (nodesOverlap(flatNodes[i], flatNodes[j])) {
-                overlappingPairs.push([flatNodes[i], flatNodes[j]]);
-            }
-        }
-    }
-    
-    if (overlappingPairs.length === 0) {
-        alert('All overlaps have been fixed! Nodes are now properly spaced.');
-    } else {
-        alert(`Fixed most overlaps. ${overlappingPairs.length} overlaps may still exist due to layout constraints.`);
-    }
-};
-
-// Search functions - defined globally so they're available immediately
-window.handleSearchInput = function(val) {
-    // This will be properly implemented once the tree is loaded
-    if (typeof searchTerm !== 'undefined' && typeof updateTree === 'function') {
-        searchTerm = val.trim();
-        updateTree();
-    }
-};
-
-window.searchBoxSearch = function() {
-    var val = document.getElementById('searchBox').value;
-    handleSearchInput(val);
-};
-
-window.clearSearchBox = function() {
-    const searchBox = document.getElementById('searchBox');
-    if (searchBox) {
-        searchBox.value = '';
-        searchBox.focus();
-        // Only call handleSearchInput if it's available
-        if (typeof handleSearchInput === 'function') {
-            handleSearchInput('');
-        }
-    }
-};
-
-// Clear JSON output function - moved outside Promise chain for global accessibility
-window.clearJsonOutput = async function() {
-    try {
-        // Clear the output.json file by sending an empty array
-        const response = await fetch('/data/output.json', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify([])
-        });
-
-        if (!response.ok) {
-            throw new Error(`Failed to clear JSON output: ${response.status}`);
-        }
-
-        console.log('JSON output cleared successfully');
-        // Reload the page to reflect the cleared output
-        location.reload();
-    } catch (error) {
-        console.error('Failed to clear JSON output:', error);
-        alert('Failed to clear JSON output. Please try again.');
-    }
-};
-
-// Show all nodes function - moved outside Promise chain for global accessibility
-window.showAllNodes = async function() {
-    try {
-        // Clear the HiddenNodes.json file by sending an empty hiddenNodes array
-        const response = await fetch('/data/HiddenNodes.json', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ hiddenNodes: [] })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Failed to clear hidden nodes: ${response.status}`);
-        }
-
-        console.log('Hidden nodes cleared successfully');
-        // Clear the local hiddenNodes array and update the tree
-        hiddenNodes = [];
-        updateTree();
-        
-        alert('All hidden nodes are now visible!');
-    } catch (error) {
-        console.error('Failed to show all nodes:', error);
-        alert('Failed to show all nodes. Please try again.');
-    }
-};
-
-// Combined toggle function for Expand/Collapse - moved outside Promise chain for global accessibility
-window.toggleExpandCollapse = async function() {
-    const isExpanded = graphControls.expandAll;
-    
-    if (isExpanded) {
-        // Currently expanded, so collapse all
-        graphControls.expandAll = false;
-        graphControls.collapseAll = true;
-        if (typeof collapseAllNodes === 'function') collapseAllNodes();
-        
-        // Update button appearance for collapse state
-        const btn = document.getElementById('expandCollapseToggleBtn');
-        const icon = document.getElementById('expandCollapseIcon');
-        const text = document.getElementById('expandCollapseText');
-        
-        if (btn) {
-            btn.classList.remove('btn-success');
-            btn.classList.add('btn-warning');
-            btn.title = 'Expand All';
-        }
-        if (icon) icon.className = 'bi bi-plus-square';
-        if (text) text.textContent = 'Expand All';
-    } else {
-        // Currently collapsed, so expand all
-        graphControls.expandAll = true;
-        graphControls.collapseAll = false;
-        if (typeof expandAllNodes === 'function') expandAllNodes();
-        
-        // Update button appearance for expand state
-        const btn = document.getElementById('expandCollapseToggleBtn');
-        const icon = document.getElementById('expandCollapseIcon');
-        const text = document.getElementById('expandCollapseText');
-        
-        if (btn) {
-            btn.classList.remove('btn-warning');
-            btn.classList.add('btn-success');
-            btn.title = 'Collapse All';
-        }
-        if (icon) icon.className = 'bi bi-dash-square';
-        if (text) text.textContent = 'Collapse All';
-    }
-    
-    // Update configuration via API if function exists
-    if (typeof updateGraphConfiguration === 'function') {
-        await updateGraphConfiguration();
-    }
-};
-
-// Reset filter function - moved outside Promise chain for global accessibility
-window.resetFilter = async function() {
-    try {
-        // Clear the Filter.json file by sending an empty filters array
-        const response = await fetch('/Filter.json', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ filters: [] })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Failed to reset filter: ${response.status}`);
-        }
-
-        console.log('Filter reset successfully');
-        // Reload the page to reflect the reset filter
-        location.reload();
-    } catch (error) {
-        console.error('Failed to reset filter:', error);
-        alert('Failed to reset filter. Please try again.');
-    }
-};
-
-// Reset positions function - moved outside Promise chain for global accessibility  
-window.resetPositions = function() {
-    // Clear all saved position offsets
-    nodePositions = {};
-    if (typeof saveNodePositions === 'function') saveNodePositions();
-    if (typeof updateTree === 'function') updateTree(); // This will recalculate and reset all positions
-    alert('Node positions have been reset!');
-};
-
-// Center view function - moved outside Promise chain for global accessibility
-window.centerView = function() {
-    if (typeof svg !== 'undefined' && svg) {
-        const bounds = svg.node().getBBox();
-        const parent = svg.node().parentElement;
-        const fullWidth = parent.clientWidth;
-        const fullHeight = parent.clientHeight;
-        const width = bounds.width;
-        const height = bounds.height;
-        const midX = bounds.x + width / 2;
-        const midY = bounds.y + height / 2;
-        
-        const scale = 0.85 / Math.max(width / fullWidth, height / fullHeight);
-        const translate = [fullWidth / 2 - scale * midX, fullHeight / 2 - scale * midY];
-        
-        svg.transition()
-            .duration(750)
-            .call(zoom.transform, d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale));
-    }
-};
-
-// Force center tree function - moved outside Promise chain for global accessibility
-window.forceCenterTree = function() {
-    // Reset positions first
-    nodePositions = {};
-    if (typeof saveNodePositions === 'function') {
-        saveNodePositions().then(() => {
-            if (typeof updateTree === 'function') updateTree();
-            setTimeout(() => {
-                if (typeof window.centerView === 'function') window.centerView();
-            }, 100);
-        });
-    }
-};
-
-// Debug function to show status on page
-function updateDebugInfo(message) {
-    const debugDiv = document.getElementById('debug-info');
-    if (debugDiv) {
-        debugDiv.innerHTML = message;
-    }
-    console.log('DEBUG:', message);
-}
-
-// Load hidden types, node positions, and output.json, then render
-updateDebugInfo('Starting data load...');
-console.log('Starting Promise.all to load data files...');
-console.log('D3 available:', typeof d3);
-console.log('Output graph element:', document.getElementById('output-graph'));
-
-Promise.all([
-    loadJSON('data/HiddenNodes.json').then(cfg => { hiddenNodes = cfg.hiddenNodes || []; }),
-    loadJSON('data/Graphconf.json').then(cfg => { 
-        nodePositions = cfg.nodePositions || {}; 
-        graphControls = cfg.graphControls || { 
-            expandAll: false, 
-            collapseAll: false,
-            nodeWidth: 110,
-            nodeSeparation: 60,
-            orientation: 'horizontal',
-            textSize: 12
-        };
-        
-        // Load control values from configuration
-        nodeWidth = graphControls.nodeWidth || 110;
-        nodeSeparation = graphControls.nodeSeparation || 60;
-        orientation = graphControls.orientation || 'horizontal';
-        textSize = graphControls.textSize || 12;
-        
-        // Initialize button states and control values
-        initializeButtonStates();
-        setInitialControlValues();
-    }).catch(() => { 
-        nodePositions = {}; 
-        graphControls = { 
-            expandAll: false, 
-            collapseAll: false,
-            nodeWidth: 110,
-            nodeSeparation: 60,
-            orientation: 'horizontal',
-            textSize: 12
-        };
-        
-        // Set default values
-        nodeWidth = 110;
-        nodeSeparation = 60;
-        orientation = 'horizontal';
-        textSize = 12;
-        
-        initializeButtonStates();
-        setInitialControlValues();
-    }),
-    loadJSON('data/output.json').then(data => {
-        updateDebugInfo('Output.json loaded: ' + (data ? data.length : 'null') + ' items');
-        console.log('output.json loaded successfully:', data);
-        console.log('Data type:', typeof data);
-        console.log('Is array:', Array.isArray(data));
-        console.log('Data length:', data ? data.length : 'undefined');
-        
-        return data;
-    }).catch(err => {
-        updateDebugInfo('Error loading output.json: ' + err.message);
-        console.error('Failed to load output.json:', err);
-        throw err;
-    })
-]).then(async ([_, __, data]) => {
-        updateDebugInfo('Promise chain executing with data...');
-        console.log('Promise chain executing. Data loaded:', data);
-        console.log('Data is array:', Array.isArray(data));
-        console.log('Data length:', data ? data.length : 'undefined');
-        
-        // Check and set starting position if needed
-        await checkAndSetStartingPosition();
-        // Handle both array and object data formats
-        let processedData = data;
-        
-        // If data is an array, convert it to an object format for processing
-        if (Array.isArray(data)) {
-            processedData = {};
-            data.forEach((item, index) => {
-                if (item && typeof item === 'object') {
-                    // Use a meaningful key if available, otherwise use index
-                    const key = item.apiCall || item.name || item.id || `Item ${index}`;
-                    processedData[key] = item;
-                    console.log('Added to processedData:', key, item);
-                } else {
-                    processedData[`Item ${index}`] = item;
-                    console.log('Added to processedData (non-object):', `Item ${index}`, item);
-                }
-            });
-        }
-        
-        console.log('ProcessedData keys:', Object.keys(processedData));
-        console.log('ProcessedData:', processedData);
-        
-        // Special handling for /Channels/{id}/Connectors
-        const connectorsMap = {};
-        Object.keys(processedData).forEach(key => {
-            const match = key.match(/^\/Channels\/([^/]+)\/Connectors$/);
-            if (match) {
-                connectorsMap[match[1]] = processedData[key];
-            }
-        });
-
-        console.log('DEBUG: About to create nodes from processedData');
-        console.log('DEBUG: processedData keys:', Object.keys(processedData));
-        console.log('DEBUG: processedData entries count:', Object.entries(processedData).length);
-        
-        const allEntries = Object.entries(processedData);
-        console.log('DEBUG: All entries before filtering:', allEntries);
-        
-        // Dynamic filtering based on Filter.json configuration
-        let filteredEntries = allEntries;
-        try {
-            const filterConfig = await loadJSON('data/Filter.json');
-            const filters = filterConfig?.filters || [];
-            console.log('DEBUG: Loaded filters from data/Filter.json:', filters);
-            
-            if (filters.length > 0) {
-                // Apply dynamic filtering - exclude entries that match any filter at depth 0 (top-level)
-                filteredEntries = allEntries.filter(([key]) => {
-                    const shouldExclude = filters.some(filter => {
-                        // Only apply filters at depth 0 for top-level entries
-                        if (filter.depth !== 0) return false;
-                        
-                        // Support different filter types:
-                        // 1. Exact match
-                        if (filter.key === key) return true;
-                        
-                        // 2. Wildcard matching (* becomes .* regex)
-                        if (filter.key.includes('*')) {
-                            const regexPattern = filter.key.replace(/\*/g, '.*');
-                            return new RegExp(`^${regexPattern}$`, 'i').test(key);
-                        }
-                        
-                        // 3. Prefix matching (if filter ends with /)
-                        if (filter.key.endsWith('/')) {
-                            return key.startsWith(filter.key);
-                        }
-                        
-                        // 4. Contains matching (if filter is wrapped in *...*)
-                        if (filter.key.startsWith('*') && filter.key.endsWith('*') && filter.key.length > 2) {
-                            const searchTerm = filter.key.slice(1, -1);
-                            return key.toLowerCase().includes(searchTerm.toLowerCase());
-                        }
-                        
-                        return false;
-                    });
-                    
-                    if (shouldExclude) {
-                        console.log(`DEBUG: Excluding entry "${key}" due to filter match`);
-                    }
-                    return !shouldExclude;
-                });
-                
-                console.log(`DEBUG: Applied ${filters.length} filters, ${allEntries.length - filteredEntries.length} entries filtered out`);
-            }
-        } catch (error) {
-            console.log('DEBUG: No filters applied (data/Filter.json not found or error):', error.message);
-            // If data/Filter.json doesn't exist or has errors, don't filter anything
-            filteredEntries = allEntries;
-        }
-        
-        console.log('DEBUG: Entries after dynamic filtering:', filteredEntries);
-        
-        const nodes = filteredEntries.map(([key, value], i) => {
-                console.log('Processing node:', key, value);
-                // If this is the /Channels node, inject connectors into each channel
-                if (key === '/channels' && value && value.list && value.list.channel && Array.isArray(value.list.channel)) {
-                    // For each channel, add a 'Connectors' property if available
-                    value.list.channel = value.list.channel.map(channel => {
-                        if (connectorsMap[channel.id]) {
-                            return { ...channel, Connectors: connectorsMap[channel.id] };
-                        }
-                        return channel;
-                    });
-                }
-                return {
-                    id: key,
-                    data: value,
-                    index: i
-                };
-            });
-
-        console.log('Total nodes created:', nodes.length);
-        console.log('Nodes:', nodes);
-
-        // Get screen resolution and viewport dimensions
-        const screenWidth = window.screen.width;
-        const screenHeight = window.screen.height;
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        
-        // Use the larger of screen resolution or viewport size for optimal display
-        const width = Math.max(viewportWidth, screenWidth);
-        const height = Math.max(viewportHeight, screenHeight);
-        
-        console.log('Display dimensions:', {
-            screenWidth,
-            screenHeight,
-            viewportWidth,
-            viewportHeight,
-            finalWidth: width,
-            finalHeight: height
-        });
-        const maxNodeContentWidth = 220;
-        const maxBranchContentWidth = 180;
-        const minNodeWidth = 40;
-        const minBranchWidth = 40;
-        const nodePaddingX = 8; // minimal horizontal padding
-        const nodePaddingY = 0; // no vertical padding
-        const branchPaddingX = 6;
-        const branchPaddingY = 0;
-        const branchSpacing = 16;
-
-        // Helper to measure wrapped text height using SVG foreignObject
-        function measureWrappedText(text, fontSize, fontWeight, maxWidth) {
-            // Create a hidden div for measurement
-            let div = d3.select('body').append('div')
-                .style('position', 'absolute')
-                .style('left', '-9999px')
-                .style('top', '-9999px')
-                .style('width', maxWidth + 'px')
-                .style('font-size', fontSize + 'px')
-                .style('font-weight', fontWeight)
-                .style('font-family', 'sans-serif')
-                .style('line-height', '1.2')
-                .style('white-space', 'pre-wrap')
-                .style('word-break', 'break-word')
-                .text(text);
-            let bbox = {
-                width: div.node().offsetWidth,
-                height: div.node().offsetHeight
-            };
-            div.remove();
-            return bbox;
-        }
-
-        // Type Detection Functions
-        function detectValueType(key, value) {
-            if (value === null) return 'null';
-            if (value === undefined) return 'undefined';
-            
-            const strValue = String(value).toLowerCase();
-            
-            // Boolean detection
-            if (typeof value === 'boolean' || strValue === 'true' || strValue === 'false') {
-                return 'boolean';
-            }
-            
-            // Number detection
-            if (typeof value === 'number' || (!isNaN(value) && !isNaN(parseFloat(value)) && isFinite(value))) {
-                return 'number';
-            }
-            
-            // Array detection
-            if (Array.isArray(value)) {
-                return 'array';
-            }
-            
-            // Object detection
-            if (typeof value === 'object' && value !== null) {
-                return 'object';
-            }
-            
-            // String-based type detection
-            const stringValue = String(value);
-            
-            // Image URL detection (common image extensions)
-            if (/\.(jpg|jpeg|png|gif|bmp|svg|webp)(\?.*)?$/i.test(stringValue)) {
-                return 'image';
-            }
-            
-            // URL detection
-            if (/^https?:\/\/.+/i.test(stringValue)) {
-                return 'url';
-            }
-            
-            // Email detection
-            if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(stringValue)) {
-                return 'email';
-            }
-            
-            // Date detection (ISO format, common date formats)
-            if (/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2})?/.test(stringValue) || 
-                /^\d{1,2}\/\d{1,2}\/\d{4}/.test(stringValue) ||
-                !isNaN(Date.parse(stringValue))) {
-                return 'date';
-            }
-            
-            // JSON string detection
-            if ((stringValue.startsWith('{') && stringValue.endsWith('}')) ||
-                (stringValue.startsWith('[') && stringValue.endsWith(']'))) {
-                try {
-                    JSON.parse(stringValue);
-                    return 'json';
-                } catch (e) {
-                    // Not valid JSON
-                }
-            }
-            
-            // Default to string
-            return 'string';
-        }
-
-        // Type-specific rendering functions
-        function renderTypedValue(key, value, type) {
-            const iconMap = {
-                'image': 'bi-image',
-                'url': 'bi-link-45deg',
-                'email': 'bi-envelope',
-                'boolean': 'bi-toggle-on',
-                'number': 'bi-123',
-                'date': 'bi-calendar-date',
-                'json': 'bi-code-square',
-                'array': 'bi-list-ul',
-                'object': 'bi-braces',
-                'string': 'bi-type',
-                'null': 'bi-dash-circle',
-                'undefined': 'bi-question-circle'
-            };
-
-            const icon = iconMap[type] || 'bi-file-text';
-            let content = '';
-            
-            switch (type) {
-                case 'image':
-                    content = `<div class="type-image">
-                        <i class="bi ${icon} type-icon"></i>
-                        <img src="${value}" alt="${key}" style="max-width: 80px; max-height: 60px;" 
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                        <span style="display: none;">${value}</span>
-                    </div>`;
-                    break;
-                    
-                case 'url':
-                    content = `<div class="type-url">
-                        <i class="bi ${icon} type-icon"></i>
-                        <a href="${value}" target="_blank" rel="noopener noreferrer">${value.length > 30 ? value.substring(0, 30) + '...' : value}</a>
-                    </div>`;
-                    break;
-                    
-                case 'email':
-                    content = `<div class="type-email">
-                        <i class="bi ${icon} type-icon"></i>
-                        <a href="mailto:${value}">${value}</a>
-                    </div>`;
-                    break;
-                    
-                case 'boolean':
-                    const boolValue = String(value).toLowerCase() === 'true';
-                    content = `<div class="type-boolean ${boolValue}">
-                        <i class="bi ${boolValue ? 'bi-check-circle' : 'bi-x-circle'} type-icon"></i>
-                        ${boolValue ? 'True' : 'False'}
-                    </div>`;
-                    break;
-                    
-                case 'number':
-                    content = `<div class="type-number">
-                        <i class="bi ${icon} type-icon"></i>
-                        ${value}
-                    </div>`;
-                    break;
-                    
-                case 'date':
-                    const dateObj = new Date(value);
-                    const isValidDate = !isNaN(dateObj.getTime());
-                    content = `<div class="type-date">
-                        <i class="bi ${icon} type-icon"></i>
-                        ${isValidDate ? dateObj.toLocaleDateString() : value}
-                    </div>`;
-                    break;
-                    
-                case 'json':
-                    let jsonPreview = String(value);
-                    if (jsonPreview.length > 50) {
-                        jsonPreview = jsonPreview.substring(0, 50) + '...';
-                    }
-                    content = `<div class="type-json">
-                        <i class="bi ${icon} type-icon"></i>
-                        ${jsonPreview}
-                    </div>`;
-                    break;
-                    
-                case 'array':
-                    content = `<div class="type-array">
-                        <i class="bi ${icon} type-icon"></i>
-                        Array[${Array.isArray(value) ? value.length : 'unknown'}]
-                    </div>`;
-                    break;
-                    
-                case 'object':
-                    const objKeys = typeof value === 'object' && value !== null ? Object.keys(value).length : 0;
-                    content = `<div class="type-object">
-                        <i class="bi ${icon} type-icon"></i>
-                        Object{${objKeys} ${objKeys === 1 ? 'key' : 'keys'}}
-                    </div>`;
-                    break;
-                    
-                case 'null':
-                    content = `<div class="type-null">
-                        <i class="bi ${icon} type-icon"></i>
-                        <em>null</em>
-                    </div>`;
-                    break;
-                    
-                case 'undefined':
-                    content = `<div class="type-undefined">
-                        <i class="bi ${icon} type-icon"></i>
-                        <em>undefined</em>
-                    </div>`;
-                    break;
-                    
-                default: // string
-                    let stringValue = String(value);
-                    if (stringValue.length > 50) {
-                        stringValue = stringValue.substring(0, 50) + '...';
-                    }
-                    content = `<div class="type-string">
-                        <i class="bi ${icon} type-icon"></i>
-                        ${stringValue}
-                    </div>`;
-                    break;
-            }
-            
-            return content;
-        }
-
-
-
-        // (removed duplicate expanded declaration)
-
-        // Build a tree structure from the JSON using bracket-aware logic
-        // Each { or [ creates a new node, leaf values become individual child nodes
-        function buildTree(key, value, parentPath = '', depth = 0) {
-            const path = parentPath ? parentPath + '.' + key : key;
-            let node = {
-                key,
-                value,
-                path,
-                depth,
-                children: [],
-                isObject: typeof value === 'object' && value !== null,
-                isArray: Array.isArray(value),
-                leafValues: {}, // Store leaf values to display within this node (for summary)
-                mergedKeys: [key],
-                mergedValues: [value]
-            };
-            
-            if (node.isObject) {
-                if (node.isArray) {
-                    // For arrays, create child nodes for ALL items (objects, arrays, and primitives)
-                    value.forEach((item, index) => {
-                        const arrayKey = `[${index}]`;
-                        if (typeof item === 'object' && item !== null) {
-                            // Objects and arrays become child nodes
-                            node.children.push(buildTree(arrayKey, item, path, depth + 1));
-                        } else {
-                            // Primitives also become individual child nodes for proper spacing
-                            node.children.push(buildTree(arrayKey, item, path, depth + 1));
-                        }
-                    });
-                } else {
-                    // For objects, create child nodes for ALL properties
-                    Object.keys(value).forEach(k => {
-                        const objValue = value[k];
-                        if (typeof objValue === 'object' && objValue !== null) {
-                            // Objects and arrays become child nodes
-                            node.children.push(buildTree(k, objValue, path, depth + 1));
-                        } else {
-                            // Primitives also become individual child nodes for proper spacing
-                            node.children.push(buildTree(k, objValue, path, depth + 1));
-                        }
-                    });
-                }
-            }
-            
-            return node;
-        }
-
-
-        // Build the root nodes (one for each top-level key)
-        console.log('Building tree roots from nodes:', nodes);
-        const treeRoots = nodes.map(n => {
-            console.log('Creating tree root for node:', n.id);
-            console.log('Node data structure:', n.data);
-            // Use n.data.data (the actual API response) instead of n.data (the whole array item)
-            const actualData = n.data.data || n.data;
-            console.log('Actual data being passed to buildTree:', actualData);
-            return buildTree(n.id, actualData);
-        });
-        console.log('Tree roots created:', treeRoots);
-
-        // Track expanded/collapsed state for each node by path
-        const expanded = {};
-        
-        // Helper function to add all nodes to expanded tracking
-        function addToExpanded(node) {
-            expanded[node.path] = false;
-            if (node.children && node.children.length > 0) {
-                node.children.forEach(child => addToExpanded(child));
-            }
-        }
-        
-        // Initialize expanded state for all nodes in the tree
-        treeRoots.forEach(root => addToExpanded(root));
-
-        // Helper function to check if a node has any hidden children
-        function hasHiddenChildren(node, nodeDepth = null) {
-            if (!node.children || node.children.length === 0) return false;
-            
-            // Use provided depth or calculate from node
-            const currentDepth = nodeDepth !== null ? nodeDepth : (node.depth || 0);
-            
-            // Check direct children
-            for (const child of node.children) {
-                const childDepth = currentDepth + 1;
-                if (hiddenNodes.some(hn => hn.key === child.key && hn.depth === childDepth)) {
-                    return true;
-                }
-                // Recursively check grandchildren
-                if (hasHiddenChildren(child, childDepth)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        // Helper function to get all hidden children of a node
-        function getHiddenChildren(node, nodeDepth = null) {
-            const hiddenChildren = [];
-            if (!node.children || node.children.length === 0) return hiddenChildren;
-            
-            // Use provided depth or calculate from node
-            const currentDepth = nodeDepth !== null ? nodeDepth : (node.depth || 0);
-            
-            // Check direct children
-            for (const child of node.children) {
-                const childDepth = currentDepth + 1;
-                if (hiddenNodes.some(hn => hn.key === child.key && hn.depth === childDepth)) {
-                    hiddenChildren.push({ 
-                        key: child.key, 
-                        depth: childDepth, 
-                        name: child.key,
-                        fullPath: child.path || `${node.path || ''}.${child.key}`
-                    });
-                }
-                // Recursively check grandchildren
-                hiddenChildren.push(...getHiddenChildren(child, childDepth));
-            }
-            return hiddenChildren;
-        }
-
-        // Helper to flatten the tree for rendering, including only expanded nodes
-        // Accepts a nodeHeightMap for measured heights
-        function flattenTree(node, arr = [], parentY = 0, depth = 0, nodeHeightMap = {}) {
-            // Check if this node should be hidden
-            const isNodeHidden = hiddenNodes.some(hn => hn.key === node.key && hn.depth === depth);
-            
-            // If searching, check if node matches search term
-            const matchesSearch = !searchTerm || nodeMatchesSearchInnerHTML(node, searchTerm);
-            
-            // If node is hidden, skip adding it to the array but continue processing children
-            if (!isNodeHidden && matchesSearch) {
-                const thisHeight = nodeHeightMap[node.path] || 60;
-                arr.push({
-                    ...node,
-                    y: parentY,
-                    depth
-                });
-                parentY = parentY + thisHeight + 8; // 8px gap
-            }
-            
-            // Always process children, even if parent is hidden
-            // When parent is hidden, children maintain the same parentY (they move up to fill the gap)
-            let y = parentY;
-            if (expanded[node.path] && node.children.length > 0) {
-                node.children.forEach(child => {
-                    y = flattenTree(child, arr, y, depth + 1, nodeHeightMap);
-                });
-            }
-            
-            return y;
-        }
-        // Helper: does any key or value in the node (recursively) match the search term in its stringified HTML
-        function nodeMatchesSearchInnerHTML(node, term) {
-            term = term.toLowerCase();
-            // Stringify key and value as HTML
-            let html = '';
-            if (node.key) html += String(node.key);
-            if (typeof node.value === 'string' || typeof node.value === 'number') {
-                html += String(node.value);
-            } else if (Array.isArray(node.value)) {
-                html += node.value.map(v => (typeof v === 'object' ? JSON.stringify(v) : String(v))).join('');
-            } else if (typeof node.value === 'object' && node.value !== null) {
-                html += Object.entries(node.value).map(([k, v]) => k + String(v)).join('');
-            }
-            if (html.toLowerCase().includes(term)) return true;
-            // Recursively check children
-            if (node.children && node.children.length > 0) {
-                return node.children.some(child => nodeMatchesSearchInnerHTML(child, term));
-            }
-            return false;
-        }
-
-
-        // --- Controls State ---
-        // Default values - will be loaded from Graphconf.json
-        let nodeWidth = 110;
-        let nodeSeparation = 60;
-        let orientation = 'horizontal';
-        let textSize = 12;
-
-        // Helper function to get all descendants of a node
-        function getDescendants(node) {
-            let descendants = [];
-            flatNodes.forEach(n => {
-                if (n.path !== node.path && n.path.startsWith(node.path + '.')) {
-                    descendants.push(n);
-                }
-            });
-            return descendants;
-        }
-
-        // Helper function to get all siblings of a node (nodes at same depth with same parent)
-        function getSiblings(node) {
-            let siblings = [];
-            const parentPath = node.path.substring(0, node.path.lastIndexOf('.'));
-            flatNodes.forEach(n => {
-                if (n.path !== node.path && n.depth === node.depth) {
-                    const nParentPath = n.path.substring(0, n.path.lastIndexOf('.'));
-                    if (nParentPath === parentPath) {
-                        siblings.push(n);
-                    }
-                }
-            });
-            return siblings;
-        }
-
-        // Helper function to get parent node
-        function getParent(node) {
-            if (node.depth === 0) return null;
-            const parentPath = node.path.substring(0, node.path.lastIndexOf('.'));
-            return flatNodes.find(n => n.path === parentPath);
-        }
-
-        // Function to reset all saved positions
-        async function resetPositions() {
-            console.log('Resetting all node positions');
-            nodePositions = {}; // Clear all global positioning
-            await saveNodePositions();
-            renderTree(); // Re-render with default positions
-        }
-
-        // Test function to manually save positions (for debugging)
-        async function testSave() {
-            nodePositions.test = { Left: 100, Top: 50 };
-            console.log('Testing manual save with data:', nodePositions);
-            const result = await saveNodePositions();
-            console.log('Manual save result:', result);
-        }
-
-        // Make test function available globally for debugging
-        window.testSave = testSave;
-
-        // Helper function to process and validate node positions
-        function processNodePositions() {
-            console.log('Processing global node positions for validation...');
-            
-            // Simple validation for global positioning
-            if (nodePositions.Left !== undefined && nodePositions.Top !== undefined) {
-                console.log('Global positioning validated:', {
-                    Left: nodePositions.Left,
-                    Top: nodePositions.Top
-                });
-            }
-            
-            if (nodePositions.rootLeft !== undefined || nodePositions.rootTop !== undefined) {
-                console.log('Root positioning validated:', {
-                    rootLeft: nodePositions.rootLeft,
-                    rootTop: nodePositions.rootTop
-                });
-            }
-            
-            console.log('Final processed node positions:', nodePositions);
-        }
-
-        // Helper function to calculate dynamic spacing for siblings to prevent overlaps
-        function calculateDynamicSpacing(siblings, startY) {
-            const positions = [];
-            let currentY = startY;
-            
-            siblings.forEach((sibling, index) => {
-                positions.push({
-                    node: sibling,
-                    y: currentY
-                });
-                
-                const nodeHeight = sibling.measuredHeight || 60;
-                const minSpacing = 8; // Minimum gap between nodes
-                currentY += nodeHeight + minSpacing;
-            });
-            
-            return positions;
-        }
-
-        // Helper function to save node positions
-        async function saveNodePositions() {
-            try {
-                console.log('Saving node positions via UpdateGraphConfiguration API:', nodePositions);
-                const result = await updateGraphConfiguration();
-                if (!result.success) {
-                    console.error('Failed to save node positions:', result.error);
-                } else {
-                    console.log('Node positions saved successfully');
-                }
-            } catch (error) {
-                console.error('Error saving node positions:', error);
-            }
-        }
-
-        // Helper function to apply saved position offsets
-        function applyPositionOffsets() {
-            // Check if we have global positioning values
-            if (nodePositions.Left !== undefined && nodePositions.Top !== undefined) {
-                console.log('Applying global position offsets:', { Left: nodePositions.Left, Top: nodePositions.Top });
-                
-                // Group nodes by their parent to handle siblings together
-                const nodesByParent = {};
-                flatNodes.forEach(node => {
-                    const parent = getParent(node);
-                    if (parent) {
-                        const parentPath = parent.path;
-                        if (!nodesByParent[parentPath]) {
-                            nodesByParent[parentPath] = [];
-                        }
-                        nodesByParent[parentPath].push(node);
-                    }
-                });
-                
-                // Apply positioning to each group of siblings
-                Object.keys(nodesByParent).forEach(parentPath => {
-                    const parent = flatNodes.find(n => n.path === parentPath);
-                    const children = nodesByParent[parentPath];
-                    
-                    if (parent && children.length > 0) {
-                        // Sort children to ensure consistent ordering
-                        const sortedChildren = children.sort((a, b) => a.path.localeCompare(b.path));
-                        
-                        // Apply dynamic spacing based on node heights to prevent overlaps
-                        let currentY = parent.y + nodePositions.Top;
-                        
-                        sortedChildren.forEach((child, index) => {
-                            child.x = parent.x + nodePositions.Left;
-                            child.y = currentY;
-                            
-                            // Calculate spacing for next sibling based on current node's height + padding
-                            const nodeHeight = child.measuredHeight || 60; // Use measured height or default
-                            const minSpacing = 8; // Minimum gap between nodes
-                            currentY += nodeHeight + minSpacing;
-                            
-                            console.log(`Applied dynamic position to ${child.path}:`, {
-                                parentPos: { x: parent.x, y: parent.y },
-                                globalOffset: { Left: nodePositions.Left, Top: nodePositions.Top },
-                                siblingIndex: index,
-                                nodeHeight: nodeHeight,
-                                finalPos: { x: child.x, y: child.y },
-                                nextY: currentY
-                            });
-                        });
-                    }
-                });
-            }
-            
-            // Apply root level offsets if they exist
-            if (nodePositions.rootLeft !== undefined || nodePositions.rootTop !== undefined) {
-                flatNodes.forEach(node => {
-                    if (!getParent(node)) { // Root level nodes
-                        if (nodePositions.rootLeft !== undefined) node.x += nodePositions.rootLeft;
-                        if (nodePositions.rootTop !== undefined) node.y += nodePositions.rootTop;
-                    }
-                });
-            }
-        }
-
-        // Helper function to update node positions without full re-render
-        function updateNodePositions() {
-            contentGroup.select('g.nodes-group')
-                .selectAll('g.tree-node')
-                .attr('transform', d => `translate(${d.x}, ${d.y})`);
-        }
-
-        // Helper function to find the nearest visible parent for a node
-        function findNearestVisibleParent(nodePath, allNodes) {
-            let currentPath = nodePath;
-            
-            while (currentPath.includes('.')) {
-                // Remove the last segment to get parent path
-                const lastDotIndex = currentPath.lastIndexOf('.');
-                currentPath = currentPath.substring(0, lastDotIndex);
-                
-                // Find the parent node in the flat nodes array (only visible nodes)
-                const parentNode = allNodes.find(n => n.path === currentPath);
-                if (parentNode) {
-                    return parentNode;
-                }
-            }
-            
-            // If no parent found, try to find a root node
-            const rootPath = nodePath.split('.')[0];
-            return allNodes.find(n => n.path === rootPath) || null;
-        }
-
-        // Helper function to update link positions without full re-render
-        function updateLinkPositions() {
-            const linksGroup = contentGroup.select('g.links-group');
-            linksGroup.selectAll('.tree-link').remove();
-            
-            flatNodes.forEach((d, i) => {
-                if (d.depth > 0) {
-                    // Find the nearest visible parent (may not be immediate parent if some are hidden)
-                    const parent = findNearestVisibleParent(d.path, flatNodes);
-                    if (parent) {
-                        const dHeight = d.measuredHeight || 60;
-                        const parentHeight = parent.measuredHeight || 60;
-                        linksGroup.append('line')
-                            .attr('class', 'tree-link')
-                            .attr('x1', orientation === 'vertical' ? parent.x + nodeWidth : parent.x + nodeWidth/2)
-                            .attr('y1', orientation === 'vertical' ? parent.y + parentHeight/2 : parent.y + parentHeight)
-                            .attr('x2', orientation === 'vertical' ? d.x : d.x + nodeWidth/2)
-                            .attr('y2', orientation === 'vertical' ? d.y + dHeight/2 : d.y)
-                            .attr('stroke', '#888')
-                            .attr('stroke-width', 2)
-                            .attr('marker-end', 'url(#arrow)');
-                    }
-                }
-            });
-        }
-
-        // Set initial control values immediately (in case script runs after DOM is ready)
-        function setInitialControlValues() {
-            document.getElementById('nodeWidthInput').value = nodeWidth;
-            document.getElementById('nodeWidthSlider').value = nodeWidth;
-            document.getElementById('nodeSeparationInput').value = nodeSeparation;
-            document.getElementById('nodeSeparationSlider').value = nodeSeparation;
-            document.getElementById('treeOrientation').value = orientation;
-            document.getElementById('textSizeInput').value = textSize;
-            document.getElementById('textSizeSlider').value = textSize;
-            
-            // Initialize button states based on graph controls
-            initializeButtonStates();
-        }
-        if (document.readyState === 'loading') {
-            window.addEventListener('DOMContentLoaded', setInitialControlValues);
-        } else {
-            setInitialControlValues();
-        }
-
-        // --- Controls Handlers ---
-        window.updateNodeWidth = async function(val) {
-            nodeWidth = parseInt(val);
-            document.getElementById('nodeWidthInput').value = nodeWidth;
-            document.getElementById('nodeWidthSlider').value = nodeWidth;
-            graphControls.nodeWidth = nodeWidth;
-            await updateGraphConfiguration();
-            updateTree();
-        };
-        window.updateNodeSeparation = async function(val) {
-            nodeSeparation = parseInt(val);
-            document.getElementById('nodeSeparationInput').value = nodeSeparation;
-            document.getElementById('nodeSeparationSlider').value = nodeSeparation;
-            graphControls.nodeSeparation = nodeSeparation;
-            await updateGraphConfiguration();
-            updateTree();
-        };
-        window.updateTreeOrientation = async function(val) {
-            orientation = val;
-            graphControls.orientation = orientation;
-            await updateGraphConfiguration();
-            updateTree();
-        };
-
-        window.updateTextSize = async function(val) {
-            textSize = parseInt(val);
-            document.getElementById('textSizeInput').value = textSize;
-            document.getElementById('textSizeSlider').value = textSize;
-            graphControls.textSize = textSize;
-            await updateGraphConfiguration();
-            updateTree();
-        };
-
-        // Add this function after controls handlers
-        window.expandAllNodes = function() {
-            console.log('Expanding all nodes and ensuring proper spacing...');
-            
-            // Expand all nodes in the tree
-            Object.keys(expanded).forEach(function(key) {
-                expanded[key] = true;
-            });
-            
-            // Clear any saved positions that might cause issues with proper spacing
-            const originalPositions = {...nodePositions}; // Backup original positions
-            nodePositions = {}; // Clear for fresh layout
-            
-            // Force a fresh layout calculation with all nodes expanded
-            flatNodes = [];
-            let y = 20;
-            treeRoots.forEach(root => {
-                y = flattenTree(root, flatNodes, y, 0);
-            });
-            
-            // Resolve any overlaps that might occur with all nodes expanded
-            resolveNodeOverlaps(flatNodes);
-            
-            // Update the tree with the new layout
-            updateTree();
-            
-            // Save the new positions for consistency
-            saveNodePositions();
-            
-            console.log('All nodes expanded and properly spaced');
-            
-            // Show confirmation
-            const overlappingPairs = [];
-            for (let i = 0; i < flatNodes.length; i++) {
-                for (let j = i + 1; j < flatNodes.length; j++) {
-                    if (nodesOverlap(flatNodes[i], flatNodes[j])) {
-                        overlappingPairs.push([flatNodes[i], flatNodes[j]]);
-                    }
-                }
-            }
-            
-            if (overlappingPairs.length === 0) {
-                console.log('All nodes expanded with perfect spacing - no overlaps detected');
-            } else {
-                console.log(`All nodes expanded with ${overlappingPairs.length} minor overlaps remaining`);
-            }
-        };
-
-        // Combined toggle function for Expand/Collapse
-        window.toggleExpandCollapse = async function() {
-            const isExpanded = graphControls.expandAll;
-            
-            if (isExpanded) {
-                // Currently expanded, so collapse all
-                graphControls.expandAll = false;
-                graphControls.collapseAll = true;
-                collapseAllNodes();
-                
-                // Update button appearance for collapse state
-                const btn = document.getElementById('expandCollapseToggleBtn');
-                const icon = document.getElementById('expandCollapseIcon');
-                const text = document.getElementById('expandCollapseText');
-                
-                btn.classList.remove('btn-success');
-                btn.classList.add('btn-warning');
-                btn.title = 'Expand All';
-                icon.className = 'bi bi-plus-square';
-                text.textContent = 'Expand All';
-            } else {
-                // Currently collapsed, so expand all
-                graphControls.expandAll = true;
-                graphControls.collapseAll = false;
-                expandAllNodes();
-                
-                // Update button appearance for expand state
-                const btn = document.getElementById('expandCollapseToggleBtn');
-                const icon = document.getElementById('expandCollapseIcon');
-                const text = document.getElementById('expandCollapseText');
-                
-                btn.classList.remove('btn-warning');
-                btn.classList.add('btn-success');
-                btn.title = 'Collapse All';
-                icon.className = 'bi bi-dash-square';
-                text.textContent = 'Collapse All';
-            }
-            
-            // Update configuration via API
-            await updateGraphConfiguration();
-        };
-
-        // Function to collapse all nodes
-        window.collapseAllNodes = function() {
-            console.log('Collapsing all nodes...');
-            
-            // Collapse all nodes in the tree
-            Object.keys(expanded).forEach(function(key) {
-                expanded[key] = false;
-            });
-            
-            updateTree();
-            saveNodePositions();
-            console.log('All nodes collapsed');
-        };
-
-        // Function to update graph configuration via API
-        async function updateGraphConfiguration() {
-            try {
-                const response = await fetch('/UpdateGraphConfiguration', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        nodePositions: nodePositions,
-                        graphControls: graphControls
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                console.log('Graph configuration updated:', result);
-                return result;
-            } catch (error) {
-                console.error('Failed to update graph configuration:', error);
-                return { success: false, error: error.message };
-            }
-        }
-
-        // Function to show a specific node using the ShowNode API
-        async function showNode(key, depth) {
-            try {
-                console.log(`Showing node: key="${key}", depth=${depth}`);
-                
-                const response = await fetch('/ShowNode', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key, depth })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                console.log('Show node result:', result);
-                
-                if (result.success) {
-                    // Update local hiddenNodes array
-                    hiddenNodes = hiddenNodes.filter(hn => !(hn.key === key && hn.depth === depth));
-                    
-                    // Refresh the tree to show the unhidden node
-                    updateTree();
-                } else {
-                    alert('Failed to show node: ' + (result.error || 'Unknown error'));
-                }
-                
-                return result;
-            } catch (error) {
-                console.error('Failed to show node:', error);
-                alert('Failed to show node: ' + error.message);
-                return { success: false, error: error.message };
-            }
-        }
-
-        // Function to show a menu for selecting which hidden child to show
-        function showHiddenChildrenMenu(hiddenChildren, event) {
-            // Remove any existing menu
-            d3.selectAll('.hidden-children-menu').remove();
-            
-            // Create a dropdown menu
-            const menu = d3.select('body')
-                .append('div')
-                .attr('class', 'hidden-children-menu')
-                .style('position', 'absolute')
-                .style('left', (event.pageX + 10) + 'px')
-                .style('top', (event.pageY + 10) + 'px')
-                .style('background', '#fff')
-                .style('border', '1px solid #ccc')
-                .style('border-radius', '4px')
-                .style('box-shadow', '0 2px 8px rgba(0,0,0,0.15)')
-                .style('z-index', '9999')
-                .style('max-height', '200px')
-                .style('overflow-y', 'auto')
-                .style('min-width', '150px');
-            
-            // Add menu items
-            const menuItems = menu.selectAll('.menu-item')
-                .data(hiddenChildren)
-                .enter()
-                .append('div')
-                .attr('class', 'menu-item')
-                .style('padding', '8px 12px')
-                .style('cursor', 'pointer')
-                .style('border-bottom', '1px solid #eee')
-                .style('color', '#333')
-                .text(d => `${d.name} (depth: ${d.depth})`)
-                .on('mouseover', function() {
-                    d3.select(this).style('background', '#f0f0f0');
-                })
-                .on('mouseout', function() {
-                    d3.select(this).style('background', '#fff');
-                })
-                .on('click', async function(event, d) {
-                    event.stopPropagation();
-                    menu.remove();
-                    await showNode(d.key, d.depth);
-                });
-            
-            // Add "Show All" option if there are multiple children
-            if (hiddenChildren.length > 1) {
-                menu.append('div')
-                    .attr('class', 'menu-item show-all')
-                    .style('padding', '8px 12px')
-                    .style('cursor', 'pointer')
-                    .style('border-top', '2px solid #007bff')
-                    .style('background', '#f8f9fa')
-                    .style('font-weight', 'bold')
-                    .style('color', '#007bff')
-                    .text(`Show All (${hiddenChildren.length} nodes)`)
-                    .on('mouseover', function() {
-                        d3.select(this).style('background', '#e9ecef');
-                    })
-                    .on('mouseout', function() {
-                        d3.select(this).style('background', '#f8f9fa');
-                    })
-                    .on('click', async function(event) {
-                        event.stopPropagation();
-                        menu.remove();
-                        
-                        // Show all hidden children
-                        for (const child of hiddenChildren) {
-                            await showNode(child.key, child.depth);
-                        }
-                    });
-            }
-            
-            // Close menu when clicking outside
-            d3.select('body').on('click.hidden-menu', function() {
-                menu.remove();
-                d3.select('body').on('click.hidden-menu', null);
-            });
-        }
-
-        // Initialize button states on page load
-        function initializeButtonStates() {
-            const btn = document.getElementById('expandCollapseToggleBtn');
-            const icon = document.getElementById('expandCollapseIcon');
-            const text = document.getElementById('expandCollapseText');
-            
-            if (graphControls.expandAll) {
-                // Currently expanded state
-                btn.classList.remove('btn-success');
-                btn.classList.add('btn-warning');
-                btn.title = 'Collapse All';
-                icon.className = 'bi bi-dash-square';
-                text.textContent = 'Collapse All';
-            } else {
-                // Currently collapsed/default state
-                btn.classList.remove('btn-warning');
-                btn.classList.add('btn-success');
-                btn.title = 'Expand All';
-                icon.className = 'bi bi-plus-square';
-                text.textContent = 'Expand All';
-            }
-        }
-
-        // Reset filter function
-        window.resetFilter = async function() {
-            try {
-                // Clear the Filter.json file by sending an empty filters array
-                const response = await fetch('/Filter.json', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filters: [] })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Failed to reset filter: ${response.status}`);
-                }
-
-                console.log('Filter reset successfully');
-                // Reload the page to apply the filter reset
-                location.reload();
-            } catch (error) {
-                console.error('Failed to reset filter:', error);
-                alert('Failed to reset filter. Please try again.');
-            }
-        };
-
-        // Add filter function for programmatic filter management
-        window.addFilter = async function(key, depth = 0, description = '') {
-            try {
-                const filterConfig = await loadJSON('data/Filter.json');
-                const filters = filterConfig?.filters || [];
-                
-                // Check if filter already exists
-                if (filters.some(f => f.key === key && f.depth === depth)) {
-                    console.log(`Filter already exists: ${key} at depth ${depth}`);
-                    return { success: false, message: 'Filter already exists' };
-                }
-                
-                // Add new filter
-                filters.push({ 
-                    key: key, 
-                    depth: depth,
-                    description: description || `Filter for ${key}`
-                });
-                
-                const response = await fetch('/Filter.json', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filters })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Failed to add filter: ${response.status}`);
-                }
-
-                console.log(`Filter added successfully: ${key}`);
-                // Reload the page to apply the new filter
-                location.reload();
-                return { success: true, message: 'Filter added successfully' };
-            } catch (error) {
-                console.error('Failed to add filter:', error);
-                return { success: false, message: error.message };
-            }
-        };
-
-        // Remove filter function
-        window.removeFilter = async function(key, depth = 0) {
-            try {
-                const filterConfig = await loadJSON('data/Filter.json');
-                const filters = filterConfig?.filters || [];
-                
-                // Remove the filter
-                const updatedFilters = filters.filter(f => !(f.key === key && f.depth === depth));
-                
-                if (updatedFilters.length === filters.length) {
-                    console.log(`Filter not found: ${key} at depth ${depth}`);
-                    return { success: false, message: 'Filter not found' };
-                }
-                
-                const response = await fetch('/Filter.json', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filters: updatedFilters })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Failed to remove filter: ${response.status}`);
-                }
-
-                console.log(`Filter removed successfully: ${key}`);
-                // Reload the page to apply the filter removal
-                location.reload();
-                return { success: true, message: 'Filter removed successfully' };
-            } catch (error) {
-                console.error('Failed to remove filter:', error);
-                return { success: false, message: error.message };
-            }
-        };
-
-        // Reset node positions function
-        window.resetPositions = function() {
-            // Clear all saved position offsets
-            nodePositions = {};
-            saveNodePositions();
-            updateTree(); // This will recalculate and reset all positions
-        };
-
-        // Center view function - resets zoom and centers the view on the root nodes
-        window.centerView = function() {
-            if (svg && zoomBehavior) {
-                // Calculate the center of the content
-                const contentBounds = {
-                    minX: Math.min(...flatNodes.map(n => n.x)),
-                    maxX: Math.max(...flatNodes.map(n => n.x + nodeWidth)),
-                    minY: Math.min(...flatNodes.map(n => n.y)),
-                    maxY: Math.max(...flatNodes.map(n => n.y + (n.measuredHeight || 60)))
-                };
-                
-                const contentCenterX = (contentBounds.minX + contentBounds.maxX) / 2;
-                const contentCenterY = (contentBounds.minY + contentBounds.maxY) / 2;
-                
-                const svgCenterX = svgWidth / 2;
-                const svgCenterY = svgHeight / 2;
-                
-                const translateX = svgCenterX - contentCenterX;
-                const translateY = svgCenterY - contentCenterY;
-                
-                // Apply centered transform with scale 1 (no zoom)
-                const transform = d3.zoomIdentity.translate(translateX, translateY).scale(1);
-                svg.transition().duration(750).call(zoomBehavior.transform, transform);
-            }
-        };
-
-        // Force center tree function - repositions nodes to center and redraws
-        window.forceCenterTree = function() {
-            // Clear any saved positions that might interfere with centering
-            nodePositions = {};
-            saveNodePositions();
-            
-            // Recalculate positions with fresh centering
-            updateTree();
-            
-            // Then apply visual centering
-            setTimeout(() => {
-                window.centerView();
-            }, 100);
-        };
-
-        // Initial flatten for rendering
-        console.log('DEBUG: About to flatten tree for rendering');
-        console.log('DEBUG: treeRoots:', treeRoots);
-        console.log('DEBUG: treeRoots length:', treeRoots.length);
-        
-        let flatNodes = [];
-        let y = 20;
-        let searchTerm = '';
-        treeRoots.forEach((root, index) => {
-            console.log(`DEBUG: Processing tree root ${index}:`, root);
-            y = flattenTree(root, flatNodes, y, 0);
-        });
-        
-        console.log('DEBUG: flatNodes after flattening:', flatNodes);
-        console.log('DEBUG: flatNodes length:', flatNodes.length);
-
-        // Calculate SVG size to fill the entire screen/viewport for proper centering
-        const maxX = flatNodes.length > 0 ? Math.max(...flatNodes.map(n => n.x + nodeWidth), 0) : nodeWidth;
-        const maxY = flatNodes.length > 0 ? Math.max(...flatNodes.map(n => n.y + (n.measuredHeight || 60)), y) : y;
-        
-        // Use full screen dimensions for optimal centering
-        let svgHeight = height; // Use full screen height
-        let svgWidth = width;   // Use full screen width
-        
-        console.log('SVG size calculation:', {
-            screenDimensions: { width, height },
-            contentDimensions: { maxX, maxY },
-            finalSvgDimensions: { svgWidth, svgHeight }
-        });
-        let svg, contentGroup, zoomBehavior, lastTransform = null;
-        function createSVG() {
-            console.log('createSVG() called');
-            console.log('svgWidth:', svgWidth, 'svgHeight:', svgHeight);
-            
-            d3.select('#output-graph').selectAll('svg').remove();
-            svg = d3.select('#output-graph')
-                .append('svg')
-                .attr('width', svgWidth)
-                .attr('height', svgHeight);
-                
-            console.log('SVG created:', svg.node());
-            
-            // Add a group for links (background) and a group for nodes (foreground)
-            contentGroup = svg.append('g').attr('class', 'content-group');
-            contentGroup.append('g').attr('class', 'links-group');
-            contentGroup.append('g').attr('class', 'nodes-group');
-            
-            console.log('contentGroup created:', contentGroup.node());
-            zoomBehavior = d3.zoom()
-                .scaleExtent([0.2, 5])
-                .filter(function(event) {
-                    // Allow zoom/pan only when:
-                    // 1. Not dragging a node
-                    // 2. Not clicking on a node element
-                    // 3. Using wheel (for zoom) or clicking on empty space (for pan)
-                    const isNodeElement = event.target.closest('.tree-node');
-                    const isWheelEvent = event.type === 'wheel';
-                    const isDragging = d3.select('body').classed('node-dragging');
-                    
-                    // Allow wheel zoom always (unless dragging)
-                    if (isWheelEvent && !isDragging) return true;
-                    
-                    // Allow pan only on empty space (not on nodes) and not while dragging
-                    return !isNodeElement && !isDragging;
-                })
-                .on('zoom', (event) => {
-                    contentGroup.attr('transform', event.transform);
-                    lastTransform = event.transform;
-                });
-            svg.call(zoomBehavior);
-            // If we have a previous transform, reapply it
-            if (lastTransform) {
-                svg.call(zoomBehavior.transform, lastTransform);
-            }
-        }
-        createSVG();
-
-        function getPath(parentPath, key) {
-            return parentPath ? parentPath + '.' + key : key;
-        }
-        nodes.forEach(n => expanded[n.id] = false);
-
-        // Helper function to check if two nodes overlap
-        function nodesOverlap(node1, node2, padding = 8) {
-            const node1Height = node1.measuredHeight || 60;
-            const node2Height = node2.measuredHeight || 60;
-            
-            // Check if rectangles overlap
-            const overlap = !(
-                node1.x + nodeWidth + padding < node2.x ||
-                node2.x + nodeWidth + padding < node1.x ||
-                node1.y + node1Height + padding < node2.y ||
-                node2.y + node2Height + padding < node1.y
-            );
-            
-            return overlap;
-        }
-
-        // Helper function to find a non-overlapping position for a node
-        function findNonOverlappingPosition(targetNode, existingNodes, startX, startY) {
-            let attempts = 0;
-            const maxAttempts = 50;
-            const stepSize = 15; // How much to move when collision detected
-            const targetHeight = targetNode.measuredHeight || 60;
-            
-            targetNode.x = startX;
-            targetNode.y = startY;
-            
-            // Try different strategies for positioning
-            const strategies = [
-                // Strategy 1: Move down incrementally
-                { deltaX: 0, deltaY: stepSize },
-                // Strategy 2: Move right incrementally  
-                { deltaX: stepSize, deltaY: 0 },
-                // Strategy 3: Move down and slightly right
-                { deltaX: stepSize * 0.5, deltaY: stepSize },
-                // Strategy 4: Move up (for when moving down doesn't work)
-                { deltaX: 0, deltaY: -stepSize }
-            ];
-            
-            for (let strategy of strategies) {
-                targetNode.x = startX;
-                targetNode.y = startY;
-                let strategyAttempts = 0;
-                
-                while (strategyAttempts < maxAttempts / strategies.length) {
-                    let hasCollision = false;
-                    
-                    // Check collision with all existing positioned nodes
-                    for (let existingNode of existingNodes) {
-                        if (existingNode.path !== targetNode.path && nodesOverlap(targetNode, existingNode)) {
-                            hasCollision = true;
-                            break;
-                        }
-                    }
-                    
-                    if (!hasCollision) {
-                        console.log(`Found non-overlapping position for ${targetNode.path} at (${targetNode.x}, ${targetNode.y}) using strategy ${strategies.indexOf(strategy) + 1} after ${strategyAttempts} attempts`);
-                        return { x: targetNode.x, y: targetNode.y };
-                    }
-                    
-                    // Apply strategy movement
-                    targetNode.x += strategy.deltaX;
-                    targetNode.y += strategy.deltaY;
-                    
-                    strategyAttempts++;
-                }
-            }
-            
-            console.warn(`Could not find non-overlapping position for ${targetNode.path} after trying all strategies, using last position`);
-            return { x: targetNode.x, y: targetNode.y };
-        }
-
-        // Helper function to resolve overlaps for all nodes
-        function resolveNodeOverlaps(nodes) {
-            const positionedNodes = [];
-            
-            // Sort nodes by depth and then by original Y position to maintain hierarchy
-            const sortedNodes = [...nodes].sort((a, b) => {
-                if (a.depth !== b.depth) return a.depth - b.depth;
-                return a.y - b.y;
-            });
-            
-            for (let node of sortedNodes) {
-                if (positionedNodes.length === 0) {
-                    // First node, no collision possible
-                    positionedNodes.push(node);
-                    continue;
-                }
-                
-                // Check for overlaps with already positioned nodes
-                let hasOverlap = false;
-                for (let positioned of positionedNodes) {
-                    if (nodesOverlap(node, positioned)) {
-                        hasOverlap = true;
-                        break;
-                    }
-                }
-                
-                if (hasOverlap) {
-                    // Find a new position that doesn't overlap
-                    const originalX = node.x;
-                    const originalY = node.y;
-                    const newPos = findNonOverlappingPosition(node, positionedNodes, originalX, originalY);
-                    node.x = newPos.x;
-                    node.y = newPos.y;
-                    
-                    console.log(`Adjusted position for ${node.path} from (${originalX}, ${originalY}) to (${node.x}, ${node.y})`);
-                }
-                
-                positionedNodes.push(node);
-            }
-            
-            return nodes;
-        }
-
-        // Render the flat node list as a tree
-
-        function renderTree() {
-            console.log('renderTree() called');
-            console.log('flatNodes for rendering:', flatNodes.length, flatNodes);
-            console.log('svg element:', svg);
-            console.log('contentGroup:', contentGroup);
-            
-            if (!svg || !contentGroup) {
-                console.error('SVG or contentGroup not initialized!');
-                return;
-            }
-            
-            // Remove previous nodes and links
-            contentGroup.select('g.links-group').selectAll('.tree-link').remove();
-            contentGroup.select('g.nodes-group').selectAll('.tree-node').remove();
-
-            // Layout: vertical or horizontal (initial y, will update after measuring height)
-            const initialNodeHeight = 2;
-            // Only set initial positions if no saved global positions exist
-            let hasGlobalPositions = nodePositions.Left !== undefined && nodePositions.Top !== undefined;
-            
-            if (!hasGlobalPositions) {
-                // Calculate center positions for root nodes
-                // Always use SVG center for optimal centering
-                let centerX = svgWidth / 2 - nodeWidth / 2;
-                let centerY = svgHeight / 2;
-                
-                // Only use saved starting position if explicitly set
-                if (nodePositions.StartingNodeLeft !== undefined && nodePositions.StartingNodeTop !== undefined) {
-                    centerX = nodePositions.StartingNodeLeft - nodeWidth / 2;
-                    centerY = nodePositions.StartingNodeTop;
-                    console.log('Using saved starting node position:', {
-                        StartingNodeLeft: nodePositions.StartingNodeLeft,
-                        StartingNodeTop: nodePositions.StartingNodeTop,
-                        calculatedCenterX: centerX,
-                        calculatedCenterY: centerY
-                    });
-                } else {
-                    console.log('Using SVG center position for optimal centering:', { centerX, centerY, svgWidth, svgHeight });
-                }
-                
-                // Set initial horizontal layout: root nodes start in center, children expand to the right
-                let xMap = {};
-                let yMap = {};
-                let maxDepth = Math.max(...flatNodes.map(n => n.depth));
-                let y = 20;
-                
-                // Find root nodes to distribute them around center
-                const rootNodes = flatNodes.filter(n => n.depth === 0);
-                const rootSpacing = 120; // Vertical spacing between multiple root nodes
-                const rootStartY = centerY - (rootNodes.length - 1) * rootSpacing / 2;
-                
-                flatNodes.forEach((d, i) => {
-                    if (d.depth === 0) {
-                        // Center root nodes horizontally, distribute vertically around center
-                        d.x = centerX;
-                        const rootIndex = rootNodes.findIndex(r => r.path === d.path);
-                        d.y = rootStartY + rootIndex * rootSpacing;
-                    } else {
-                        // Child nodes expand to the right from their parent's center position
-                        d.x = centerX + d.depth * (nodeWidth + nodeSeparation);
-                        if (!yMap[d.depth]) yMap[d.depth] = 20;
-                        d.y = yMap[d.depth];
-                        yMap[d.depth] += (d.measuredHeight || 60) + 8;
-                    }
-                });
-            } else {
-                // Initialize with default centered positions that will be adjusted by global positioning
-                let centerX = svgWidth / 2 - nodeWidth / 2;
-                let centerY = svgHeight / 2;
-                
-                // Only override if explicitly saved starting positions exist
-                if (nodePositions.StartingNodeLeft !== undefined && nodePositions.StartingNodeTop !== undefined) {
-                    centerX = nodePositions.StartingNodeLeft - nodeWidth / 2;
-                    centerY = nodePositions.StartingNodeTop;
-                }
-                
-                let yMap = {};
-                
-                // Find root nodes for centered positioning
-                const rootNodes = flatNodes.filter(n => n.depth === 0);
-                const rootSpacing = 120;
-                const rootStartY = centerY - (rootNodes.length - 1) * rootSpacing / 2;
-                
-                flatNodes.forEach((d, i) => {
-                    if (d.depth === 0) {
-                        // Set default centered position for root nodes (may be overridden by applyPositionOffsets)
-                        d.x = centerX;
-                        const rootIndex = rootNodes.findIndex(r => r.path === d.path);
-                        d.y = rootStartY + rootIndex * rootSpacing;
-                    } else {
-                        // Set minimal default position for child nodes that will be overridden by applyPositionOffsets
-                        d.x = centerX + d.depth * (nodeWidth + nodeSeparation);
-                        if (!yMap[d.depth]) yMap[d.depth] = 20;
-                        d.y = yMap[d.depth];
-                        yMap[d.depth] += (d.measuredHeight || 60) + 8;
-                    }
-                });
-            }
-
-            // Apply saved position offsets after initial layout
-            applyPositionOffsets();
-
-            // Resolve any overlapping nodes before rendering
-            console.log('Checking for node overlaps...');
-            resolveNodeOverlaps(flatNodes);
-            console.log('Node overlap resolution completed');
-
-            // --- Draw links (lines) between parent and child nodes in the background links-group ---
-            const linksGroup = contentGroup.select('g.links-group');
-            flatNodes.forEach((d, i) => {
-                if (d.depth > 0) {
-                    // Find the nearest visible parent (may not be immediate parent if some are hidden)
-                    const parent = findNearestVisibleParent(d.path, flatNodes);
-                    if (parent) {
-                        // Use measured heights if available
-                        const dHeight = d.measuredHeight || initialNodeHeight;
-                        const parentHeight = parent.measuredHeight || initialNodeHeight;
-                        if (orientation === 'horizontal') {
-                            linksGroup.append('line')
-                                .attr('class', 'tree-link')
-                                .attr('x1', parent.x + nodeWidth)
-                                .attr('y1', parent.y + parentHeight/2)
-                                .attr('x2', d.x)
-                                .attr('y2', d.y + dHeight/2)
-                                .attr('stroke', '#888')
-                                .attr('stroke-width', 2)
-                                .attr('marker-end', 'url(#arrow)');
-                        } else {
-                            linksGroup.append('line')
-                                .attr('class', 'tree-link')
-                                .attr('x1', parent.x + nodeWidth)
-                                .attr('y1', parent.y + parentHeight/2)
-                                .attr('x2', d.x)
-                                .attr('y2', d.y + dHeight/2)
-                                .attr('stroke', '#888')
-                                .attr('stroke-width', 2)
-                                .attr('marker-end', 'url(#arrow)');
-                        }
-                    }
-                }
-            });
-
-            // --- Draw nodes in the foreground nodes-group ---
-            const nodeGroup = contentGroup.select('g.nodes-group')
-                .selectAll('g.tree-node')
-                .data(flatNodes, d => d.path)
-                .enter()
-                .append('g')
-                .attr('class', 'tree-node')
-                .attr('transform', d => `translate(${d.x}, ${d.y})`)
-                .style('cursor', 'grab')
-                .on('click', function(event, d) {
-                    // Prevent event propagation to stop zoom/pan
-                    event.stopPropagation();
-                    
-                    if (!d.isObject) return;
-                    // Prevent click during drag
-                    if (d3.select(this).classed('dragging')) return;
-                    expanded[d.path] = !expanded[d.path];
-                    updateTree();
-                })
-                .call(d3.drag()
-                    .on('start', function(event, d) {
-                        // Prevent event propagation to stop zoom/pan
-                        event.sourceEvent.stopPropagation();
-                        
-                        // Set global dragging state
-                        d3.select('body').classed('node-dragging', true);
-                        d3.select(this).classed('dragging', true);
-                        
-                        // Get all descendants and siblings for this node
-                        const descendants = getDescendants(d);
-                        const siblings = getSiblings(d);
-                        const parent = getParent(d);
-                        
-                        // All nodes that should move together
-                        const nodesToMove = [...descendants, ...siblings];
-                        
-                        // Store initial positions
-                        d.dragData = {
-                            startX: d.x,
-                            startY: d.y,
-                            parent: parent,
-                            siblings: siblings,
-                            descendants: descendants,
-                            nodesToMove: nodesToMove,
-                            originalOffsets: []
-                        };
-                        
-                        // Store original relative positions for all nodes that should move
-                        nodesToMove.forEach(node => {
-                            d.dragData.originalOffsets.push({
-                                node: node,
-                                relativeX: node.x - d.x,
-                                relativeY: node.y - d.y,
-                                startX: node.x,
-                                startY: node.y
-                            });
-                        });
-                    })
-                    .on('drag', function(event, d) {
-                        // Prevent event propagation to stop zoom/pan
-                        event.sourceEvent.stopPropagation();
-                        
-                        // Calculate the drag offset from original position
-                        const dx = event.x - d.dragData.startX;
-                        const dy = event.y - d.dragData.startY;
-                        
-                        // Update position of the dragged node
-                        d.x = d.dragData.startX + dx;
-                        d.y = d.dragData.startY + dy;
-                        
-                        // If dragging a child node, move all siblings to maintain uniform alignment with dynamic spacing
-                        if (d.dragData.parent && d.dragData.siblings.length > 0) {
-                            const parent = d.dragData.parent;
-                            const allChildren = [d, ...d.dragData.siblings].sort((a, b) => a.path.localeCompare(b.path));
-                            const draggedIndex = allChildren.findIndex(c => c.path === d.path);
-                            
-                            // Calculate horizontal offset from parent (Left value)
-                            const leftOffset = d.x - parent.x;
-                            
-                            // Apply dynamic positioning to prevent overlaps
-                            let currentY = d.y; // Start from dragged node position
-                            
-                            // Position nodes before the dragged node (going upward)
-                            for (let i = draggedIndex - 1; i >= 0; i--) {
-                                const child = allChildren[i];
-                                const childHeight = child.measuredHeight || 60;
-                                currentY -= (childHeight + 8); // Move up by height + padding
-                                child.x = parent.x + leftOffset;
-                                child.y = currentY;
-                            }
-                            
-                            // Reset for nodes after the dragged node
-                            currentY = d.y + (d.measuredHeight || 60) + 8;
-                            
-                            // Position nodes after the dragged node (going downward)
-                            for (let i = draggedIndex + 1; i < allChildren.length; i++) {
-                                const child = allChildren[i];
-                                child.x = parent.x + leftOffset;
-                                child.y = currentY;
-                                const childHeight = child.measuredHeight || 60;
-                                currentY += childHeight + 8; // Move down by height + padding
-                            }
-                        }
-                        
-                        // Update positions of descendants maintaining their relative positions
-                        d.dragData.descendants.forEach(desc => {
-                            const originalOffset = d.dragData.originalOffsets.find(o => o.node.path === desc.path);
-                            if (originalOffset) {
-                                desc.x = d.x + originalOffset.relativeX;
-                                desc.y = d.y + originalOffset.relativeY;
-                            }
-                        });
-                        
-                        // Update visual positions
-                        updateNodePositions();
-                        updateLinkPositions();
-                    })
-                    .on('end', function(event, d) {
-                        // Calculate final offset from original position
-                        const finalDx = d.x - d.dragData.startX;
-                        const finalDy = d.y - d.dragData.startY;
-                        
-                        console.log('Drag end:', {
-                            node: d.path,
-                            finalDx,
-                            finalDy,
-                            hasMovement: Math.abs(finalDx) > 1 || Math.abs(finalDy) > 1
-                        });
-                        
-                        // Only save if there was actual movement
-                        if (Math.abs(finalDx) > 1 || Math.abs(finalDy) > 1) {
-                            const parent = d.dragData.parent;
-                            
-                            if (parent) {
-                                // For child nodes, save single global offset that all children will use
-                                const leftOffset = d.x - parent.x;
-                                const topOffset = d.y - parent.y;
-                                
-                                // Store single global reference values
-                                nodePositions = {
-                                    Left: leftOffset,
-                                    Top: topOffset
-                                };
-                                
-                                console.log(`Saved global child positioning:`, {
-                                    Left: leftOffset,
-                                    Top: topOffset,
-                                    parentPosition: { x: parent.x, y: parent.y },
-                                    childPosition: { x: d.x, y: d.y }
-                                });
-                            } else {
-                                // For root nodes, still save absolute offset
-                                if (!nodePositions.rootLeft) nodePositions.rootLeft = 0;
-                                if (!nodePositions.rootTop) nodePositions.rootTop = 0;
-                                
-                                nodePositions.rootLeft += finalDx;
-                                nodePositions.rootTop += finalDy;
-                                
-                                console.log(`Saved root node offset:`, {
-                                    rootLeft: nodePositions.rootLeft,
-                                    rootTop: nodePositions.rootTop
-                                });
-                            }
-                            
-                            // Force save to file - add more debugging
-                            console.log('About to save node positions...');
-                            
-                            // Resolve any overlaps created by dragging before saving
-                            console.log('Checking for overlaps after drag...');
-                            resolveNodeOverlaps(flatNodes);
-                            updateNodePositions(); // Update visual positions after collision resolution
-                            updateLinkPositions(); // Update links after position changes
-                            
-                            saveNodePositions().then(() => {
-                                console.log('Save promise resolved');
-                            }).catch(error => {
-                                console.error('Save promise rejected:', error);
-                            });
-                        }
-                        
-                        // Clear dragging state after a short delay to prevent click
-                        setTimeout(() => {
-                            d3.select(this).classed('dragging', false);
-                            d3.select('body').classed('node-dragging', false);
-                        }, 100);
-                        delete d.dragData;
-                    })
-                );
-
-            nodeGroup.append('rect')
-                .attr('width', nodeWidth)
-                .attr('height', initialNodeHeight)
-                .attr('rx', 8)
-                .attr('ry', 8)
-                .attr('fill', '#343a40')
-                .attr('stroke', '#555')
-                .attr('stroke-width', 1);
-
-            // Flex container for label, value, and controls
-            const contentContainer = nodeGroup.append('foreignObject')
-                .attr('x', 0)
-                .attr('y', 0)
-                .attr('width', nodeWidth)
-                .attr('height', 10) // will update after measuring
-                .append('xhtml:div')
-                .attr('class', 'd-flex flex-column justify-content-center align-items-start node-foreign-content')
-                .style('width', '100%');
-
-            // Input group for expand/collapse and hide
-            const inputGroup = contentContainer.append('div')
-                .attr('class', 'input-group input-group-sm mb-1')
-                .style('width', '100%');
-
-            // Filter button
-            inputGroup.append('button')
-                .attr('class', 'btn btn-outline-warning btn-filter-node btn-sm')
-                .style('min-width', '32px')
-                .style('padding', '0px 1px 0px 1px')
-                .html('<i class="bi bi-funnel"></i>')
-                .attr('title', 'Filter')
-                .on('click', async function(event, d) {
-                    event.stopPropagation();
-                    try {
-                        const cfg = await loadJSON('data/Filter.json');
-                        let filters = cfg.filters || [];
-                        if (!filters.some(f => f.key === d.key && f.depth === d.depth)) {
-                            filters.push({ key: d.key, depth: d.depth });
-                            const success = await saveJSON('Filter.json', { filters });
-                            if (success) {
-                                ProcessFilter();
-                            } else {
-                                alert('Failed to save filter. Please try again.');
-                            }
-                        } else {
-                            ProcessFilter();
-                        }
-                    } catch (error) {
-                        console.error('Error handling filter:', error);
-                        alert('Failed to process filter. Please try again.');
-                    }
-                });
-            // Expand/collapse button (left) - only show for expandable nodes
-            inputGroup.append('button')
-                .attr('class', 'btn btn-outline-info btn-expand-collapse')
-                .style('min-width', '32px')
-                .style('padding', '0px 1px 0px 1px')
-                .style('font-size', Math.max(18, textSize * 1.5) + 'px')
-                .style('font-weight', 'bold')
-                .style('display', d => (d.children && d.children.length > 0) ? 'inline-block' : 'none') // Hide if no child nodes
-                .text(d => (d.children && d.children.length > 0) ? (expanded[d.path] ? '−' : '+') : '')
-                .on('click', function(event, d) {
-                    event.stopPropagation();
-                    if (!d.children || d.children.length === 0) return;
-                    expanded[d.path] = !expanded[d.path];
-                    updateTree();
-                });
-
-            // Hide button (right)
-            inputGroup.append('button')
-                .attr('class', 'btn btn-outline-danger btn-hide-node')
-                .style('min-width', '32px')
-                .style('padding', '0px 1px 0px 1px')
-                .html('<i class="bi bi-eye-slash"></i>')
-                .attr('title', 'Hide')
-                .on('click', async function(event, d) {
-                    event.stopPropagation();
-                    if (!hiddenNodes.some(hn => hn.key === d.key && hn.depth === d.depth)) {
-                        hiddenNodes.push({ key: d.key, depth: d.depth });
-                        const success = await saveJSON('HiddenNodes.json', { hiddenNodes });
-                        if (success) {
-                            updateTree();
-                        } else {
-                            // Remove from hiddenNodes if save failed
-                            hiddenNodes = hiddenNodes.filter(hn => !(hn.key === d.key && hn.depth === d.depth));
-                            alert('Failed to save hidden node. Please try again.');
-                        }
-                    }
-                });
-
-            // Show hidden children button - only show when node has hidden children
-            inputGroup.append('button')
-                .attr('class', 'btn btn-outline-success btn-show-children')
-                .style('min-width', '32px')
-                .style('padding', '0px 1px 0px 1px')
-                .style('display', d => hasHiddenChildren(d, d.depth) ? 'inline-block' : 'none')
-                .html('<i class="bi bi-eye"></i>')
-                .attr('title', 'Show hidden children')
-                .on('click', async function(event, d) {
-                    event.stopPropagation();
-                    
-                    // Get all hidden children of this node
-                    const hiddenChildren = getHiddenChildren(d, d.depth);
-                    
-                    if (hiddenChildren.length === 0) {
-                        console.log('No hidden children found for this node');
-                        return;
-                    }
-                    
-                    // Show a dropdown/menu for user to select which hidden child to show
-                    if (hiddenChildren.length === 1) {
-                        // If only one hidden child, show it directly
-                        await showNode(hiddenChildren[0].key, hiddenChildren[0].depth);
-                    } else {
-                        // If multiple hidden children, show a selection menu
-                        showHiddenChildrenMenu(hiddenChildren, event);
-                    }
-                });
-
-            // Create flex container for node label and content on same line
-            const nodeInfoContainer = contentContainer.append('div')
-                .attr('class', 'd-flex')
-                .style('margin', '2px 0 0 10px')
-                .style('align-items', 'flex-start')
-                .style('gap', '8px')
-                .style('width', '100%');
-
-            // Node label: show merged keys joined by ' / '
-            nodeInfoContainer.append('div')
-                .attr('class', 'node-label')
-                .style('font-size', textSize + 'px')
-                .style('font-weight', 'bold')
-                .style('color', '#fff')
-                .style('white-space', 'nowrap')
-                .style('flex-shrink', '0')
-                .text(d => d.mergedKeys ? d.mergedKeys.join(' / ') : d.key);
-
-            // Node value summary: show merged values for each merged key
-            const valueDiv = nodeInfoContainer.append('div')
-                .attr('class', 'node-content')
-                .style('font-size', textSize + 'px')
-                .style('flex-grow', '1')
-                .style('min-width', '0');
-
-            valueDiv.selectAll('div.kv-row')
-                .data(d => {
-                    let displayData = [];
-                    
-                    // For leaf nodes (primitive values), display the value directly
-                    if (!d.isObject) {
-                        const type = detectValueType(d.key, d.value);
-                        displayData.push({
-                            k: '', // No key for leaf nodes, just the value
-                            v: d.value,
-                            type: type,
-                            displayValue: String(d.value)
-                        });
-                        return displayData;
-                    }
-                    
-                    // For object/array nodes, show summary information
-                    if (d.isArray) {
-                        const childCount = d.children ? d.children.length : 0;
-                        displayData.push({
-                            k: 'Array Info',
-                            v: `Array[${childCount}] - ${childCount} items`,
-                            type: 'array',
-                            displayValue: `Array[${childCount}] - ${childCount} items`
-                        });
-                    } else if (d.isObject) {
-                        const childCount = d.children ? d.children.length : 0;
-                        displayData.push({
-                            k: 'Object Info',
-                            v: `Object{${childCount}} - ${childCount} properties`,
-                            type: 'object',
-                            displayValue: `Object{${childCount}} - ${childCount} properties`
-                        });
-                    }
-                    
-                    return displayData;
-                })
-                .enter()
-                .append('div')
-                .attr('class', 'kv-row')
-                .html(d => {
-                    if (d.k) {
-                        // If key is 'name', add a data attribute for CSS
-                        const keyAttr = d.k.trim().toLowerCase() === 'name' ? ' data-key-name="name"' : '';
-                        const renderedValue = renderTypedValue(d.k, d.v, d.type);
-                        return `<span class="key"${keyAttr}>${d.k}:</span><span class="value">${renderedValue}</span>`;
-                    } else {
-                        const renderedValue = renderTypedValue('', d.v, d.type);
-                        return `<span class="value">${renderedValue}</span>`;
-                    }
-                });
-
-            // After rendering, measure and update node heights
-            setTimeout(() => {
-                // Measure all node heights
-                const nodeHeightMap = {};
-                nodeGroup.each(function(d, i) {
-                    const fo = d3.select(this).select('foreignObject').node();
-                    if (fo) {
-                        // Get the height of the HTML content inside the foreignObject
-                        const htmlDiv = fo.querySelector('.node-foreign-content');
-                        if (htmlDiv) {
-                            const contentHeight = htmlDiv.scrollHeight;
-                            // Update rect and foreignObject height
-                            d3.select(this).select('rect').attr('height', contentHeight + 8); // add some padding
-                            d3.select(this).select('foreignObject').attr('height', contentHeight + 8);
-                            d.measuredHeight = contentHeight + 8;
-                            nodeHeightMap[d.path] = contentHeight + 8;
-                        } else {
-                            d.measuredHeight = 60;
-                            nodeHeightMap[d.path] = 60;
-                        }
-                    } else {
-                        d.measuredHeight = 60;
-                        nodeHeightMap[d.path] = 60;
-                    }
-                });
-                // Re-layout nodes with measured heights
-                let y = 20;
-                flatNodes.forEach((d, i) => {
-                    if (orientation === 'vertical') {
-                        d.x = 40 + d.depth * nodeSeparation;
-                        d.y = y;
-                        y += (d.measuredHeight || 60) + 8;
-                    } else {
-                        d.x = 40 + i * nodeWidth * 1.2;
-                        d.y = 20 + d.depth * nodeSeparation;
-                    }
-                });
-                
-                // Re-apply saved position offsets after re-layout
-                applyPositionOffsets();
-                
-                // Update node positions
-                nodeGroup.attr('transform', d => `translate(${d.x}, ${d.y})`);
-                // Update link positions in the background links-group
-                const linksGroup = contentGroup.select('g.links-group');
-                linksGroup.selectAll('.tree-link').remove();
-                flatNodes.forEach((d, i) => {
-                    if (d.depth > 0) {
-                        // Find the nearest visible parent (may not be immediate parent if some are hidden)
-                        const parent = findNearestVisibleParent(d.path, flatNodes);
-                        if (parent) {
-                            const dHeight = d.measuredHeight || 60;
-                            const parentHeight = parent.measuredHeight || 60;
-                            linksGroup.append('line')
-                                .attr('class', 'tree-link')
-                                .attr('x1', orientation === 'vertical' ? parent.x + nodeWidth : parent.x + nodeWidth/2)
-                                .attr('y1', orientation === 'vertical' ? parent.y + parentHeight/2 : parent.y + parentHeight)
-                                .attr('x2', orientation === 'vertical' ? d.x : d.x + nodeWidth/2)
-                                .attr('y2', orientation === 'vertical' ? d.y + dHeight/2 : d.y)
-                                .attr('stroke', '#888')
-                                .attr('stroke-width', 2)
-                                .attr('marker-end', 'url(#arrow)');
-                        }
-                    }
-                });
-            }, 0);
-
-            // (Expand/collapse indicator moved to input group)
-        }
-
-
-        function updateTree() {
-            console.log('updateTree() called');
-            console.log('treeRoots available:', treeRoots ? treeRoots.length : 'undefined');
-            console.log('treeRoots content:', treeRoots);
-            
-            // Save current transform before update
-            if (svg && zoomBehavior) {
-                const t = d3.zoomTransform(svg.node());
-                lastTransform = t;
-            }
-            flatNodes = [];
-            let y = 20;
-            treeRoots.forEach(root => {
-                y = flattenTree(root, flatNodes, y, 0);
-            });
-            
-            console.log('flatNodes after flattening:', flatNodes.length, flatNodes);
-            
-            // Use screen/viewport dimensions for full coverage
-            const screenWidth = window.screen.width;
-            const screenHeight = window.screen.height;
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-            const fullWidth = Math.max(viewportWidth, screenWidth);
-            const fullHeight = Math.max(viewportHeight, screenHeight);
-            
-            // Set SVG size to full screen dimensions for proper centering
-            svgHeight = fullHeight;
-            svgWidth = fullWidth;
-            
-            createSVG();
-            renderTree();
-        }
-        // Re-define search functions now that all variables are available
-        window.handleSearchInput = function(val) {
-            searchTerm = val.trim();
-            updateTree();
-        };
-        
-        renderTree();
-
-        // Ensure tree is centered on initial load
-        setTimeout(() => {
-            if (flatNodes.length > 0) {
-                window.centerView();
-            }
-        }, 100);
-
-        // Handle window resize to update SVG dimensions
-        window.addEventListener('resize', function() {
-            console.log('Window resized, updating SVG dimensions');
-            updateTree();
-        });
-
-        // Initial tree rendering - this was missing!
-        console.log('Calling initial updateTree to render the data');
-        const { nodes: processedNodes, treeRoots: processedRoots } = updateTree(data);
-        updateDebugInfo('Tree updated. Nodes: ' + processedNodes.length + ', Roots: ' + processedRoots.length);
-        console.log('treeRoots after processing:', processedRoots);
-        console.log('treeRoots length:', processedRoots.length);
-        console.log('nodes after processing:', processedNodes);
-        console.log('nodes length:', processedNodes.length);
-
-        // Add arrow marker for branch connectors
-        svg.append('defs').append('marker')
-            .attr('id', 'arrow')
-            .attr('viewBox', '0 0 10 10')
-            .attr('refX', 10)
-            .attr('refY', 5)
-            .attr('markerWidth', 6)
-            .attr('markerHeight', 6)
-            .attr('orient', 'auto-start-reverse')
-            .append('path')
-            .attr('d', 'M 0 0 L 10 5 L 0 10 z')
-            .attr('fill', '#888');
-    })
-    .catch(err => {
-        d3.select('#output-graph').append('div').text('Failed to load output.json: ' + err);
-    });
-
-// Add this function to define ProcessFilter
-function ProcessFilter() {
-    // Load filters and render dropdown checklist
-    loadJSON('data/Filter.json').then(cfg => {
-        const filterNodes = cfg.filters || [];
-        const container = document.getElementById('filterDropdownContainer');
-        if (!container) return;
-        if (filterNodes.length === 0) {
-            container.innerHTML = '<div class="alert alert-info">No filters added.</div>';
-            return;
-        }
-        let html = '<div class="dropdown-menu show" style="position:relative;display:block;max-width:300px;">';
-        filterNodes.forEach((f, i) => {
-            html += `<div class="form-check">
-                <input class="form-check-input" type="checkbox" value="${f.key}-${f.depth}" id="filterCheck${i}" checked>
-                <label class="form-check-label" for="filterCheck${i}">${f.key} (depth ${f.depth})</label>
-                <button class="btn btn-sm btn-outline-secondary ms-2" onclick="sortFilter('${f.key}', ${f.depth})">Sort</button>
-            </div>`;
-        });
-        html += '</div>';
-        container.innerHTML = html;
-    });
-}
-
-function sortFilter(key, depth) {
-    alert('Sort by ' + key + ' at depth ' + depth);
-}
-</script>
+<script src="view.js"></script>
 </body>
 </html>

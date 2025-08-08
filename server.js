@@ -936,6 +936,23 @@ app.post('/UpdateGraphConfiguration', (req, res) => {
         nodeSize: 22,
         treeOrientation: 'vertical',
         zoomValue: 1
+      },
+      explorerControls: {
+        nodeSpacing: 100,
+        verticalSpacing: 40,
+        textSize: 11,
+        nodeSize: 5,
+        maxDepth: 8,
+        chartSize: 400,
+        orientation: 'vertical',
+        treeShape: 'tree',
+        linkStyle: 'curved',
+        showLabels: true
+      },
+      controlPanelState: {
+        width: '320px',
+        height: '600px',
+        collapsed: false
       }
     };
     
@@ -964,6 +981,27 @@ app.post('/UpdateGraphConfiguration', (req, res) => {
             zoomValue: 1
           };
         }
+        if (!graphConfig.explorerControls) {
+          graphConfig.explorerControls = {
+            nodeSpacing: 100,
+            verticalSpacing: 40,
+            textSize: 11,
+            nodeSize: 5,
+            maxDepth: 8,
+            chartSize: 400,
+            orientation: 'vertical',
+            treeShape: 'tree',
+            linkStyle: 'curved',
+            showLabels: true
+          };
+        }
+        if (!graphConfig.controlPanelState) {
+          graphConfig.controlPanelState = {
+            width: '320px',
+            height: '600px',
+            collapsed: false
+          };
+        }
       } catch (parseErr) {
         console.error('Error parsing existing Graphconf.json:', parseErr);
       }
@@ -978,6 +1016,12 @@ app.post('/UpdateGraphConfiguration', (req, res) => {
     }
     if (req.body.hierarchicalControls) {
       graphConfig.hierarchicalControls = { ...graphConfig.hierarchicalControls, ...req.body.hierarchicalControls };
+    }
+    if (req.body.explorerControls) {
+      graphConfig.explorerControls = { ...graphConfig.explorerControls, ...req.body.explorerControls };
+    }
+    if (req.body.controlPanelState) {
+      graphConfig.controlPanelState = { ...graphConfig.controlPanelState, ...req.body.controlPanelState };
     }
     
     // Save the updated configuration
@@ -998,6 +1042,281 @@ app.post('/UpdateGraphConfiguration', (req, res) => {
       });
     });
   });
+});
+
+// Alias endpoint to update graph controls (same behavior as /UpdateGraphConfiguration)
+app.post('/UpdateGraphControls', (req, res) => {
+  // Reuse logic by internally calling the existing implementation
+  // Duplicate minimal logic to avoid refactor
+  const graphConfigPath = path.join(__dirname, 'data', 'Graphconf.json');
+  fs.readFile(graphConfigPath, 'utf8', (err, data) => {
+    let graphConfig = {};
+    try {
+      graphConfig = data ? JSON.parse(data) : {};
+    } catch (e) { graphConfig = {}; }
+    // Ensure default sections
+    graphConfig.nodePositions = graphConfig.nodePositions || {};
+    graphConfig.graphControls = graphConfig.graphControls || {
+      expandAll: false,
+      collapseAll: false,
+      nodeWidth: 110,
+      nodeSeparation: 60,
+      orientation: 'horizontal',
+      textSize: 12
+    };
+    graphConfig.hierarchicalControls = graphConfig.hierarchicalControls || {
+      nodeSeparation: 100,
+      levelSeparation: 150,
+      nodeSize: 22,
+      treeOrientation: 'vertical',
+      zoomValue: 1
+    };
+    graphConfig.explorerControls = graphConfig.explorerControls || {
+      nodeSpacing: 100,
+      verticalSpacing: 40,
+      textSize: 11,
+      nodeSize: 5,
+      maxDepth: 8,
+      chartSize: 400,
+      orientation: 'vertical',
+      treeShape: 'tree',
+      linkStyle: 'curved',
+      showLabels: true
+    };
+    graphConfig.controlPanelState = graphConfig.controlPanelState || {
+      width: '320px',
+      height: '600px',
+      collapsed: false
+    };
+
+    if (req.body.nodePositions) {
+      graphConfig.nodePositions = { ...graphConfig.nodePositions, ...req.body.nodePositions };
+    }
+    if (req.body.graphControls) {
+      graphConfig.graphControls = { ...graphConfig.graphControls, ...req.body.graphControls };
+    }
+    if (req.body.hierarchicalControls) {
+      graphConfig.hierarchicalControls = { ...graphConfig.hierarchicalControls, ...req.body.hierarchicalControls };
+    }
+    if (req.body.explorerControls) {
+      graphConfig.explorerControls = { ...graphConfig.explorerControls, ...req.body.explorerControls };
+    }
+    if (req.body.controlPanelState) {
+      graphConfig.controlPanelState = { ...graphConfig.controlPanelState, ...req.body.controlPanelState };
+    }
+
+    fs.writeFile(graphConfigPath, JSON.stringify(graphConfig, null, 2), writeErr => {
+      if (writeErr) {
+        return res.status(500).json({ error: 'Failed to save graph configuration', details: writeErr.message });
+      }
+      res.json({ success: true, message: 'Graph configuration updated successfully', configuration: graphConfig });
+    });
+  });
+});
+
+// Save Graph Control Panel Size API
+app.post('/SaveGraphControlSize', (req, res) => {
+  console.log('Received SaveGraphControlSize request:', req.body);
+  
+  const graphConfigPath = path.join(__dirname, 'data', 'Graphconf.json');
+  
+  // Read existing configuration
+  fs.readFile(graphConfigPath, 'utf8', (err, data) => {
+    let graphConfig = { 
+      nodePositions: {},
+      graphControls: {
+        expandAll: false,
+        collapseAll: false,
+        nodeWidth: 110,
+        nodeSeparation: 60,
+        orientation: 'horizontal',
+        textSize: 12
+      },
+      hierarchicalControls: {
+        nodeSeparation: 100,
+        levelSeparation: 150,
+        nodeSize: 22,
+        treeOrientation: 'vertical',
+        zoomValue: 1
+      },
+      explorerControls: {
+        nodeSpacing: 100,
+        verticalSpacing: 40,
+        textSize: 11,
+        nodeSize: 5,
+        maxDepth: 8,
+        chartSize: 400,
+        orientation: 'vertical',
+        treeShape: 'tree',
+        linkStyle: 'curved',
+        showLabels: true
+      },
+      controlPanelState: {
+        width: '320px',
+        height: '600px',
+        collapsed: false
+      }
+    };
+    
+    if (!err && data) {
+      try {
+        graphConfig = JSON.parse(data);
+        if (!graphConfig.controlPanelState) {
+          graphConfig.controlPanelState = {
+            width: '320px',
+            height: '600px',
+            collapsed: false
+          };
+        }
+      } catch (parseErr) {
+        console.error('Error parsing existing Graphconf.json:', parseErr);
+      }
+    }
+    
+    // Update control panel state with new values from request
+    if (req.body) {
+      graphConfig.controlPanelState = { ...graphConfig.controlPanelState, ...req.body };
+    }
+    
+    // Save the updated configuration
+    fs.writeFile(graphConfigPath, JSON.stringify(graphConfig, null, 2), writeErr => {
+      if (writeErr) {
+        console.error('Failed to save control panel state:', writeErr);
+        return res.status(500).json({ 
+          error: 'Failed to save control panel state', 
+          details: writeErr.message 
+        });
+      }
+      
+      console.log('Control panel state saved successfully:', graphConfig.controlPanelState);
+      res.json({ 
+        success: true, 
+        message: 'Control panel state updated successfully',
+        controlPanelState: graphConfig.controlPanelState
+      });
+    });
+  });
+});
+
+// Render Graph API - Save graph configuration for rendering
+app.post('/RenderGraph', (req, res) => {
+  console.log('Received RenderGraph request:', req.body);
+  
+  const graphControlsPath = path.join(__dirname, 'data', 'GraphControls.json');
+  
+  try {
+    // Validate required fields
+    if (!req.body.dataSource || !req.body.visualization) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: dataSource and visualization are required' 
+      });
+    }
+    
+    if (!req.body.dataSource.apiResponse || !req.body.visualization.graphType) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: apiResponse and graphType are required' 
+      });
+    }
+    
+    const configuration = {
+      dataSource: {
+        apiResponse: req.body.dataSource.apiResponse,
+        lastLoaded: new Date().toISOString()
+      },
+      visualization: {
+        graphType: req.body.visualization.graphType,
+        mappings: req.body.visualization.mappings || {}
+      },
+      explorerSettings: {
+        spacing: req.body.explorerSettings?.spacing || 100,
+        verticalSpacing: req.body.explorerSettings?.verticalSpacing || 40,
+        textSize: req.body.explorerSettings?.textSize || 11,
+        maxDepth: req.body.explorerSettings?.maxDepth || 8
+      },
+      metadata: {
+        createdAt: new Date().toISOString(),
+        version: '1.0'
+      }
+    };
+    
+    // Save the configuration
+    fs.writeFileSync(graphControlsPath, JSON.stringify(configuration, null, 2));
+    
+    console.log('Graph configuration saved successfully:', configuration);
+    res.json({ 
+      success: true, 
+      message: 'Graph configuration saved successfully',
+      configuration: configuration
+    });
+    
+  } catch (error) {
+    console.error('Failed to save graph configuration:', error);
+    res.status(500).json({ 
+      error: 'Failed to save graph configuration', 
+      details: error.message 
+    });
+  }
+});
+
+// Save (auto) Graph Controls without full render
+app.post('/SaveGraphControls', (req, res) => {
+  const graphControlsPath = path.join(__dirname, 'data', 'GraphControls.json');
+  let existing = {};
+  try {
+    if (fs.existsSync(graphControlsPath)) {
+      existing = JSON.parse(fs.readFileSync(graphControlsPath, 'utf8')) || {};
+    }
+  } catch (e) {
+    existing = {};
+  }
+  // Initialize structure if missing
+  if (!existing.metadata) existing.metadata = { createdAt: new Date().toISOString(), version: '1.0' };
+  if (!existing.dataSource) existing.dataSource = {};
+  if (!existing.visualization) existing.visualization = { mappings: {} };
+  if (!existing.explorerSettings) existing.explorerSettings = {};
+
+  // Merge incoming
+  if (req.body.dataSource) {
+    existing.dataSource = { ...existing.dataSource, ...req.body.dataSource };
+    if (!existing.dataSource.lastLoaded) existing.dataSource.lastLoaded = new Date().toISOString();
+  }
+  if (req.body.visualization) {
+    existing.visualization = {
+      ...existing.visualization,
+      ...req.body.visualization,
+      mappings: { ...(existing.visualization.mappings||{}), ...(req.body.visualization.mappings||{}) }
+    };
+  }
+  if (req.body.explorerSettings) {
+    existing.explorerSettings = { ...existing.explorerSettings, ...req.body.explorerSettings };
+  }
+  existing.metadata.updatedAt = new Date().toISOString();
+
+  try {
+    fs.writeFileSync(graphControlsPath, JSON.stringify(existing, null, 2));
+    res.json({ success: true, configuration: existing });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to save graph controls', details: err.message });
+  }
+});
+
+// Serve directory listings for API responses
+app.get('/data/ApiResponse', (req, res) => {
+  const apiResponseDir = path.join(__dirname, 'data', 'ApiResponse');
+  
+  try {
+    if (!fs.existsSync(apiResponseDir)) {
+      return res.json([]);
+    }
+    
+    const files = fs.readdirSync(apiResponseDir);
+    const jsonFiles = files.filter(file => file.endsWith('.json'));
+    
+    res.json(jsonFiles);
+  } catch (error) {
+    console.error('Error reading ApiResponse directory:', error);
+    res.status(500).json({ error: 'Failed to read directory' });
+  }
 });
 
 // Endpoint to set starting node position based on monitor resolution
@@ -1265,6 +1584,29 @@ app.post('/CreateApplication', (req, res) => {
       });
     });
   });
+});
+
+// Endpoint to list available API response files
+app.get('/api/list-api-responses', (req, res) => {
+    try {
+        const apiResponseDir = path.join(__dirname, 'data', 'ApiResponse');
+        
+        // Check if directory exists
+        if (!fs.existsSync(apiResponseDir)) {
+            fs.mkdirSync(apiResponseDir, { recursive: true });
+            return res.json([]);
+        }
+        
+        // Get all JSON files from ApiResponse directory
+        const files = fs.readdirSync(apiResponseDir)
+            .filter(file => file.endsWith('.json'))
+            .sort();
+        
+        res.json(files);
+    } catch (error) {
+        console.error('Error listing API response files:', error);
+        res.status(500).json({ error: 'Failed to list API response files' });
+    }
 });
 
 // Start Express server

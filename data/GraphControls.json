@@ -1,0 +1,24 @@
+{
+  "dataSource": {
+    "apiResponse": "countries-world.json",
+    "lastLoaded": "2025-08-08T05:50:05.696Z"
+  },
+  "visualization": {
+    "graphType": "bar-chart",
+    "mappings": {
+      "rowPath": "response.data.wb:countries.wb:country",
+      "x": "wb:name",
+      "y": "wb:longitude"
+    }
+  },
+  "explorerSettings": {
+    "spacing": 200,
+    "verticalSpacing": 20,
+    "textSize": 14,
+    "maxDepth": 6
+  },
+  "metadata": {
+    "createdAt": "2025-08-08T05:50:05.696Z",
+    "version": "1.0"
+  }
+}

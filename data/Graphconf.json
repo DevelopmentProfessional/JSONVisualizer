@@ -8,10 +8,10 @@
   "graphControls": {
     "expandAll": false,
     "collapseAll": false,
-    "nodeWidth": 110,
+    "nodeWidth": 380,
     "nodeSeparation": 60,
     "orientation": "horizontal",
-    "textSize": 12
+    "textSize": 24
   },
   "hierarchicalControls": {
     "nodeSeparation": 100,
@@ -19,5 +19,23 @@
     "nodeSize": 22,
     "treeOrientation": "vertical",
     "zoomValue": 1
+  },
+  "explorerControls": {
+    "nodeSpacing": 200,
+    "verticalSpacing": 20,
+    "textSize": 14,
+    "nodeSize": 6,
+    "maxDepth": 6,
+    "chartSize": 450,
+    "orientation": "vertical",
+    "treeShape": "tree",
+    "linkStyle": "curved",
+    "showLabels": true,
+    "lastUpdated": "2025-08-08T04:34:45.038Z"
+  },
+  "controlPanelState": {
+    "width": "320px",
+    "height": "600px",
+    "collapsed": false
   }
 }

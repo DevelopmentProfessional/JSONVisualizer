@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Controls - JSON Visualizer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #212529;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .left-panel {
+            width: 350px;
+            min-width: 300px;
+            max-width: 450px;
+            background: rgba(0, 0, 0, 0.8);
+            border-right: 2px solid #444;
+            padding: 15px;
+            overflow-y: auto;
+            resize: horizontal;
+        }
+        
+        .json-explorer-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            overflow: hidden;
+        }
+        
+        .explorer-header {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
+            border-bottom: 2px solid #555;
+            margin-bottom: 0;
+        }
+        
+        .explorer-content {
+            flex: 1;
+            background: #1a1a1a;
+            border-radius: 0 0 8px 8px;
+            border: 2px solid #555;
+            border-top: none;
+            padding: 15px;
+            overflow: auto;
+            position: relative;
+        }
+        
+        .section-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #444;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background: #333;
+            padding: 12px 15px;
+            border-bottom: 1px solid #555;
+            font-weight: 600;
+        }
+        
+        .section-body {
+            padding: 15px;
+        }
+        
+        .render-btn-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .render-btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .render-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+        
+        .variables-preview {
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .variable-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #17a2b8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .variable-path {
+            font-family: 'Courier New', monospace;
+            color: #ffd700;
+        }
+        
+        .variable-type {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+        
+        .drop-zone {
+            border: 2px dashed #666;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+            color: #999;
+            transition: all 0.3s ease;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .drop-zone.dragover {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+        
+        .drop-zone.has-value {
+            border-color: #17a2b8;
+            background: rgba(23, 162, 184, 0.1);
+            color: #17a2b8;
+        }
+        
+        .navbar {
+            background: #343a40 !important;
+            border-bottom: 2px solid #495057;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            color: #fff !important;
+        }
+        
+        .nav-link {
+            color: #adb5bd !important;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: #fff !important;
+        }
+        
+        .nav-link.active {
+            color: #17a2b8 !important;
+            font-weight: 600;
+        }
+        
+        #jsonExplorerChart {
+            height: calc(100vh - 200px);
+            background: #2d2d2d;
+            border-radius: 8px;
+            border: 1px solid #555;
+            user-select: none; /* Disable text selection in the entire chart */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        .mapping-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #666;
+            color: #fff;
+        }
+        
+        .mapping-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #17a2b8;
+            color: #fff;
+            box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+        }
+        
+        .status-indicator {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+        
+        .status-indicator.show {
+            opacity: 1;
+        }
+        
+        .status-success {
+            background: rgba(40, 167, 69, 0.9);
+            color: white;
+        }
+        
+        .status-error {
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+        }
+        
+        .status-info {
+            background: rgba(23, 162, 184, 0.9);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-graph-up"></i> JSON Visualizer - Graph Controls
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="view.html">
+                    <i class="bi bi-eye"></i> View Charts
+                </a>
+                <a class="nav-link active" href="GraphControls.html">
+                    <i class="bi bi-sliders"></i> Graph Controls
+                </a>
+                <a class="nav-link" href="admin.html">
+                    <i class="bi bi-gear"></i> Admin
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Status Indicator -->
+    <div id="statusIndicator" class="status-indicator"></div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Left Panel -->
+        <div class="left-panel">
+            <!-- Data Source Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <i class="bi bi-database"></i> Data Source
+                </div>
+                <div class="section-body">
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">API Response</span>
+                        <select id="apiResponseSelector" class="form-select" onchange="loadSelectedApiResponse()">
+                            <option value="">-- Select API Response --</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i> 
+                            Select the API response file to visualize
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualization Configuration Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <i class="bi bi-bar-chart"></i> Visualization
+                </div>
+                <div class="section-body">
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Graph Type</span>
+                        <select id="graphTypeSelector" class="form-select" onchange="selectGraphType()">
+                            <option value="">-- Select Graph Type --</option>
+                            <option value="tree">Tree (Hierarchical)</option>
+                            <option value="force-directed">Force-Directed Network</option>
+                            <option value="bar-chart">Bar Chart</option>
+                            <option value="map">Map Chart</option>
+                        </select>
+                    </div>
+
+                    <!-- Graph Input Mappings -->
+                    <div id="graphInputMappings" style="display: none;">
+                        <div class="mb-2">
+                            <label class="form-label small">Field Mappings:</label>
+                        </div>
+                        <div id="mappingControls"></div>
+                        
+                        <!-- Variables Preview Table -->
+                        <div id="variablesPreview" class="variables-preview">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>Selected Variables Preview</strong>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="clearAllMappings()">
+                                    <i class="bi bi-x"></i> Clear All
+                                </button>
+                            </div>
+                            <div id="variablesTable"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <div class="d-grid gap-2">
+                            <button id="previewBtn" class="btn btn-outline-info btn-sm" onclick="previewMappings()" disabled>
+                                <i class="bi bi-eye"></i> Preview Mappings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- JSON Explorer Container -->
+        <div class="json-explorer-container">
+            <div class="explorer-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-list-nested"></i> JSON Explorer
+                    </h4>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-light" onclick="expandAllExplorerNodes()" title="Expand All">
+                            <i class="bi bi-chevron-expand"></i>
+                        </button>
+                        <button class="btn btn-outline-light" onclick="collapseAllExplorerNodes()" title="Collapse All">
+                            <i class="bi bi-chevron-contract"></i>
+                        </button>
+                        <button class="btn btn-outline-light" onclick="centerExplorerView()" title="Center View">
+                            <i class="bi bi-bullseye"></i>
+                        </button>
+                        <button class="btn btn-outline-light" onclick="toggleAdvancedControls()" title="Advanced Controls">
+                            <i class="bi bi-gear"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="explorer-content">
+                <!-- Advanced Controls (Initially Hidden) -->
+                <div id="advancedExplorerControls" class="mb-3" style="display: none;">
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <label class="form-label small">Node Spacing:</label>
+                            <div class="d-flex align-items-center">
+                                <input type="range" id="explorerSpacingSlider" class="form-range me-2" min="50" max="500" value="100" step="10" style="width: 80px;" oninput="updateExplorerSpacing(this.value)">
+                                <small id="explorerSpacingValue" class="text-muted">100</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Vertical Spacing:</label>
+                            <div class="d-flex align-items-center">
+                                <input type="range" id="explorerVerticalSpacingSlider" class="form-range me-2" min="20" max="300" value="40" step="5" style="width: 80px;" oninput="updateExplorerVerticalSpacing(this.value)">
+                                <small id="explorerVerticalSpacingValue" class="text-muted">40</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Text Size:</label>
+                            <div class="d-flex align-items-center">
+                                <input type="range" id="explorerTextSizeSlider" class="form-range me-2" min="8" max="20" value="11" step="1" style="width: 60px;" oninput="updateExplorerTextSize(this.value)">
+                                <small id="explorerTextSizeValue" class="text-muted">11</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Max Depth:</label>
+                            <div class="d-flex align-items-center">
+                                <input type="range" id="explorerMaxDepthSlider" class="form-range me-2" min="2" max="10" value="8" step="1" style="width: 60px;" oninput="updateExplorerMaxDepth(this.value)">
+                                <small id="explorerMaxDepthValue" class="text-muted">8</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Node Size:</label>
+                            <div class="d-flex align-items-center">
+                                <input type="range" id="explorerNodeSizeSlider" class="form-range me-2" min="3" max="20" value="6" step="1" style="width: 60px;" oninput="updateExplorerNodeSize(this.value)">
+                                <small id="explorerNodeSizeValue" class="text-muted">6</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-2 mt-2">
+                        <div class="col-md-2">
+                            <label class="form-label small">Orientation</label>
+                            <select id="explorerOrientationSelect" class="form-select form-select-sm" onchange="updateExplorerOrientation(this.value)">
+                                <option value="vertical">Vertical</option>
+                                <option value="horizontal">Horizontal</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Tree Shape</label>
+                            <select id="explorerTreeShapeSelect" class="form-select form-select-sm" onchange="updateExplorerTreeShape(this.value)">
+                                <option value="tree">Tree</option>
+                                <option value="cluster">Cluster</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Link Style</label>
+                            <select id="explorerLinkStyleSelect" class="form-select form-select-sm" onchange="updateExplorerLinkStyle(this.value)">
+                                <option value="curved">Curved</option>
+                                <option value="straight">Straight</option>
+                                <option value="elbow">Elbow</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Chart Size</label>
+                            <div class="d-flex align-items-center">
+                                <input type="range" id="explorerChartSizeSlider" class="form-range me-2" min="300" max="1200" value="450" step="50" style="width: 80px;" oninput="updateExplorerChartSize(this.value)">
+                                <small id="explorerChartSizeValue" class="text-muted">450</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="explorerShowLabelsChk" checked onchange="updateExplorerShowLabels(this.checked)">
+                                <label class="form-check-label small" for="explorerShowLabelsChk">Show Labels</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JSON Explorer Chart -->
+                <div id="jsonExplorerChart">
+                    <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                        <div class="text-center">
+                            <i class="bi bi-file-earmark-code" style="font-size: 3rem;"></i>
+                            <p class="mt-2">Select an API response to explore its structure</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Render Button -->
+    <div class="render-btn-container">
+        <button id="renderBtn" class="btn render-btn" onclick="renderGraph()" disabled>
+            <i class="bi bi-play-circle-fill"></i> Render Graph
+        </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        // Global variables
+        let currentApiData = null;
+        let currentGraphType = null;
+        let graphMappings = {};
+        let availableJsonPaths = [];
+        let explorerZoom = null;
+        let explorerRoot = null;
+        let explorerUpdate = null;
+        let explorerSpacing = 100;
+        let explorerVerticalSpacing = 40;
+        let explorerTextSize = 11;
+        let explorerMaxDepth = 8;
+        // New advanced explorer control variables (from Graphconf.json)
+        let explorerNodeSize = 6;
+        let explorerOrientation = 'vertical';
+        let explorerTreeShape = 'tree';
+        let explorerLinkStyle = 'curved';
+        let explorerShowLabels = true;
+        let explorerChartSize = 450;
+        let saveExplorerConfigDebounce = null;
+
+        // Button state updater (re-added)
+        function updateRenderButtonState() {
+            const renderBtn = document.getElementById('renderBtn');
+            const previewBtn = document.getElementById('previewBtn');
+            if (!renderBtn || !previewBtn) return;
+            const hasData = !!currentApiData;
+            const hasGraphType = !!currentGraphType;
+            const hasRowPath = !!(graphMappings.rowPath && graphMappings.rowPath.trim() !== '');
+            const requiredRolesMap = {
+                'tree': ['label'],
+                'force-directed': ['source','target'],
+                'bar-chart': ['x','y'],
+                'map': ['latitude','longitude']
+            };
+            let hasRequired = true;
+            if (hasGraphType && requiredRolesMap[currentGraphType]) {
+                hasRequired = requiredRolesMap[currentGraphType].every(r => graphMappings[r] && graphMappings[r].trim() !== '');
+            }
+            const canRender = hasData && hasGraphType && hasRowPath && hasRequired;
+            renderBtn.disabled = !canRender;
+            previewBtn.disabled = !hasData || !hasGraphType || !hasRowPath || Object.keys(graphMappings).filter(k => graphMappings[k] && k !== 'rowPath').length === 0;
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAvailableApiResponses();
+            loadSavedConfiguration();
+            loadExplorerControlsFromGraphconf();
+        });
+
+        // Load available API response files
+        async function loadAvailableApiResponses() {
+            try {
+                const response = await fetch('/data/ApiResponse');
+                if (!response.ok) throw new Error('Failed to load API responses');
+                
+                const files = await response.json();
+                const selector = document.getElementById('apiResponseSelector');
+                
+                selector.innerHTML = '<option value="">-- Select API Response --</option>';
+                files.forEach(file => {
+                    if (file.endsWith('.json')) {
+                        const option = document.createElement('option');
+                        option.value = file;
+                        option.textContent = file.replace('.json', '');
+                        selector.appendChild(option);
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading API responses:', error);
+                showStatus('Failed to load API responses', 'error');
+            }
+        }
+
+        // Load selected API response
+        async function loadSelectedApiResponse() {
+            const selector = document.getElementById('apiResponseSelector');
+            const selectedFile = selector.value;
+            
+            if (!selectedFile) {
+                currentApiData = null;
+                clearJsonExplorer();
+                updateRenderButtonState();
+                return;
+            }
+            
+            try {
+                showStatus('Loading API response...', 'info');
+                const response = await fetch(`/data/ApiResponse/${selectedFile}`);
+                if (!response.ok) throw new Error(`Failed to load ${selectedFile}`);
+                
+                currentApiData = await response.json();
+                displayJsonExplorer(currentApiData);
+                updateRenderButtonState();
+                showStatus('API response loaded successfully', 'success');
+            } catch (error) {
+                console.error('Error loading API response:', error);
+                showStatus(`Failed to load ${selectedFile}`, 'error');
+                currentApiData = null;
+                clearJsonExplorer();
+                updateRenderButtonState();
+            }
+        }
+
+        // Clear JSON Explorer
+        function clearJsonExplorer() {
+            const chart = document.getElementById('jsonExplorerChart');
+            chart.innerHTML = `
+                <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                    <div class="text-center">
+                        <i class="bi bi-file-earmark-code" style="font-size: 3rem;"></i>
+                        <p class="mt-2">Select an API response to explore its structure</p>
+                    </div>
+                </div>
+            `;
+            availableJsonPaths = [];
+        }
+
+        // Display JSON structure explorer as D3 hierarchical chart
+        function displayJsonExplorer(data) {
+            const chartContainer = document.getElementById('jsonExplorerChart');
+            availableJsonPaths = [];
+            // Adjust chart container size based on explorerChartSize
+            chartContainer.style.height = explorerChartSize + 'px';
+            
+            // Clear existing chart
+            d3.select('#jsonExplorerChart').selectAll('*').remove();
+            
+            // Extract data portion from response
+            let explorerData = data;
+            if (data && typeof data === 'object') {
+                if (data.data) {
+                    explorerData = data.data;
+                } else if (data.response && data.response.data) {
+                    explorerData = data.response.data;
+                } else if (data.result) {
+                    explorerData = data.result;
+                } else if (data.payload) {
+                    explorerData = data.payload;
+                }
+            }
+            
+            // Build hierarchical data structure
+            function buildHierarchy(obj, path = '', depth = 0) {
+                if (depth > explorerMaxDepth) return null;
+                
+                const node = {
+                    name: path === '' ? 'root' : path.split('.').pop(),
+                    path: path === '' ? 'data' : path,
+                    value: null,
+                    type: Array.isArray(obj) ? 'array' : typeof obj,
+                    children: [],
+                    depth: depth
+                };
+                
+                // Add to paths for drag and drop
+                if (path) {
+                    availableJsonPaths.push({
+                        path: path,
+                        type: node.type,
+                        sample: Array.isArray(obj) ? `[${obj.length} items]` : 
+                               typeof obj === 'object' ? '[object]' : 
+                               String(obj).length > 50 ? String(obj).substring(0, 50) + '...' : String(obj)
+                    });
+                }
+                
+                if (typeof obj === 'object' && obj !== null) {
+                    const entries = Array.isArray(obj) ? 
+                        obj.slice(0, 5).map((item, i) => [i, item]) : // Show first 5 array items
+                        Object.entries(obj);
+                        
+                    entries.forEach(([key, value]) => {
+                        const childPath = path === '' ? String(key) : `${path}.${key}`;
+                        const childNode = buildHierarchy(value, childPath, depth + 1);
+                        if (childNode) {
+                            node.children.push(childNode);
+                        }
+                    });
+                    
+                    if (Array.isArray(obj) && obj.length > 5) {
+                        node.children.push({
+                            name: `... ${obj.length - 5} more items`,
+                            path: `${path}[...]`,
+                            type: 'placeholder',
+                            children: [],
+                            depth: depth + 1
+                        });
+                    }
+                } else {
+                    node.value = obj;
+                }
+                
+                return node;
+            }
+            
+            const hierarchyData = buildHierarchy(explorerData);
+            
+            if (!hierarchyData) {
+                showStatus('Failed to build hierarchy data', 'error');
+                return;
+            }
+            
+            // D3 tree layout
+            const containerRect = chartContainer.getBoundingClientRect();
+            const width = containerRect.width - 20;
+            const height = containerRect.height - 20;
+            const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+
+            const svg = d3.select('#jsonExplorerChart')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height)
+                .style('background', '#2d2d2d')
+                .style('border-radius', '4px')
+                .style('cursor', 'grab');
+            
+            // Add zoom and pan
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 3])
+                .on('zoom', function(event) {
+                    g.attr('transform', event.transform);
+                });
+            
+            explorerZoom = zoom;
+            svg.call(zoom);
+            
+            svg.on('mousedown', function() {
+                svg.style('cursor', 'grabbing');
+            }).on('mouseup', function() {
+                svg.style('cursor', 'grab');
+            });
+            
+            const g = svg.append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+            
+            // Create tree layout
+            const treeLayout = d3.tree()
+                .size([width - margin.left - margin.right, height - margin.top - margin.bottom]);
+            
+            treeLayout.separation((a, b) => {
+                const baseSpacing = explorerVerticalSpacing / 40;
+                return (a.parent === b.parent ? baseSpacing : baseSpacing * 1.5);
+            });
+            
+            const root = d3.hierarchy(hierarchyData);
+            explorerRoot = root;
+            
+            // Initially expand first 2 levels
+            root.descendants().forEach(d => {
+                if (d.depth < 2) {
+                    d._children = null;
+                } else {
+                    d._children = d.children;
+                    d.children = null;
+                }
+            });
+            
+            function update(source) {
+                // Choose layout based on tree shape
+                const layout = (explorerTreeShape === 'cluster' ? d3.cluster() : d3.tree())
+                    .size([
+                        explorerOrientation === 'vertical' ? (width - margin.left - margin.right) : (height - margin.top - margin.bottom),
+                        explorerOrientation === 'vertical' ? (height - margin.top - margin.bottom) : (width - margin.left - margin.right)
+                    ]);
+                layout.separation((a, b) => {
+                    const baseSpacing = explorerVerticalSpacing / 40;
+                    return (a.parent === b.parent ? baseSpacing : baseSpacing * 1.5);
+                });
+                const treeData = layout(root);
+                const nodes = treeData.descendants();
+                const links = treeData.descendants().slice(1);
+                
+                // Update node positions
+                nodes.forEach(d => {
+                    if (explorerOrientation === 'vertical') {
+                        d.y = d.depth * explorerSpacing;
+                        d.x = d.x * (explorerVerticalSpacing / 40);
+                    } else {
+                        d.x = d.depth * explorerSpacing;
+                        d.y = d.x * (explorerVerticalSpacing / 40); // temporary swapped logic
+                    }
+                });
+                
+                // Add links first (behind nodes) - use stable key based on data path
+                const link = g.selectAll('.json-link')
+                    .data(links, d => (d && d.data && d.data.path) ? d.data.path : `${d.depth}-${d.index}`);
+                
+                const linkEnter = link.enter().append('path')
+                    .attr('class', 'json-link')
+                    .style('fill', 'none')
+                    .style('stroke', '#666')
+                    .style('stroke-width', '1px')
+                    .style('opacity', '0.6');
+                
+                const linkUpdate = linkEnter.merge(link);
+                
+                linkUpdate.attr('d', d => {
+                    const sx = d.parent.x, sy = d.parent.y, tx = d.x, ty = d.y;
+                    if (explorerLinkStyle === 'straight') {
+                        return `M${sy},${sx}L${ty},${tx}`;
+                    } else if (explorerLinkStyle === 'elbow') {
+                        return `M${sy},${sx}L${(sy+ty)/2},${sx}L${(sy+ty)/2},${tx}L${ty},${tx}`;
+                    } else { // curved
+                        return `M${ty},${tx}C${(ty + sy) / 2},${tx} ${(ty + sy) / 2},${sx} ${sy},${sx}`;
+                    }
+                });
+                
+                link.exit().remove();
+                
+                // Add nodes - stable key based on path
+                const node = g.selectAll('.json-node')
+                    .data(nodes, d => (d && d.data && d.data.path) ? d.data.path : `${d.depth}-${d.index}`);
+                
+                const nodeEnter = node.enter().append('g')
+                    .attr('class', 'json-node')
+                    .attr('transform', d => `translate(${d.y},${d.x})`)
+                    .style('cursor', 'pointer');
+                
+                // Add circles
+                nodeEnter.append('circle')
+                    .attr('r', explorerNodeSize)
+                    .style('fill', d => {
+                        if (d.data.type === 'object') return '#4fc3f7';
+                        if (d.data.type === 'array') return '#ff9800';
+                        if (d.data.type === 'string') return '#4caf50';
+                        if (d.data.type === 'number') return '#f44336';
+                        if (d.data.type === 'boolean') return '#9c27b0';
+                        return '#666';
+                    })
+                    .style('stroke', '#fff')
+                    .style('stroke-width', '2px')
+                    .style('cursor', 'pointer')
+                    .attr('draggable', false); // Explicitly not draggable
+                
+                // Add expand/collapse indicators
+                nodeEnter.append('text')
+                    .attr('dy', '0.35em')
+                    .attr('x', d => d.children || d._children ? -12 : 0)
+                    .style('text-anchor', 'middle')
+                    .style('font-size', `${explorerTextSize}px`)
+                    .style('font-weight', 'bold')
+                    .style('fill', '#ffd700')
+                    .style('cursor', 'pointer')
+                    .attr('draggable', false) // Not draggable
+                    .text(d => {
+                        if (d.children) return '▼';
+                        if (d._children) return '▶';
+                        return '';
+                    })
+                    .each(function(d) {
+                        // Prevent zoom when clicking expand/collapse
+                        this.addEventListener('mousedown', e => {
+                            e.stopPropagation();
+                        });
+                    });
+                
+                // Add draggable labels
+                nodeEnter.append('text')
+                    .attr('dy', '0.35em')
+                    .attr('x', 8)
+                    .style('text-anchor', 'start')
+                    .style('font-size', `${explorerTextSize}px`)
+                    .style('fill', '#fff')
+                    .style('font-family', 'monospace')
+                    .style('cursor', 'default')
+                    .style('user-select', 'none') // Prevent text selection
+                    .style('-webkit-user-select', 'none')
+                    .style('-moz-user-select', 'none')
+                    .style('-ms-user-select', 'none')
+                    .style('pointer-events', 'none') // Disable mouse events on text
+                    .text(d => {
+                        const name = d.data.name === 'root' ? 'data' : d.data.name;
+                        if (d.data.value !== null && d.data.value !== undefined) {
+                            const valueStr = String(d.data.value);
+                            if (valueStr.length > 20) {
+                                return `${name}: ${valueStr.substring(0, 20)}...`;
+                            }
+                            return `${name}: ${valueStr}`;
+                        }
+                        return name;
+                    });
+                
+                // Add click handle circle for non-array, non-object fields (positioned to the right)
+                nodeEnter.filter(d => d.data.type !== 'array' && d.data.type !== 'object' && d.data.type !== 'placeholder')
+                    .append('circle')
+                    .attr('class', 'click-handle')
+                    .attr('cx', d => {
+                        // Calculate text width to position click handle to the right
+                        const name = d.data.name === 'root' ? 'data' : d.data.name;
+                        let displayText = name;
+                        if (d.data.value !== null && d.data.value !== undefined) {
+                            const valueStr = String(d.data.value);
+                            if (valueStr.length > 20) {
+                                displayText = `${name}: ${valueStr.substring(0, 20)}...`;
+                            } else {
+                                displayText = `${name}: ${valueStr}`;
+                            }
+                        }
+                        // Rough text width calculation (8px per character for monospace)
+                        return 8 + (displayText.length * (explorerTextSize * 0.6)) + 10;
+                    })
+                    .attr('cy', 0)
+                    .attr('r', d => Math.max(explorerNodeSize, 6)) // Same size as main node or minimum 6px
+                    .style('fill', '#007bff')
+                    .style('stroke', '#fff')
+                    .style('stroke-width', '2px')
+                    .style('cursor', 'pointer')
+                    .style('opacity', '0.9')
+                    .on('mouseenter', function() {
+                        d3.select(this)
+                            .style('opacity', '1')
+                            .attr('r', d => Math.max(explorerNodeSize + 2, 8))
+                            .style('fill', '#0056b3');
+                    })
+                    .on('mouseleave', function() {
+                        d3.select(this)
+                            .style('opacity', '0.9')
+                            .attr('r', d => Math.max(explorerNodeSize, 6))
+                            .style('fill', '#007bff');
+                    })
+                    .on('click', function(event, d) {
+                        event.stopPropagation();
+                        showFieldMappingPopup(d.data.path, event.pageX, event.pageY);
+                    });
+                
+                // Add click icon overlay for better visibility
+                nodeEnter.filter(d => d.data.type !== 'array' && d.data.type !== 'object' && d.data.type !== 'placeholder')
+                    .append('text')
+                    .attr('class', 'click-icon')
+                    .attr('x', d => {
+                        // Position icon in the center of the click handle
+                        const name = d.data.name === 'root' ? 'data' : d.data.name;
+                        let displayText = name;
+                        if (d.data.value !== null && d.data.value !== undefined) {
+                            const valueStr = String(d.data.value);
+                            if (valueStr.length > 20) {
+                                displayText = `${name}: ${valueStr.substring(0, 20)}...`;
+                            } else {
+                                displayText = `${name}: ${valueStr}`;
+                            }
+                        }
+                        return 8 + (displayText.length * (explorerTextSize * 0.6)) + 10;
+                    })
+                    .attr('y', 0)
+                    .attr('dy', '0.35em')
+                    .style('text-anchor', 'middle')
+                    .style('font-size', '10px')
+                    .style('fill', '#fff')
+                    .style('pointer-events', 'none')
+                    .style('user-select', 'none')
+                    .style('font-weight', 'bold')
+                    .text('◐');
+                
+                // Click to expand/collapse - attach to circles and expand/collapse indicators
+                nodeEnter.select('circle').on('click', function(event, d) {
+                    event.stopPropagation();
+                    if (d.children) {
+                        d._children = d.children;
+                        d.children = null;
+                    } else {
+                        d.children = d._children;
+                        d._children = null;
+                    }
+                    update(d);
+                });
+                
+                // Also add click to expand/collapse indicators
+                nodeEnter.selectAll('text:first-of-type').on('click', function(event, d) {
+                    event.stopPropagation();
+                    if (d.children) {
+                        d._children = d.children;
+                        d.children = null;
+                    } else {
+                        d.children = d._children;
+                        d._children = null;
+                    }
+                    update(d);
+                });
+                
+                const nodeUpdate = nodeEnter.merge(node);
+                nodeUpdate.attr('transform', d => `translate(${d.y},${d.x})`);
+                
+                // Update main circles
+                nodeUpdate.select('circle:not(.drag-handle)').attr('r', explorerNodeSize);
+                
+                // Update click handles to match node size
+                nodeUpdate.selectAll('.click-handle')
+                    .attr('r', d => Math.max(explorerNodeSize, 6))
+                    .attr('cx', d => {
+                        // Recalculate position based on current text size
+                        const name = d.data.name === 'root' ? 'data' : d.data.name;
+                        let displayText = name;
+                        if (d.data.value !== null && d.data.value !== undefined) {
+                            const valueStr = String(d.data.value);
+                            if (valueStr.length > 20) {
+                                displayText = `${name}: ${valueStr.substring(0, 20)}...`;
+                            } else {
+                                displayText = `${name}: ${valueStr}`;
+                            }
+                        }
+                        return 8 + (displayText.length * (explorerTextSize * 0.6)) + 10;
+                    })
+                    .style('display', explorerShowLabels ? null : 'none');
+                
+                // Update click icons position
+                nodeUpdate.selectAll('.click-icon')
+                    .attr('x', d => {
+                        const name = d.data.name === 'root' ? 'data' : d.data.name;
+                        let displayText = name;
+                        if (d.data.value !== null && d.data.value !== undefined) {
+                            const valueStr = String(d.data.value);
+                            if (valueStr.length > 20) {
+                                displayText = `${name}: ${valueStr.substring(0, 20)}...`;
+                            } else {
+                                displayText = `${name}: ${valueStr}`;
+                            }
+                        }
+                        return 8 + (displayText.length * (explorerTextSize * 0.6)) + 10;
+                    })
+                    .style('display', explorerShowLabels ? null : 'none');
+                
+                // Update text
+                nodeUpdate.selectAll('text')
+                    .style('font-size', `${explorerTextSize}px`);
+                nodeUpdate.selectAll('text:not(.drag-icon):last-of-type')
+                    .style('display', explorerShowLabels ? null : 'none');
+                
+                node.exit().remove();
+            }
+            
+            explorerUpdate = update;
+            update(root);
+        }
+
+        // Show field mapping popup menu
+        function showFieldMappingPopup(jsonPath, x, y) {
+            // Remove any existing popup
+            const existingPopup = document.getElementById('fieldMappingPopup');
+            if (existingPopup) {
+                existingPopup.remove();
+            }
+            
+            if (!currentGraphType) {
+                showStatus('Please select a graph type first', 'warning');
+                return;
+            }
+            
+            // Check if this is an array path and suggest row mapping
+            const isArrayPath = jsonPath.includes('[') || (currentApiData && isPathToArray(jsonPath));
+            
+            // Get available fields for current graph type
+            const graphRequirements = {
+                'tree': {
+                    required: [
+                        { role: 'label', name: 'Label', description: 'Text to display for each node', dataType: 'any' }
+                    ],
+                    optional: [
+                        { role: 'parent', name: 'Parent', description: 'Parent node reference', dataType: 'any' },
+                        { role: 'value', name: 'Value', description: 'Numeric value for sizing', dataType: 'number' }
+                    ]
+                },
+                'force-directed': {
+                    required: [
+                        { role: 'source', name: 'Source', description: 'Source node identifier', dataType: 'any' },
+                        { role: 'target', name: 'Target', description: 'Target node identifier', dataType: 'any' }
+                    ],
+                    optional: [
+                        { role: 'weight', name: 'Weight', description: 'Connection strength', dataType: 'number' },
+                        { role: 'label', name: 'Label', description: 'Edge label', dataType: 'any' }
+                    ]
+                },
+                'bar-chart': {
+                    required: [
+                        { role: 'x', name: 'X-Axis (Category)', description: 'Categories for X-axis', dataType: 'any' },
+                        { role: 'y', name: 'Y-Axis (Value)', description: 'Numeric values for Y-axis', dataType: 'number' }
+                    ],
+                    optional: [
+                        { role: 'color', name: 'Color', description: 'Category for coloring', dataType: 'any' },
+                        { role: 'tooltip', name: 'Tooltip', description: 'Additional info on hover', dataType: 'any' }
+                    ]
+                },
+                'map': {
+                    required: [
+                        { role: 'latitude', name: 'Latitude', description: 'Latitude coordinates', dataType: 'number' },
+                        { role: 'longitude', name: 'Longitude', description: 'Longitude coordinates', dataType: 'number' }
+                    ],
+                    optional: [
+                        { role: 'label', name: 'Label', description: 'Location label', dataType: 'any' },
+                        { role: 'value', name: 'Value', description: 'Numeric value for sizing', dataType: 'number' }
+                    ]
+                }
+            };
+            
+            const requirements = graphRequirements[currentGraphType];
+            if (!requirements) return;
+            
+            // Create popup element
+            const popup = document.createElement('div');
+            popup.id = 'fieldMappingPopup';
+            popup.style.cssText = `
+                position: fixed;
+                left: ${Math.min(x, window.innerWidth - 280)}px;
+                top: ${Math.min(y, window.innerHeight - 300)}px;
+                background: #2d2d2d;
+                border: 2px solid #007bff;
+                border-radius: 8px;
+                padding: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                z-index: 1000;
+                min-width: 260px;
+                font-family: inherit;
+            `;
+            
+            // Create popup content
+            let html = `
+                <div style="color: #fff; font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #444; padding-bottom: 6px;">
+                    Map "${jsonPath}" to:
+                </div>
+            `;
+            
+            // Analyze field data type for display
+            let fieldDataType = 'unknown';
+            let fieldSample = '';
+            if (!isArrayPath && graphMappings.rowPath) {
+                // Get relative path for data type analysis
+                let relativePath = jsonPath;
+                if (jsonPath.startsWith(graphMappings.rowPath)) {
+                    relativePath = jsonPath.substring(graphMappings.rowPath.length + 1);
+                    if (relativePath.startsWith('[0].')) {
+                        relativePath = relativePath.substring(4);
+                    }
+                }
+                fieldDataType = analyzeFieldDataType(relativePath);
+                
+                // Get sample values
+                const rowDataArray = resolvePath(graphMappings.rowPath);
+                if (Array.isArray(rowDataArray) && rowDataArray.length > 0) {
+                    const sampleValue = resolvePath(relativePath, rowDataArray[0]);
+                    if (sampleValue !== null && sampleValue !== undefined) {
+                        fieldSample = String(sampleValue).length > 30 ? 
+                            String(sampleValue).substring(0, 30) + '...' : 
+                            String(sampleValue);
+                    }
+                }
+            }
+            
+            // Show field type info if not an array
+            if (!isArrayPath && fieldDataType !== 'unknown') {
+                html += `
+                    <div style="margin-bottom: 12px; padding: 6px; background: #1a1a1a; border-radius: 4px; border: 1px solid #666;">
+                        <div style="color: #ccc; font-size: 11px; margin-bottom: 2px;">
+                            <strong>Field Type:</strong> <span style="color: #4fc3f7;">${fieldDataType}</span>
+                            ${fieldSample ? `<br><strong>Sample:</strong> "${fieldSample}"` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Add special option for row path (if this is an array)
+            if (isArrayPath) {
+                html += `
+                    <div style="margin-bottom: 12px; padding: 8px; background: #1a1a1a; border-radius: 4px; border: 1px solid #ffc107;">
+                        <div style="color: #ffc107; font-size: 12px; font-weight: bold; margin-bottom: 4px;">⚡ Array Data Source:</div>
+                        <div class="popup-field-option" data-role="rowPath" style="
+                            padding: 6px 8px;
+                            margin: 2px 0;
+                            background: #444;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            color: #fff;
+                            font-size: 13px;
+                            border: 1px solid transparent;
+                        ">
+                            <strong>Set as Row Data Source</strong>
+                            <div style="font-size: 11px; color: #ccc;">Each item in this array becomes a row</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Add required fields
+            if (requirements.required.length > 0) {
+                html += '<div style="margin-bottom: 8px;">';
+                html += '<div style="color: #dc3545; font-size: 12px; font-weight: bold; margin-bottom: 4px;">Required Fields:</div>';
+                requirements.required.forEach(field => {
+                    // Check compatibility for this field
+                    let isCompatible = true;
+                    let warningMessage = '';
+                    if (!isArrayPath && field.dataType && fieldDataType !== 'unknown') {
+                        isCompatible = isFieldCompatible(fieldDataType, field.dataType);
+                        if (!isCompatible) {
+                            warningMessage = `This field contains ${fieldDataType} data, but ${field.name} requires ${field.dataType} data.`;
+                        }
+                    }
+                    
+                    const isSelected = graphMappings[field.role] === jsonPath;
+                    const backgroundColor = isSelected ? '#4fc3f7' : 
+                                          isCompatible ? '#444' : '#6a2828';
+                    const textColor = isSelected ? '#000' : 
+                                     isCompatible ? '#fff' : '#ff9999';
+                    const borderColor = isSelected ? 'transparent' : 
+                                       isCompatible ? 'transparent' : '#ff6666';
+                    
+                    html += `
+                        <div class="popup-field-option" data-role="${field.role}" style="
+                            padding: 6px 8px;
+                            margin: 2px 0;
+                            background: ${backgroundColor};
+                            border-radius: 4px;
+                            cursor: pointer;
+                            color: ${textColor};
+                            font-size: 13px;
+                            border: 1px solid ${borderColor};
+                        " title="${warningMessage}">
+                            <strong>${field.name}</strong>
+                            <div style="font-size: 11px; color: ${isSelected ? '#333' : '#ccc'};">${field.description}</div>
+                            ${field.dataType && field.dataType !== 'any' ? `<div style="font-size: 10px; color: ${isSelected ? '#333' : '#888'}; margin-top: 2px;">Requires: ${field.dataType}</div>` : ''}
+                            ${!isCompatible ? `<div style="font-size: 10px; color: #ff9999; margin-top: 2px;">⚠ ${warningMessage}</div>` : ''}
+                            ${isSelected ? '<div style="font-size: 10px; color: #000; margin-top: 2px;">✓ Currently mapped</div>' : ''}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            // Add optional fields
+            if (requirements.optional.length > 0) {
+                html += '<div style="margin-bottom: 8px;">';
+                html += '<div style="color: #17a2b8; font-size: 12px; font-weight: bold; margin-bottom: 4px;">Optional Fields:</div>';
+                requirements.optional.forEach(field => {
+                    // Check compatibility for this field
+                    let isCompatible = true;
+                    let warningMessage = '';
+                    if (!isArrayPath && field.dataType && fieldDataType !== 'unknown') {
+                        isCompatible = isFieldCompatible(fieldDataType, field.dataType);
+                        if (!isCompatible) {
+                            warningMessage = `This field contains ${fieldDataType} data, but ${field.name} requires ${field.dataType} data.`;
+                        }
+                    }
+                    
+                    const isSelected = graphMappings[field.role] === jsonPath;
+                    const backgroundColor = isSelected ? '#4fc3f7' : 
+                                          isCompatible ? '#444' : '#6a2828';
+                    const textColor = isSelected ? '#000' : 
+                                     isCompatible ? '#fff' : '#ff9999';
+                    const borderColor = isSelected ? 'transparent' : 
+                                       isCompatible ? 'transparent' : '#ff6666';
+                    
+                    html += `
+                        <div class="popup-field-option" data-role="${field.role}" style="
+                            padding: 6px 8px;
+                            margin: 2px 0;
+                            background: ${backgroundColor};
+                            border-radius: 4px;
+                            cursor: pointer;
+                            color: ${textColor};
+                            font-size: 13px;
+                            border: 1px solid ${borderColor};
+                        " title="${warningMessage}">
+                            <strong>${field.name}</strong>
+                            <div style="font-size: 11px; color: ${isSelected ? '#333' : '#ccc'};">${field.description}</div>
+                            ${field.dataType && field.dataType !== 'any' ? `<div style="font-size: 10px; color: ${isSelected ? '#333' : '#888'}; margin-top: 2px;">Requires: ${field.dataType}</div>` : ''}
+                            ${!isCompatible ? `<div style="font-size: 10px; color: #ff9999; margin-top: 2px;">⚠ ${warningMessage}</div>` : ''}
+                            ${isSelected ? '<div style="font-size: 10px; color: #000; margin-top: 2px;">✓ Currently mapped</div>' : ''}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            // Add cancel button
+            html += `
+                <div style="border-top: 1px solid #444; padding-top: 8px; margin-top: 8px;">
+                    <button id="popupCancel" style="
+                        background: #6c757d;
+                        color: white;
+                        border: none;
+                        padding: 4px 12px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 12px;
+                        width: 100%;
+                    ">Cancel</button>
+                </div>
+            `;
+            
+            popup.innerHTML = html;
+            document.body.appendChild(popup);
+            
+            // Add event listeners
+            popup.querySelectorAll('.popup-field-option').forEach(option => {
+                option.addEventListener('mouseenter', function() {
+                    this.style.background = '#007bff';
+                    this.style.borderColor = '#007bff';
+                });
+                
+                option.addEventListener('mouseleave', function() {
+                    this.style.background = '#444';
+                    this.style.borderColor = 'transparent';
+                });
+                
+                option.addEventListener('click', function() {
+                    const role = this.dataset.role;
+                    
+                    if (role === 'rowPath') {
+                        // Set this as the row data source
+                        const cleanPath = cleanArrayPath(jsonPath);
+                        graphMappings.rowPath = cleanPath;
+                        
+                        // Update row path input (it should already exist)
+                        let rowPathInput = document.querySelector('[data-role="rowPath"]');
+                        if (rowPathInput) {
+                            rowPathInput.value = cleanPath;
+                            rowPathInput.dispatchEvent(new Event('change'));
+                        }
+                        
+                        showStatus(`Set ${cleanPath} as row data source`, 'success');
+                    } else {
+                        // Map to visualization field
+                        const input = document.querySelector(`[data-role="${role}"]`);
+                        if (input) {
+                            // Find the field requirement to check data type compatibility
+                            const allFields = [...requirements.required, ...requirements.optional];
+                            const fieldRequirement = allFields.find(f => f.role === role);
+                            
+                            // If we have a row path, make this a relative path
+                            let finalPath = jsonPath;
+                            if (graphMappings.rowPath && jsonPath.startsWith(graphMappings.rowPath)) {
+                                finalPath = jsonPath.substring(graphMappings.rowPath.length + 1);
+                                if (finalPath.startsWith('[0].')) {
+                                    finalPath = finalPath.substring(4); // Remove [0].
+                                }
+                            }
+                            
+                            // Validate data type compatibility
+                            if (fieldRequirement && fieldRequirement.dataType !== 'any') {
+                                const isCompatible = isFieldCompatible(finalPath, fieldRequirement.dataType);
+                                if (!isCompatible) {
+                                    const fieldDataType = analyzeFieldDataType(finalPath);
+                                    showStatus(`⚠️ Data type mismatch: ${fieldRequirement.name} requires ${fieldRequirement.dataType} data, but this field contains ${fieldDataType} data`, 'warning');
+                                    popup.remove();
+                                    return;
+                                }
+                            }
+                            
+                            input.value = finalPath;
+                            input.dispatchEvent(new Event('change'));
+                            showStatus(`Mapped ${finalPath} to ${role}`, 'success');
+                        }
+                    }
+                    popup.remove();
+                });
+            });
+            
+            // Cancel button
+            popup.querySelector('#popupCancel').addEventListener('click', function() {
+                popup.remove();
+            });
+            
+            // Close popup when clicking outside
+            setTimeout(() => {
+                document.addEventListener('click', function closePopup(e) {
+                    if (!popup.contains(e.target)) {
+                        popup.remove();
+                        document.removeEventListener('click', closePopup);
+                    }
+                });
+            }, 100);
+        }
+
+        // Helper function to check if a path leads to an array
+        function isPathToArray(path) {
+            try {
+                const value = resolvePath(path);
+                return Array.isArray(value);
+            } catch {
+                return false;
+            }
+        }
+
+        // Helper function to clean array paths
+        function cleanArrayPath(path) {
+            // Remove array indices like [0], [1] etc to get the base array path
+            return path.replace(/\[\d+\]/g, '');
+        }
+
+        // Helper function to analyze data type of a field path
+        function analyzeFieldDataType(fieldPath, rowDataArray = null) {
+            if (!fieldPath || !currentApiData) return 'unknown';
+            
+            let dataArray = rowDataArray;
+            if (!dataArray && graphMappings.rowPath) {
+                dataArray = resolvePath(graphMappings.rowPath);
+                if (!Array.isArray(dataArray)) dataArray = null;
+            }
+            
+            if (!dataArray || !dataArray.length) return 'unknown';
+            
+            // Sample first few items to determine data type
+            const sampleSize = Math.min(10, dataArray.length);
+            const values = [];
+            
+            for (let i = 0; i < sampleSize; i++) {
+                const value = resolvePath(fieldPath, dataArray[i]);
+                if (value !== null && value !== undefined && value !== '') {
+                    values.push(value);
+                }
+            }
+            
+            if (values.length === 0) return 'empty';
+            
+            // Analyze the collected values
+            let numericCount = 0;
+            let stringCount = 0;
+            let booleanCount = 0;
+            
+            values.forEach(val => {
+                if (typeof val === 'number' || (!isNaN(parseFloat(val)) && isFinite(val))) {
+                    numericCount++;
+                } else if (typeof val === 'boolean') {
+                    booleanCount++;
+                } else {
+                    stringCount++;
+                }
+            });
+            
+            // Determine predominant type
+            if (numericCount > values.length * 0.8) return 'number';
+            if (booleanCount > values.length * 0.8) return 'boolean';
+            if (stringCount > 0) return 'string';
+            
+            return 'mixed';
+        }
+
+        // Helper function to check if field is compatible with required data type
+        function isFieldCompatible(fieldPath, requiredDataType) {
+            if (requiredDataType === 'any') return true;
+            
+            const fieldDataType = analyzeFieldDataType(fieldPath);
+            
+            switch (requiredDataType) {
+                case 'number':
+                    return fieldDataType === 'number';
+                case 'string':
+                    return fieldDataType === 'string' || fieldDataType === 'mixed';
+                case 'boolean':
+                    return fieldDataType === 'boolean';
+                default:
+                    return true;
+            }
+        }
+
+        // Graph type selection
+        function selectGraphType() {
+            const selector = document.getElementById('graphTypeSelector');
+            currentGraphType = selector.value;
+            
+            if (!currentGraphType) {
+                document.getElementById('graphInputMappings').style.display = 'none';
+                hideVariablesPreview();
+                updateRenderButtonState();
+                return;
+            }
+            
+            loadGraphMappingControls(currentGraphType);
+            document.getElementById('graphInputMappings').style.display = 'block';
+            updateRenderButtonState();
+        }
+
+        // Load mapping controls for selected graph type
+        function loadGraphMappingControls(graphType) {
+            const container = document.getElementById('mappingControls');
+            graphMappings = {};
+            
+            const graphRequirements = {
+                'tree': {
+                    required: [
+                        { role: 'label', name: 'Label', description: 'Text to display for each node' }
+                    ],
+                    optional: [
+                        { role: 'parent', name: 'Parent', description: 'Parent node reference' },
+                        { role: 'value', name: 'Value', description: 'Numeric value for sizing' }
+                    ]
+                },
+                'force-directed': {
+                    required: [
+                        { role: 'source', name: 'Source', description: 'Source node identifier' },
+                        { role: 'target', name: 'Target', description: 'Target node identifier' }
+                    ],
+                    optional: [
+                        { role: 'weight', name: 'Weight', description: 'Connection strength' },
+                        { role: 'label', name: 'Label', description: 'Edge label' }
+                    ]
+                },
+                'bar-chart': {
+                    required: [
+                        { role: 'x', name: 'X-Axis (Category)', description: 'Categories for X-axis' },
+                        { role: 'y', name: 'Y-Axis (Value)', description: 'Numeric values for Y-axis' }
+                    ],
+                    optional: [
+                        { role: 'color', name: 'Color', description: 'Category for coloring' },
+                        { role: 'tooltip', name: 'Tooltip', description: 'Additional info on hover' }
+                    ]
+                },
+                'map': {
+                    required: [
+                        { role: 'latitude', name: 'Latitude', description: 'Latitude coordinates' },
+                        { role: 'longitude', name: 'Longitude', description: 'Longitude coordinates' }
+                    ],
+                    optional: [
+                        { role: 'label', name: 'Label', description: 'Location label' },
+                        { role: 'value', name: 'Value', description: 'Numeric value for sizing' }
+                    ]
+                }
+            };
+            
+            const requirements = graphRequirements[graphType];
+            if (!requirements) {
+                container.innerHTML = '<p class="text-warning">Unknown graph type</p>';
+                return;
+            }
+            
+            let html = '';
+            
+            // Add row path configuration first
+            html += `
+                <div class="mb-3" style="border: 2px solid #ffc107; border-radius: 6px; padding: 10px; background: #1a1a1a;">
+                    <h6 class="text-warning small mb-2">⚡ Data Source Configuration:</h6>
+                    <div class="mb-2">
+                        <div class="input-container">
+                            <input type="text" 
+                                   class="form-control mapping-input" 
+                                   data-role="rowPath"
+                                   placeholder="Path to array containing row data (e.g., response.data.wb:countries.wb:country)"
+                                   style="background: #333; border-color: #ffc107;">
+                        </div>
+                        <small class="text-muted">
+                            <strong>Row Data Source</strong> <span class="text-warning">*</span>
+                            - Path to the array where each item becomes a data row
+                        </small>
+                    </div>
+                </div>
+            `;
+            
+            // Required inputs
+            if (requirements.required.length > 0) {
+                html += '<div class="required-inputs mb-3">';
+                html += '<h6 class="text-danger small">Required Fields (relative to each row):</h6>';
+                requirements.required.forEach(input => {
+                    html += createMappingInput(input, true);
+                });
+                html += '</div>';
+            }
+            
+            // Optional inputs
+            if (requirements.optional.length > 0) {
+                html += '<div class="optional-inputs mb-3">';
+                html += '<h6 class="text-info small">Optional Fields (relative to each row):</h6>';
+                requirements.optional.forEach(input => {
+                    html += createMappingInput(input, false);
+                });
+                html += '</div>';
+            }
+            
+            container.innerHTML = html;
+            
+            // Add event listeners for input changes
+            container.querySelectorAll('.mapping-input').forEach(input => {
+                input.addEventListener('change', function() {
+                    const role = this.dataset.role;
+                    const path = this.value;
+                    graphMappings[role] = path || null;
+                    updateRenderButtonState();
+                    updateVariablesPreview();
+                    autoSaveGraphControls();
+                });
+            });
+            
+            // Enable drag from JSON explorer nodes (removed old timeout)
+        }
+
+        function createMappingInput(input, required) {
+            return `
+                <div class="mb-2">
+                    <div class="input-container">
+                        <input type="text" 
+                               class="form-control mapping-input" 
+                               data-role="${input.role}"
+                               placeholder="Field path relative to each row (e.g., wb:name, wb:incomeLevel.content)"
+                               ${required ? 'required' : ''}>
+                    </div>
+                    <small class="text-muted">
+                        <strong>${input.name}</strong> ${required ? '<span class="text-danger">*</span>' : ''}
+                        - ${input.description}
+                    </small>
+                </div>
+            `;
+        }
+
+        // Preview mappings
+        function previewMappings() {
+            if (!currentApiData || Object.keys(graphMappings).length === 0) {
+                showStatus('No mappings to preview', 'error');
+                return;
+            }
+            updateVariablesPreview();
+            showVariablesPreview();
+        }
+
+        function updateVariablesPreview() {
+            const tableContainer = document.getElementById('variablesTable');
+            if (!tableContainer) return;
+            if (!currentApiData || Object.keys(graphMappings).length === 0) {
+                hideVariablesPreview();
+                return;
+            }
+            const preview = buildPreviewData();
+            if (!preview.rows.length) {
+                tableContainer.innerHTML = '<div class="text-warning small">No preview rows available for current mappings.</div>';
+                return;
+            }
+            let html = '<table class="table table-sm table-dark mb-0"><thead><tr>';
+            preview.columns.forEach(col => { html += `<th>${col}</th>`; });
+            html += '</tr></thead><tbody>';
+            preview.rows.forEach(r => {
+                html += '<tr>' + preview.columns.map(c => `<td>${formatPreviewCell(r[c])}</td>`).join('') + '</tr>';
+            });
+            html += '</tbody></table>';
+            html += `<div class="small text-muted mt-1">Showing ${preview.rows.length} row(s)${preview.truncated ? ' (truncated)' : ''}.</div>`;
+            tableContainer.innerHTML = html;
+            showVariablesPreview();
+        }
+        function formatPreviewCell(val){
+            if (val === null || val === undefined) return '<span class="text-secondary">∅</span>';
+            if (typeof val === 'object') return `<code>${JSON.stringify(val).substring(0,60)}${JSON.stringify(val).length>60?'…':''}</code>`;
+            const s = String(val);
+            return s.length>60 ? s.substring(0,60)+'…' : s;
+        }
+        function resolvePath(pathExpr, baseData = null) {
+            try {
+                if (!pathExpr) return undefined;
+                const data = baseData || currentApiData;
+                const segments = pathExpr.split('.');
+                let cur = data;
+                for (let seg of segments) {
+                    if (!cur) return undefined;
+                    if (seg.includes('[')) {
+                        const base = seg.substring(0, seg.indexOf('['));
+                        const idx = parseInt(seg.substring(seg.indexOf('[')+1, seg.indexOf(']')));
+                        cur = cur[base];
+                        cur = Array.isArray(cur) ? cur[idx] : undefined;
+                    } else {
+                        cur = cur[seg];
+                    }
+                }
+                return cur;
+            } catch { return undefined; }
+        }
+        
+        function buildPreviewData(){
+            const columns = Object.keys(graphMappings).filter(k => graphMappings[k] && k !== 'rowPath');
+            if (!columns.length) return { columns: [], rows: [], truncated: false };
+            
+            // Get the row data array
+            let rowDataArray = [];
+            if (graphMappings.rowPath) {
+                const rowData = resolvePath(graphMappings.rowPath);
+                if (Array.isArray(rowData)) {
+                    rowDataArray = rowData;
+                } else {
+                    console.warn('Row path does not point to an array:', graphMappings.rowPath);
+                    return { columns, rows: [], truncated: false };
+                }
+            } else {
+                // Fallback: try to find arrays in mapped paths
+                for (const role of columns) {
+                    const pathValue = resolvePath(graphMappings[role]);
+                    if (Array.isArray(pathValue)) {
+                        rowDataArray = pathValue;
+                        break;
+                    }
+                }
+            }
+            
+            if (!rowDataArray.length) {
+                return { columns, rows: [], truncated: false };
+            }
+            
+            const limit = 20;
+            const rows = [];
+            
+            for (let i = 0; i < Math.min(rowDataArray.length, limit); i++) {
+                const rowItem = rowDataArray[i];
+                const row = {};
+                
+                columns.forEach(role => {
+                    const fieldPath = graphMappings[role];
+                    if (fieldPath) {
+                        // Resolve field path relative to this row item
+                        row[role] = resolvePath(fieldPath, rowItem);
+                    }
+                });
+                
+                rows.push(row);
+            }
+            
+            return { columns, rows, truncated: rowDataArray.length > limit };
+        }
+
+        function autoSaveGraphControls() {
+            clearTimeout(saveExplorerConfigDebounce);
+            saveExplorerConfigDebounce = setTimeout(() => {
+                const payload = {
+                    visualization: { graphType: currentGraphType, mappings: graphMappings },
+                    explorerControls: {
+                        nodeSpacing: explorerSpacing,
+                        verticalSpacing: explorerVerticalSpacing,
+                        textSize: explorerTextSize,
+                        nodeSize: explorerNodeSize,
+                        maxDepth: explorerMaxDepth,
+                        chartSize: explorerChartSize,
+                        orientation: explorerOrientation,
+                        treeShape: explorerTreeShape,
+                        linkStyle: explorerLinkStyle,
+                        showLabels: explorerShowLabels
+                    }
+                };
+                fetch('/UpdateGraphControls', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).catch(()=>{});
+            }, 300);
+        }
+        async function loadExplorerControlsFromGraphconf() {
+            try {
+                const resp = await fetch('/Graphconf.json');
+                if (!resp.ok) return;
+                const conf = await resp.json();
+                if (conf.explorerControls) {
+                    const ec = conf.explorerControls;
+                    explorerSpacing = ec.nodeSpacing ?? explorerSpacing;
+                    explorerVerticalSpacing = ec.verticalSpacing ?? explorerVerticalSpacing;
+                    explorerTextSize = ec.textSize ?? explorerTextSize;
+                    explorerNodeSize = ec.nodeSize ?? explorerNodeSize;
+                    explorerMaxDepth = ec.maxDepth ?? explorerMaxDepth;
+                    explorerChartSize = ec.chartSize ?? explorerChartSize;
+                    explorerOrientation = ec.orientation ?? explorerOrientation;
+                    explorerTreeShape = ec.treeShape ?? explorerTreeShape;
+                    explorerLinkStyle = ec.linkStyle ?? explorerLinkStyle;
+                    explorerShowLabels = ec.showLabels ?? explorerShowLabels;
+                    // Apply UI values
+                    document.getElementById('explorerSpacingSlider').value = explorerSpacing;
+                    document.getElementById('explorerSpacingValue').textContent = explorerSpacing;
+                    document.getElementById('explorerVerticalSpacingSlider').value = explorerVerticalSpacing;
+                    document.getElementById('explorerVerticalSpacingValue').textContent = explorerVerticalSpacing;
+                    document.getElementById('explorerTextSizeSlider').value = explorerTextSize;
+                    document.getElementById('explorerTextSizeValue').textContent = explorerTextSize;
+                    document.getElementById('explorerNodeSizeSlider').value = explorerNodeSize;
+                    document.getElementById('explorerNodeSizeValue').textContent = explorerNodeSize;
+                    document.getElementById('explorerMaxDepthSlider').value = explorerMaxDepth;
+                    document.getElementById('explorerMaxDepthValue').textContent = explorerMaxDepth;
+                    document.getElementById('explorerChartSizeSlider').value = explorerChartSize;
+                    document.getElementById('explorerChartSizeValue').textContent = explorerChartSize;
+                    document.getElementById('explorerOrientationSelect').value = explorerOrientation;
+                    document.getElementById('explorerTreeShapeSelect').value = explorerTreeShape;
+                    document.getElementById('explorerLinkStyleSelect').value = explorerLinkStyle;
+                    document.getElementById('explorerShowLabelsChk').checked = explorerShowLabels;
+                }
+            } catch(e) { console.warn('Failed to load explorer controls', e); }
+        }
+        // Restore previously saved RenderGraph configuration (GraphControls.json)
+        async function loadSavedConfiguration() {
+            try {
+                const response = await fetch('/data/GraphControls.json');
+                if (!response.ok) return; // silently ignore if not present
+                const config = await response.json();
+                // Restore data source
+                if (config.dataSource && config.dataSource.apiResponse) {
+                    const sel = document.getElementById('apiResponseSelector');
+                    // Wait until options loaded
+                    const ensureOption = () => {
+                        if ([...sel.options].some(o => o.value === config.dataSource.apiResponse)) {
+                            sel.value = config.dataSource.apiResponse;
+                            loadSelectedApiResponse();
+                        } else {
+                            setTimeout(ensureOption, 200);
+                        }
+                    };
+                    ensureOption();
+                }
+                // Visualization
+                if (config.visualization && config.visualization.graphType) {
+                    document.getElementById('graphTypeSelector').value = config.visualization.graphType;
+                    selectGraphType();
+                    if (config.visualization.mappings) {
+                        setTimeout(() => {
+                            Object.entries(config.visualization.mappings).forEach(([role, path]) => {
+                                const input = document.querySelector(`[data-role="${role}"]`);
+                                if (input && path) {
+                                    input.value = path;
+                                    // Remove old drop-zone class logic since we no longer use drop zones
+                                    graphMappings[role] = path;
+                                }
+                            });
+                            updateVariablesPreview();
+                            updateRenderButtonState();
+                        }, 300);
+                    }
+                }
+                // Explorer settings (subset stored in GraphControls.json)
+                if (config.explorerSettings) {
+                    if (config.explorerSettings.spacing !== undefined) {
+                        explorerSpacing = config.explorerSettings.spacing;
+                        document.getElementById('explorerSpacingSlider').value = explorerSpacing;
+                        document.getElementById('explorerSpacingValue').textContent = explorerSpacing;
+                    }
+                    if (config.explorerSettings.verticalSpacing !== undefined) {
+                        explorerVerticalSpacing = config.explorerSettings.verticalSpacing;
+                        document.getElementById('explorerVerticalSpacingSlider').value = explorerVerticalSpacing;
+                        document.getElementById('explorerVerticalSpacingValue').textContent = explorerVerticalSpacing;
+                    }
+                    if (config.explorerSettings.textSize !== undefined) {
+                        explorerTextSize = config.explorerSettings.textSize;
+                        document.getElementById('explorerTextSizeSlider').value = explorerTextSize;
+                        document.getElementById('explorerTextSizeValue').textContent = explorerTextSize;
+                    }
+                    if (config.explorerSettings.maxDepth !== undefined) {
+                        explorerMaxDepth = config.explorerSettings.maxDepth;
+                        document.getElementById('explorerMaxDepthSlider').value = explorerMaxDepth;
+                        document.getElementById('explorerMaxDepthValue').textContent = explorerMaxDepth;
+                    }
+                }
+            } catch (err) {
+                console.warn('No previous configuration to load', err);
+            }
+        }
+        // Status indicator helper
+        function showStatus(message, type) {
+            const indicator = document.getElementById('statusIndicator');
+            if (!indicator) return;
+            indicator.textContent = message;
+            indicator.className = `status-indicator status-${type} show`;
+            setTimeout(() => indicator.classList.remove('show'), 3000);
+        }
+
+        // Explorer button functions
+        function expandAllExplorerNodes() {
+            if (explorerRoot && explorerUpdate) {
+                explorerRoot.descendants().forEach(d => {
+                    if (d._children) {
+                        d.children = d._children;
+                        d._children = null;
+                    }
+                });
+                explorerUpdate(explorerRoot);
+            }
+        }
+
+        function collapseAllExplorerNodes() {
+            if (explorerRoot && explorerUpdate) {
+                explorerRoot.descendants().forEach(d => {
+                    if (d.depth > 1 && d.children) {
+                        d._children = d.children;
+                        d.children = null;
+                    }
+                });
+                explorerUpdate(explorerRoot);
+            }
+        }
+
+        function centerExplorerView() {
+            if (explorerZoom && d3.select('#jsonExplorerChart svg').node()) {
+                const svg = d3.select('#jsonExplorerChart svg');
+                const bounds = svg.select('g').node().getBBox();
+                const svgWidth = +svg.attr('width');
+                const svgHeight = +svg.attr('height');
+                
+                const centerX = svgWidth / 2;
+                const centerY = svgHeight / 2;
+                const x = centerX - bounds.x - bounds.width / 2;
+                const y = centerY - bounds.y - bounds.height / 2;
+                
+                svg.transition().duration(750)
+                    .call(explorerZoom.transform, d3.zoomIdentity.translate(x, y));
+            }
+        }
+
+        function toggleAdvancedControls() {
+            const controls = document.getElementById('advancedExplorerControls');
+            controls.style.display = controls.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Missing utility functions
+        function getSampleDataFromPath(path) {
+            try {
+                const keys = path.split('.');
+                let current = currentApiData;
+                
+                for (let key of keys) {
+                    if (key.includes('[') && key.includes(']')) {
+                        const arrayKey = key.split('[')[0];
+                        const index = parseInt(key.split('[')[1].split(']')[0]) || 0;
+                        current = current[arrayKey] ? current[arrayKey][index] : undefined;
+                    } else {
+                        current = current[key];
+                    }
+                    
+                    if (current === undefined) break;
+                }
+                
+                return current;
+            } catch (error) {
+                return undefined;
+            }
+        }
+
+        function showVariablesPreview() {
+            document.getElementById('variablesPreview').style.display = 'block';
+        }
+
+        function hideVariablesPreview() {
+            document.getElementById('variablesPreview').style.display = 'none';
+        }
+
+        function clearAllMappings() {
+            graphMappings = {};
+            document.querySelectorAll('.mapping-input').forEach(input => {
+                input.value = '';
+                // Remove drop-zone class logic since we no longer use drop zones
+            });
+            hideVariablesPreview();
+            updateRenderButtonState();
+        }
+
+        // Explorer control update functions
+        function updateExplorerSpacing(value) {
+            explorerSpacing = parseInt(value);
+            document.getElementById('explorerSpacingValue').textContent = value;
+            if (explorerUpdate && explorerRoot) {
+                explorerUpdate(explorerRoot);
+            }
+            persistExplorerControls();
+        }
+
+        function updateExplorerVerticalSpacing(value) {
+            explorerVerticalSpacing = parseInt(value);
+            document.getElementById('explorerVerticalSpacingValue').textContent = value;
+            if (explorerUpdate && explorerRoot) {
+                explorerUpdate(explorerRoot);
+            }
+            persistExplorerControls();
+        }
+
+        function updateExplorerTextSize(value) {
+            explorerTextSize = parseInt(value);
+            document.getElementById('explorerTextSizeValue').textContent = value;
+            if (currentApiData) {
+                displayJsonExplorer(currentApiData);
+            }
+            persistExplorerControls();
+        }
+
+        function updateExplorerMaxDepth(value) {
+            explorerMaxDepth = parseInt(value);
+            document.getElementById('explorerMaxDepthValue').textContent = value;
+            if (currentApiData) {
+                displayJsonExplorer(currentApiData);
+            }
+            persistExplorerControls();
+        }
+
+        function updateExplorerNodeSize(value) {
+            explorerNodeSize = parseInt(value);
+            document.getElementById('explorerNodeSizeValue').textContent = value;
+            if (explorerUpdate && explorerRoot) explorerUpdate(explorerRoot);
+            persistExplorerControls();
+        }
+
+        function updateExplorerOrientation(value) {
+            explorerOrientation = value;
+            if (currentApiData) displayJsonExplorer(currentApiData);
+            persistExplorerControls();
+        }
+
+        function updateExplorerTreeShape(value) {
+            explorerTreeShape = value;
+            if (currentApiData) displayJsonExplorer(currentApiData);
+            persistExplorerControls();
+        }
+
+        function updateExplorerLinkStyle(value) {
+            explorerLinkStyle = value;
+            if (explorerUpdate && explorerRoot) explorerUpdate(explorerRoot);
+            persistExplorerControls();
+        }
+
+        function updateExplorerShowLabels(checked) {
+            explorerShowLabels = checked;
+            if (explorerUpdate && explorerRoot) explorerUpdate(explorerRoot);
+            persistExplorerControls();
+        }
+
+        function updateExplorerChartSize(value) {
+            explorerChartSize = parseInt(value);
+            document.getElementById('explorerChartSizeValue').textContent = value;
+            if (currentApiData) displayJsonExplorer(currentApiData);
+            persistExplorerControls();
+        }
+
+        function persistExplorerControls() {
+            clearTimeout(saveExplorerConfigDebounce);
+            saveExplorerConfigDebounce = setTimeout(() => {
+                const payload = {
+                    explorerControls: {
+                        nodeSpacing: explorerSpacing,
+                        verticalSpacing: explorerVerticalSpacing,
+                        textSize: explorerTextSize,
+                        nodeSize: explorerNodeSize,
+                        maxDepth: explorerMaxDepth,
+                        chartSize: explorerChartSize,
+                        orientation: explorerOrientation,
+                        treeShape: explorerTreeShape,
+                        linkStyle: explorerLinkStyle,
+                        showLabels: explorerShowLabels,
+                        lastUpdated: new Date().toISOString()
+                    }
+                };
+                fetch('/UpdateGraphControls', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).catch(()=>{});
+            }, 400);
+        }
+
+        // Render graph function
+        async function renderGraph() {
+            if (!currentApiData || !currentGraphType) {
+                showStatus('Please select both an API response and graph type', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('Saving configuration...', 'info');
+                
+                const configuration = {
+                    dataSource: {
+                        apiResponse: document.getElementById('apiResponseSelector').value,
+                        data: currentApiData
+                    },
+                    visualization: {
+                        graphType: currentGraphType,
+                        mappings: graphMappings
+                    },
+                    explorerSettings: {
+                        spacing: explorerSpacing,
+                        verticalSpacing: explorerVerticalSpacing,
+                        textSize: explorerTextSize,
+                        maxDepth: explorerMaxDepth
+                    },
+                    timestamp: new Date().toISOString()
+                };
+                
+                const response = await fetch('/RenderGraph', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(configuration)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                showStatus('Configuration saved successfully!', 'success');
+                
+                // Redirect to view page after a brief delay
+                setTimeout(() => {
+                    window.location.href = 'view.html';
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Error saving configuration:', error);
+                showStatus('Failed to save configuration', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

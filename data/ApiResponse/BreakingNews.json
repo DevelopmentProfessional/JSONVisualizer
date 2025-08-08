@@ -1,0 +1,418 @@
+{
+  "status": "success",
+  "request": {
+    "method": "GET",
+    "originalUrl": "https://newsdata.io/api/1/latest?apikey={{NewsAPI}}",
+    "interpolatedUrl": "https://newsdata.io/api/1/latest?apikey=pub_ba5cc484e4974aa9a80aefebf4008b99",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": ""
+  },
+  "variables": {
+    "newsapi": "pub_ba5cc484e4974aa9a80aefebf4008b99"
+  },
+  "response": {
+    "status": 200,
+    "statusText": "OK",
+    "headers": {
+      "date": "Fri, 08 Aug 2025 01:19:32 GMT",
+      "server": "Apache/2.4.41 (Ubuntu)",
+      "x_rate_limit_remaining": "29",
+      "x_api_limit_remaining": "199",
+      "access-control-allow-origin": "*",
+      "vary": "Accept-Encoding",
+      "connection": "close",
+      "transfer-encoding": "chunked",
+      "content-type": "application/json"
+    },
+    "data": {
+      "status": "success",
+      "totalResults": 517514,
+      "results": [
+        {
+          "article_id": "e503a5d45a7f5c6c26796c813308b13a",
+          "title": "Простото правило „20-2500“ пести пари на шофьорите на дизели",
+          "link": "https://www.actualno.com/cars/prostoto-pravilo-20-2500-pesti-pari-na-shofiorite-na-dizeli-news_2480800.html",
+          "keywords": [
+            "авто"
+          ],
+          "creator": [
+            "reklama@webground.bg (Actualno.com)"
+          ],
+          "description": "Всеки собственик на дизелов автомобил трябва да помни простото правило „20-2500“. То ще помогне да се избегн...",
+          "content": "ONLY AVAILABLE IN PAID PLANS",
+          "pubDate": "2025-08-07 13:19:00",
+          "pubDateTZ": "UTC",
+          "image_url": "https://cdn.actualno.eu/actualno_2013/upload/news/2025/08/07/3c8608f64a8d7efea2b4e038f70b5846_2480800_1920x1080.jpg",
+          "video_url": null,
+          "source_id": "actualno",
+          "source_name": "Actualno",
+          "source_priority": 8972,
+          "source_url": "https://www.actualno.com",
+          "source_icon": "https://n.bytvi.com/actualno.png",
+          "language": "bulgarian",
+          "country": [
+            "bulgaria"
+          ],
+          "category": [
+            "top"
+          ],
+          "sentiment": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "sentiment_stats": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_tag": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_region": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_org": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_summary": "ONLY AVAILABLE IN PAID PLANS",
+          "ai_content": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "duplicate": false
+        },
+        {
+          "article_id": "882599cc5bcdc8697b08d4f1263064fd",
+          "title": "Wir suchen die besten Bilder eurer Samtpfoten",
+          "link": "https://www.salzburg24.at/news/salzburg/wir-suchen-die-besten-bilder-eurer-samtpfoten-art-298588",
+          "keywords": [
+            "salzburg"
+          ],
+          "creator": [
+            "SALZBURG24"
+          ],
+          "description": "Samtpfoten vor den Vorhang: Anlässlich des morgigen Weltkatzentages möchten wir Salzburgs Stubentigern besondere Aufmerksamkeit schenken. Schickt uns dafür die besten, süßesten oder auch lustigsten Bilder eurer Katzen!",
+          "content": "ONLY AVAILABLE IN PAID PLANS",
+          "pubDate": "2025-08-07 13:19:00",
+          "pubDateTZ": "UTC",
+          "image_url": "https://www.salzburg24.at/storage/image/8/5/7/9/1069758_katze_default-vorschau_1EBas2_1v2vQ9.jpg",
+          "video_url": null,
+          "source_id": "salzburg24",
+          "source_name": "Salzburg24",
+          "source_priority": 2906131,
+          "source_url": "https://www.salzburg24.at",
+          "source_icon": "https://n.bytvi.com/salzburg24.png",
+          "language": "german",
+          "country": [
+            "austria"
+          ],
+          "category": [
+            "top"
+          ],
+          "sentiment": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "sentiment_stats": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_tag": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_region": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_org": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_summary": "ONLY AVAILABLE IN PAID PLANS",
+          "ai_content": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "duplicate": false
+        },
+        {
+          "article_id": "c7b83795b49f7206f6998ad8e3bfa443",
+          "title": "Sleepgasms are real — my climax wakes me up in the mornings",
+          "link": "https://metro.co.uk/2025/08/07/sleepgasms-real-climax-wakes-mornings-23854911/",
+          "keywords": [
+            "sex",
+            "women",
+            "sexual health",
+            "sex tips",
+            "sleep",
+            "lifestyle"
+          ],
+          "creator": [
+            "Alice Giddings"
+          ],
+          "description": "You don't even need a sexy dream to have one.",
+          "content": "ONLY AVAILABLE IN PAID PLANS",
+          "pubDate": "2025-08-07 13:19:00",
+          "pubDateTZ": "UTC",
+          "image_url": "https://metro.co.uk/wp-content/uploads/2025/08/SEI_261413138-e8fb_1754572750.jpg?crop=1&h=630&quality=90&strip=all&w=1200",
+          "video_url": null,
+          "source_id": "metro",
+          "source_name": "Metro",
+          "source_priority": 2575,
+          "source_url": "https://metro.co.uk",
+          "source_icon": "https://n.bytvi.com/metro.png",
+          "language": "english",
+          "country": [
+            "united kingdom"
+          ],
+          "category": [
+            "top"
+          ],
+          "sentiment": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "sentiment_stats": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_tag": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_region": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_org": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_summary": "ONLY AVAILABLE IN PAID PLANS",
+          "ai_content": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "duplicate": false
+        },
+        {
+          "article_id": "9fbb9dc9f43c47aa6596db04431f6f86",
+          "title": "प्रेमा के तीन विकेट , लेकिन आस्ट्रेलिया ए से पहला महिला टी20 हारी भारत ए टीम",
+          "link": "https://hindi.theprint.in/sports/prema-took-three-wickets-but-india-a-lost-the-first-womens-t20-to-australia-a/852571/",
+          "keywords": [
+            "bhasha wire",
+            "खेल"
+          ],
+          "creator": [
+            "भाषा"
+          ],
+          "description": "मैके (आस्ट्रेलिया), सात अगस्त (भाषा) लेग स्पिनर प्रेमा रावत ने तीन विकेट चटकाये लेकिन अनिका लियरोड के अर्धशतक की मदद से आस्ट्रेलिया ए ने बृहस्पतिवार को पहले महिला टी20 मैच में भारत ए को 13 रन से हरा दिया । भारत ए टीम आस्ट्रेलिया दौरे पर तीन टी2, तीन वनडे और एक अनधिकृत टेस्ट मैच [...]",
+          "content": "ONLY AVAILABLE IN PAID PLANS",
+          "pubDate": "2025-08-07 13:19:00",
+          "pubDateTZ": "UTC",
+          "image_url": null,
+          "video_url": null,
+          "source_id": "theprint_hi",
+          "source_name": "Theprint Hindi",
+          "source_priority": 14094,
+          "source_url": "https://hindi.theprint.in",
+          "source_icon": "https://n.bytvi.com/theprint_hi.jpg",
+          "language": "hindi",
+          "country": [
+            "india"
+          ],
+          "category": [
+            "lifestyle"
+          ],
+          "sentiment": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "sentiment_stats": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_tag": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_region": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_org": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_summary": "ONLY AVAILABLE IN PAID PLANS",
+          "ai_content": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "duplicate": false
+        },
+        {
+          "article_id": "5dae1f566c07f9602e8048b72b3f1e0e",
+          "title": "Young Japanese brewers promote sake in Beijing ahead of 3-day event",
+          "link": "https://english.kyodonews.net/articles/-/58862",
+          "keywords": null,
+          "creator": [
+            "KYODO NEWS"
+          ],
+          "description": "Young Japanese sake brewers promoted their products Thursday at the Japanese Embassy in Beijing ahead of a three-day event in the Read full story here",
+          "content": "ONLY AVAILABLE IN PAID PLANS",
+          "pubDate": "2025-08-07 13:19:00",
+          "pubDateTZ": "UTC",
+          "image_url": "https://english-kyodo.ismcdn.jp/mwimgs/5/4/400w/img_540fb137d7b898c3d28d4f7d05285252667238.jpg",
+          "video_url": null,
+          "source_id": "kyodonews",
+          "source_name": "Kyodo News",
+          "source_priority": 869899,
+          "source_url": "https://english.kyodonews.net",
+          "source_icon": "https://n.bytvi.com/kyodonews.png",
+          "language": "english",
+          "country": [
+            "japan"
+          ],
+          "category": [
+            "top"
+          ],
+          "sentiment": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "sentiment_stats": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_tag": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_region": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_org": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_summary": "ONLY AVAILABLE IN PAID PLANS",
+          "ai_content": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "duplicate": false
+        },
+        {
+          "article_id": "373a37d29068f88cc062fc55157d4faa",
+          "title": "District attorney says Alabama teen killed by police had grabbed a gun",
+          "link": "https://dothaneagle.com/ap/national/article_6cd7c8e0-f17a-447a-9deb-005ffb980542.html",
+          "keywords": [
+            "teens",
+            "police shooting alabama",
+            "wire",
+            "shootings",
+            "crime",
+            "u.s. news",
+            "general news",
+            "ap-regional",
+            "law enforcement"
+          ],
+          "creator": [
+            "KIM CHANDLER Associated Press"
+          ],
+          "description": "A district attorney says an Alabama police officer who fatally shot a teenager in the back was justified in using deadly force. Jefferson County District Attorney Dany Carr announced Wednesday that no charges will be brought against the officer who...",
+          "content": "ONLY AVAILABLE IN PAID PLANS",
+          "pubDate": "2025-08-07 13:19:00",
+          "pubDateTZ": "UTC",
+          "image_url": "https://bloximages.newyork1.vip.townnews.com/dothaneagle.com/content/tncms/assets/v3/editorial/3/a9/3a9affc2-54a5-58b2-a4fe-91407aef2427/686d99d2c158e.image.jpg?crop=1247%2C655%2C0%2C503&order=crop%2Cresize&resize=1200%2C630",
+          "video_url": null,
+          "source_id": "dothaneagle",
+          "source_name": "Dothaneagle",
+          "source_priority": 66863,
+          "source_url": "https://dothaneagle.com",
+          "source_icon": "https://n.bytvi.com/dothaneagle.png",
+          "language": "english",
+          "country": [
+            "united states of america"
+          ],
+          "category": [
+            "crime"
+          ],
+          "sentiment": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "sentiment_stats": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_tag": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_region": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_org": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_summary": "ONLY AVAILABLE IN PAID PLANS",
+          "ai_content": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "duplicate": false
+        },
+        {
+          "article_id": "35a8fb3020b2da292a2298b8c5531d26",
+          "title": "انخفاض خسائر «أرتيكس» 67% إلى 2.9 مليون ريال في الربع الثاني",
+          "link": "https://www.alyaum.com/articles/6608864/%D8%A7%D9%84%D8%A7%D9%82%D8%AA%D8%B5%D8%A7%D8%AF/%D8%A3%D8%B3%D9%88%D8%A7%D9%82-%D8%A7%D9%84%D8%A3%D8%B3%D9%87%D9%85/%D8%A7%D9%86%D8%AE%D9%81%D8%A7%D8%B6-%D8%AE%D8%B3%D8%A7%D8%A6%D8%B1-%D8%A3%D8%B1%D8%AA%D9%8A%D9%83%D8%B3-67-%D8%A5%D9%84%D9%89-29-%D9%85%D9%84%D9%8A%D9%88%D9%86-%D8%B1%D9%8A%D8%A7%D9%84-%D9%81%D9%8A-%D8%A7%D9%84%D8%B1%D8%A8%D8%B9-%D8%A7%D9%84%D8%AB%D8%A7%D9%86%D9%8A",
+          "keywords": null,
+          "creator": [
+            "اليوم - الدمام"
+          ],
+          "description": "انخفضت خسائر شركة أرتيكس للاستثمار الصناعي في الربع الثاني من 2025 بنسبة 67% إلى 2.9 مليون ريال، مقابل خسائر بـ9 ملايين ريال في الربع المماثل من العام الماضي.وبحسب بيان الشركة على موقع \"تداول السعودية\"، جاء انخفاض الخسائر، نتيجة تحقيق الشركة ربحاً تشغيلياً خلال هذا الربع بمبلغ 2,502 مليون ريال، مقارنةً بخسارة تشغيلية قدرها 3,847 مليون ريال خلال نفس الربع من العام الماضي.وبسبب انخفاض المبيعات خلال الربع الثاني مقارنةً بالربع الأول، تكبدت الشركة صافي خسارة قدرها 2,972 مليون ريال، مقارنةً بصافي ربح تم تحقيقه خلال الربع الأول بلغ 5,699 مليون ريال.وحققت الشركة صافي ربح خلال هذه الفترة بمبلغ 2,727 مليون ريال، مقارنةً بصافي خسارة قدرها 7,602 مليون ريال خلال نفس الفترة من العام السابق.ويُعزى ذلك بشكل رئيسي إلى زيادة المبيعات، وتحسن أسعار المواد الخام، والإجراءات الفعالة لضبط التكاليف التي اتخذتها الإدارة.",
+          "content": "ONLY AVAILABLE IN PAID PLANS",
+          "pubDate": "2025-08-07 13:19:00",
+          "pubDateTZ": "UTC",
+          "image_url": "https://www.alyaum.com/uploads/images/2025/08/07/2638449.jpg",
+          "video_url": null,
+          "source_id": "alyaum",
+          "source_name": "Alyaum",
+          "source_priority": 933841,
+          "source_url": "https://www.alyaum.com",
+          "source_icon": "https://n.bytvi.com/alyaum.png",
+          "language": "arabic",
+          "country": [
+            "saudi arabia"
+          ],
+          "category": [
+            "business"
+          ],
+          "sentiment": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "sentiment_stats": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_tag": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_region": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_org": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_summary": "ONLY AVAILABLE IN PAID PLANS",
+          "ai_content": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "duplicate": false
+        },
+        {
+          "article_id": "4f89dccda257a050301fbaa8495bb397",
+          "title": "Kriminalität in Baden-Württemberg: Trotz steigender Jugendgewalt fehlt Übersicht zu Präventionsangeboten",
+          "link": "https://www.stuttgarter-nachrichten.de/inhalt.kriminalitaet-in-baden-wuerttemberg-trotz-steigender-jugendgewalt-fehlt-uebersicht-zu-praeventionsangeboten.9142acec-02dc-474e-8abd-42ed12f09c7a.html",
+          "keywords": [
+            "jugendkriminalität",
+            "gewalt",
+            "gewaltprävention",
+            "justizministerium",
+            "baden-württemberg",
+            "kriminalität"
+          ],
+          "creator": [
+            "red/epd"
+          ],
+          "description": "Die Jugendkriminalität in Baden-Württemberg ist gestiegen. Die Wirksamkeit von Anti-Gewalt-Programmen bleibt unklar.",
+          "content": "ONLY AVAILABLE IN PAID PLANS",
+          "pubDate": "2025-08-07 13:19:00",
+          "pubDateTZ": "UTC",
+          "image_url": "https://www.stuttgarter-nachrichten.de/media.media.9bbedd93-14fb-4c1b-a039-2e3bdcea6fe8.original_1024.jpg",
+          "video_url": null,
+          "source_id": "stuttgarter_nachrichten",
+          "source_name": "Stuttgarter Nachrichten",
+          "source_priority": 882003,
+          "source_url": "https://www.stuttgarter-nachrichten.de",
+          "source_icon": "https://n.bytvi.com/stuttgarter_nachrichten.png",
+          "language": "german",
+          "country": [
+            "germany"
+          ],
+          "category": [
+            "top"
+          ],
+          "sentiment": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "sentiment_stats": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_tag": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_region": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_org": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_summary": "ONLY AVAILABLE IN PAID PLANS",
+          "ai_content": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "duplicate": true
+        },
+        {
+          "article_id": "b84ce431e7a6a2898f7560cb75b377f0",
+          "title": "30 gadus vecs pasaules rekords - slikta zīme vieglatlētikai kā sportam?",
+          "link": "http://sportacentrs.com/vieglatletika/07082025-30_gadus_vecs_pasaules_rekords_slikta_zim",
+          "keywords": [
+            "vieglatlētika"
+          ],
+          "creator": null,
+          "description": "Tieši šādu virsrakstā minēto argumentu izteica Džonatans Edvardss, britu vieglatlētikas izcilnieks, kurš 1995. gadā uzstādīja pasaules rekordu trīssoļlēkšanā, kas joprojām nav pārspēts. Viņš uzskata, ka vieglatlētika kā sporta veids nav tikusi līdzi citiem sporta veidiem profesionalitātē un attiecīgi piesaista mazāk talantu.",
+          "content": "ONLY AVAILABLE IN PAID PLANS",
+          "pubDate": "2025-08-07 13:19:00",
+          "pubDateTZ": "UTC",
+          "image_url": "https://i.tiesraides.lv/1200x0s/pictures/2025-08-07/e9bf_edvardss_dzonatans.jpg",
+          "video_url": null,
+          "source_id": "sportacentrs",
+          "source_name": "Sportacentrs",
+          "source_priority": 1933913,
+          "source_url": "https://sportacentrs.com",
+          "source_icon": "https://n.bytvi.com/sportacentrs.png",
+          "language": "latvian",
+          "country": [
+            "latvia"
+          ],
+          "category": [
+            "sports"
+          ],
+          "sentiment": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "sentiment_stats": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_tag": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_region": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_org": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_summary": "ONLY AVAILABLE IN PAID PLANS",
+          "ai_content": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "duplicate": false
+        },
+        {
+          "article_id": "d54757bece27b3b0dce598a20e08a7ad",
+          "title": "[사진]KT,'한화에 극적인 역전승'",
+          "link": "https://www.chosun.com/sports/sports_photo/2025/08/07/XJ72PUGYU3TUJXZRKOZLFLZBOI/",
+          "keywords": null,
+          "creator": [
+            "OSEN"
+          ],
+          "description": "[OSEN=대전, 민경훈 기자] 7일 대전 한화생명볼파크에서 ‘2025 신한 SOL Bank KBO리그’ 한화 이글스와 KT 위즈의 경기가 열렸다. 이 경기에서 KT는 강백호의 9회 역전 홈런에 힘입어 한화에 5-4 역전승을 거뒀다. 2승1패 위닝시리즈를 따낸 KT는 52승51패4무(승률 .505)를 마크했다.60승40패3무(승률 .600)가 된 한화는 이",
+          "content": "ONLY AVAILABLE IN PAID PLANS",
+          "pubDate": "2025-08-07 13:19:00",
+          "pubDateTZ": "UTC",
+          "image_url": "https://www.chosun.com/resizer/v2/5O2QRWOADBS5EIVSWMZF3A6TZM.jpg?auth=edf401677860b9d99c87a0b3f659fed29263e17f333070eeb5242de79956d143&height=512&smart=true&width=650",
+          "video_url": null,
+          "source_id": "chosun",
+          "source_name": "Chosun",
+          "source_priority": 9559,
+          "source_url": "https://www.chosun.com",
+          "source_icon": "https://n.bytvi.com/chosun.png",
+          "language": "korean",
+          "country": [
+            "south korea"
+          ],
+          "category": [
+            "sports"
+          ],
+          "sentiment": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "sentiment_stats": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_tag": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "ai_region": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_org": "ONLY AVAILABLE IN CORPORATE PLANS",
+          "ai_summary": "ONLY AVAILABLE IN PAID PLANS",
+          "ai_content": "ONLY AVAILABLE IN PROFESSIONAL AND CORPORATE PLANS",
+          "duplicate": false
+        }
+      ],
+      "nextPage": "1754572740791083763"
+    }
+  }
+}
