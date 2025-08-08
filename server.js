@@ -43,6 +43,27 @@ app.post('/runApiSequence', async (req, res) => {
         });
     };
 
+    // Helper to extract used variables from strings
+    const extractUsedVariables = (url, body) => {
+        const usedVars = {};
+        const extractFromString = (str) => {
+            if (typeof str !== 'string') return;
+            const matches = str.match(/{{(\w+)}}/gi);
+            if (matches) {
+                matches.forEach(match => {
+                    const varName = match.replace(/[{}]/g, '').toLowerCase();
+                    if (variables[varName] !== undefined) {
+                        usedVars[varName] = variables[varName];
+                    }
+                });
+            }
+        };
+        
+        extractFromString(url);
+        extractFromString(body);
+        return usedVars;
+    };
+
     let sessionCookie = null;
     let loginResult = null;
     let results = [];
@@ -53,13 +74,28 @@ app.post('/runApiSequence', async (req, res) => {
         const loginApi = apiSequence[loginIdx];
         const url = interpolate(loginApi.url);
         const body = interpolate(loginApi.body);
+        const usedVariables = extractUsedVariables(loginApi.url, loginApi.body);
         let headers = { ...loginApi.headers };
         try {
             const loginRes = await axios.post(url, body, { httpsAgent, headers, withCredentials: true });
             sessionCookie = loginRes.headers['set-cookie']?.[0]?.split(';')[0] || null;
+            
+            // Check if login response is XML and convert to JSON automatically
+            let loginResponseData = loginRes.data;
+            const responseContentType = (loginRes.headers['content-type'] || '').toLowerCase();
+            if ((responseContentType.includes('text/xml') || responseContentType.includes('application/xml')) && 
+                typeof loginResponseData === 'string' && loginResponseData.trim().startsWith('<')) {
+                try {
+                    loginResponseData = await parseXmlToJson(loginResponseData);
+                    console.log('Automatically converted XML login response to JSON for:', url);
+                } catch (xmlErr) {
+                    console.warn('Failed to convert login XML to JSON, keeping original data:', xmlErr.message);
+                    // Keep original data if conversion fails
+                }
+            }
+            
             loginResult = {
                 status: 'success',
-                data: loginRes.data,
                 cookie: sessionCookie,
                 request: {
                     method: loginApi.method,
@@ -68,12 +104,12 @@ app.post('/runApiSequence', async (req, res) => {
                     headers,
                     body
                 },
-                variables,
+                variables: usedVariables,
                 response: {
                     status: loginRes.status,
                     statusText: loginRes.statusText,
                     headers: loginRes.headers,
-                    data: loginRes.data
+                    data: loginResponseData
                 }
             };
         } catch (err) {
@@ -94,7 +130,7 @@ app.post('/runApiSequence', async (req, res) => {
                     headers,
                     body
                 },
-                variables,
+                variables: usedVariables,
                 response: err.response ? {
                     status: err.response.status,
                     statusText: err.response.statusText,
@@ -112,6 +148,7 @@ app.post('/runApiSequence', async (req, res) => {
         const api = apiSequence[i];
         const url = interpolate(api.url);
         const body = interpolate(api.body);
+        const usedVariables = extractUsedVariables(api.url, api.body);
         let headers = { ...api.headers };
         if (sessionCookie) {
             headers['Cookie'] = sessionCookie;
@@ -135,16 +172,30 @@ app.post('/runApiSequence', async (req, res) => {
                 default:
                     result = await axios({ method: api.method, url, data: body, httpsAgent, headers });
             }
+            
+            // Check if response is XML and convert to JSON automatically
+            let responseData = result.data;
+            const responseContentType = (result.headers['content-type'] || '').toLowerCase();
+            if ((responseContentType.includes('text/xml') || responseContentType.includes('application/xml')) && 
+                typeof responseData === 'string' && responseData.trim().startsWith('<')) {
+                try {
+                    responseData = await parseXmlToJson(responseData);
+                    console.log('Automatically converted XML response to JSON for:', url);
+                } catch (xmlErr) {
+                    console.warn('Failed to convert XML to JSON, keeping original data:', xmlErr.message);
+                    // Keep original data if conversion fails
+                }
+            }
+            
             results.push({
                 status: 'success',
-                data: result.data,
                 request: requestInfo,
-                variables,
+                variables: usedVariables,
                 response: {
                     status: result.status,
                     statusText: result.statusText,
                     headers: result.headers,
-                    data: result.data
+                    data: responseData
                 }
             });
         } catch (err) {
@@ -159,7 +210,7 @@ app.post('/runApiSequence', async (req, res) => {
                     responseData: err.response?.data || null
                 },
                 request: requestInfo,
-                variables,
+                variables: usedVariables,
                 response: err.response ? {
                     status: err.response.status,
                     statusText: err.response.statusText,
@@ -201,7 +252,7 @@ app.post('/runApiSequence', async (req, res) => {
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
 // Handler for POST requests
-async function handlePostRequest(url, body, api, requestInfo, variables) {
+async function handlePostRequest(url, body, api, requestInfo, variables, usedVariables) {
     let cookie = null;
     let responseData = null;
     let headers = { ...api.headers };
@@ -216,10 +267,9 @@ async function handlePostRequest(url, body, api, requestInfo, variables) {
         responseData = loginRes.data;
         return {
             status: 'success',
-            data: responseData,
             cookie,
             request: requestInfo,
-            variables,
+            variables: usedVariables,
             response: {
                 status: loginRes.status,
                 statusText: loginRes.statusText,
@@ -232,9 +282,8 @@ async function handlePostRequest(url, body, api, requestInfo, variables) {
         responseData = postRes.data;
         return {
             status: 'success',
-            data: responseData,
             request: requestInfo,
-            variables,
+            variables: usedVariables,
             response: {
                 status: postRes.status,
                 statusText: postRes.statusText,
@@ -246,7 +295,7 @@ async function handlePostRequest(url, body, api, requestInfo, variables) {
 }
 
 // Handler for GET requests
-async function handleGetRequest(url, body, api, requestInfo, variables) {
+async function handleGetRequest(url, body, api, requestInfo, variables, usedVariables) {
     let headers = { ...api.headers };
     if (api.cookie) {
         headers['Cookie'] = api.cookie;
@@ -267,9 +316,8 @@ async function handleGetRequest(url, body, api, requestInfo, variables) {
     const responseData = getRes.data;
     return {
         status: 'success',
-        data: responseData,
         request: requestInfo,
-        variables,
+        variables: usedVariables,
         response: {
             status: getRes.status,
             statusText: getRes.statusText,
@@ -280,7 +328,7 @@ async function handleGetRequest(url, body, api, requestInfo, variables) {
 }
 
 // Handler for other methods (PUT, PATCH, DELETE, etc.)
-async function handleGenericRequest(url, body, api, requestInfo, variables) {
+async function handleGenericRequest(url, body, api, requestInfo, variables, usedVariables) {
     let headers = { ...api.headers };
     if (api.cookie) {
         headers['Cookie'] = api.cookie;
@@ -301,9 +349,8 @@ async function handleGenericRequest(url, body, api, requestInfo, variables) {
     const responseData = res.data;
     return {
         status: 'success',
-        data: responseData,
         request: requestInfo,
-        variables,
+        variables: usedVariables,
         response: {
             status: res.status,
             statusText: res.statusText,
@@ -644,8 +691,10 @@ async function smartParse(data, headers = {}) {
     }
   }
   
+  // XML conversion is now handled upstream in the API response processing
+  // Skip XML parsing here to avoid double conversion
   if (contentType.includes('application/xml') || contentType.includes('text/xml')) {
-    return await parseXmlToJson(data);
+    return data; // Return as-is, should already be converted if it was XML
   }
   
   if (contentType.includes('text/html')) {
@@ -678,11 +727,15 @@ async function smartParse(data, headers = {}) {
 async function parseXmlToJson(xmlString) {
   try {
     const parser = new xml2js.Parser({ 
-      explicitArray: true,
-      ignoreAttrs: false,
-      mergeAttrs: true,
-      explicitCharkey: false,
-      charkey: 'content'
+      explicitArray: false,    // Only create arrays when there are multiple elements
+      ignoreAttrs: false,      // Keep XML attributes
+      mergeAttrs: true,        // Merge attributes with element content
+      explicitCharkey: false,  // Don't create separate text content key
+      charkey: 'content',      // Use 'content' for mixed content
+      trim: true,              // Trim whitespace
+      normalize: true,         // Normalize whitespace
+      normalizeTags: false,    // Keep original tag casing
+      attrkey: '@'            // Prefix for attributes
     });
     
     return new Promise((resolve, reject) => {
@@ -757,9 +810,10 @@ app.post('/appendOutput', async (req, res) => {
   
   // Apply smart parsing to the data
   try {
-    // If there's a response body/data, parse it intelligently
-    if (outputResult.response) {
-      outputResult.response = await smartParse(outputResult.response, outputResult.headers || {});
+    // If there's a response body/data, parse it intelligently (but not XML - that's handled upstream)
+    if (outputResult.response && outputResult.response.data) {
+      const responseHeaders = outputResult.response.headers || {};
+      outputResult.response.data = await smartParse(outputResult.response.data, responseHeaders);
     }
     
     // If there's a data property specifically, parse it

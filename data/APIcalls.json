@@ -14,7 +14,7 @@
         "Username",
         "Password"
       ],
-      "checked": true,
+      "checked": false,
       "isLogin": true,
       "loginVar": "sessionId",
       "outputFileName": "mirth-login"
@@ -79,6 +79,7 @@
       "url": "https://api.restful-api.dev/objects",
       "method": "GET",
       "headers": {
+        "Content-Type": "application/json",
         "Accept": "application/json"
       },
       "checked": false,

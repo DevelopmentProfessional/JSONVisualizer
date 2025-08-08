@@ -6,26 +6,127 @@
     <title>Manage API - APIRunner</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        /* Page layout for scrollable content */
+        body {
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .main-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header-section {
+            flex-shrink: 0;
+            background-color: var(--bs-body-bg);
+            z-index: 10;
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+        
+        .content-section {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .search-section {
+            flex-shrink: 0;
+            padding: 1rem;
+            background-color: var(--bs-body-bg);
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+        
+        .api-list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        
+        /* Drag and drop styling */
+        .form-control[ondrop]:hover {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+        
+        .form-control[ondrop]:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
+        /* Variable badge styling */
+        .badge[draggable="true"]:hover {
+            background-color: #6c757d !important;
+            transform: scale(1.05);
+            transition: all 0.2s ease;
+        }
+        
+        .badge[draggable="true"]:active {
+            transform: scale(0.95);
+        }
+        
+        /* API item editing header */
+        .api-item-editing {
+            border-left: 4px solid #0d6efd;
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+        
+        /* Bold labels for editing forms */
+        .api-item-editing .form-label {
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: var(--bs-primary);
+        }
+        
+        /* Search styling */
+        .search-container {
+            position: relative;
+        }
+        
+        .search-clear-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--bs-secondary);
+            cursor: pointer;
+            padding: 2px;
+        }
+        
+        .search-clear-btn:hover {
+            color: var(--bs-danger);
+        }
+        
+        /* Hide filtered items */
+        .api-item.filtered-hidden {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Navigation -->
-            <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-                <div class="container-fluid">
-                    <a class="navbar-brand" href="#"><i class="bi bi-api"></i> API Runner</a>
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item"><a class="nav-link active" href="ManageAPI.html">Manage API</a></li>
-                        <li class="nav-item"><a class="nav-link" href="view.html">Visualizer</a></li>
-                        <li class="nav-item"><a class="nav-link" href="Variables.html">Variables</a></li>
-                        <li class="nav-item"><a class="nav-link" href="Run.html">Run</a></li>
-                    </ul>
-                </div>
-            </nav>
+    <div class="main-container">
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark header-section">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#"><i class="bi bi-api"></i> API Runner</a>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="ManageAPI.html">Manage API</a></li>
+                    <li class="nav-item"><a class="nav-link" href="view.html">Visualizer</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Variables.html">Variables</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Run.html">Run</a></li>
+                </ul>
+            </div>
+        </nav>
 
-            <!-- Main Content -->
-            <main class="col-md-12 ms-sm-auto px-md-4">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <!-- Header Section -->
+        <div class="header-section">
+            <div class="container-fluid px-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2">
                     <h1 class="h2">Manage API Calls</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addApiModal">
@@ -33,12 +134,42 @@
                         </button>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- API List Container -->
-                <div id="apiListContainer">
-                    <div class="alert alert-info">Loading API calls...</div>
+        <!-- Content Section -->
+        <div class="content-section">
+            <!-- Search Section -->
+            <div class="search-section">
+                <div class="container-fluid px-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="search-container">
+                                <input type="text" id="apiSearchInput" class="form-control" 
+                                       placeholder="Search APIs by name, URL, method, headers, body..." 
+                                       oninput="filterApiCalls(this.value)">
+                                <button class="search-clear-btn" onclick="clearSearch()" title="Clear search">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small" id="searchStatus">
+                                <span id="searchResults"></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </main>
+            </div>
+
+            <!-- API List Container -->
+            <div class="api-list-container">
+                <div class="container-fluid px-4">
+                    <div id="apiListContainer">
+                        <div class="alert alert-info">Loading API calls...</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -109,6 +240,7 @@
                                     <option value="application/json">application/json</option>
                                     <option value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</option>
                                     <option value="text/plain">text/plain</option>
+                                    <option value="text/xml">text/xml</option>
                                     <option value="multipart/form-data">multipart/form-data</option>
                                 </select>
                             </div>
@@ -157,6 +289,7 @@
         let apiCalls = [];
         let variables = [];
         let draggedVariable = null;
+        let currentSearchTerm = '';
         const apiFile = '../data/APIcalls.json';
         const variablesFile = '/variables.json';
 
@@ -189,6 +322,28 @@
             // Method change listener to show/hide body input
             document.getElementById('apiMethodInput').addEventListener('change', toggleBodyInput);
             toggleBodyInput(); // Initial state
+            
+            // Global keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Ctrl/Cmd + F to focus search
+                if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                    e.preventDefault();
+                    const searchInput = document.getElementById('apiSearchInput');
+                    if (searchInput) {
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                }
+                
+                // Escape to clear search
+                if (e.key === 'Escape') {
+                    const searchInput = document.getElementById('apiSearchInput');
+                    if (searchInput && searchInput === document.activeElement) {
+                        clearSearch();
+                        searchInput.blur();
+                    }
+                }
+            });
         });
 
         // Toggle body input visibility based on method
@@ -217,6 +372,23 @@
             const input = document.getElementById('apiUrlInput');
             const varName = e.dataTransfer.getData('text/plain');
             if (varName) {
+                const ref = `{{${varName}}}`;
+                const start = input.selectionStart || 0;
+                const end = input.selectionEnd || 0;
+                const value = input.value;
+                input.value = value.slice(0, start) + ref + value.slice(end);
+                input.focus();
+                input.setSelectionRange(start + ref.length, start + ref.length);
+            }
+            draggedVariable = null;
+        }
+
+        // Handle variable drop for edit mode fields
+        function handleVariableDropEdit(e, fieldId) {
+            e.preventDefault();
+            const input = document.getElementById(fieldId);
+            const varName = e.dataTransfer.getData('text/plain');
+            if (varName && input) {
                 const ref = `{{${varName}}}`;
                 const start = input.selectionStart || 0;
                 const end = input.selectionEnd || 0;
@@ -315,6 +487,77 @@
             customHeadersInput.value = newValue;
         }
 
+        // --- Search Functions ---
+        function filterApiCalls(searchTerm) {
+            currentSearchTerm = searchTerm.toLowerCase().trim();
+            updateSearchStatus();
+            
+            if (!currentSearchTerm) {
+                // Show all items
+                document.querySelectorAll('.api-item').forEach(item => {
+                    item.classList.remove('filtered-hidden');
+                });
+                return;
+            }
+            
+            // Filter items
+            document.querySelectorAll('.api-item').forEach((item, idx) => {
+                const api = apiCalls[idx];
+                if (api && matchesSearch(api, currentSearchTerm)) {
+                    item.classList.remove('filtered-hidden');
+                } else {
+                    item.classList.add('filtered-hidden');
+                }
+            });
+        }
+        
+        function matchesSearch(api, searchTerm) {
+            // Search in name
+            if (api.name && api.name.toLowerCase().includes(searchTerm)) return true;
+            
+            // Search in URL
+            if (api.url && api.url.toLowerCase().includes(searchTerm)) return true;
+            
+            // Search in method
+            if (api.method && api.method.toLowerCase().includes(searchTerm)) return true;
+            
+            // Search in body
+            if (api.body && api.body.toLowerCase().includes(searchTerm)) return true;
+            
+            // Search in output filename
+            if (api.outputFileName && api.outputFileName.toLowerCase().includes(searchTerm)) return true;
+            
+            // Search in headers
+            if (api.headers && typeof api.headers === 'object') {
+                for (const [key, value] of Object.entries(api.headers)) {
+                    if (key.toLowerCase().includes(searchTerm) || 
+                        value.toLowerCase().includes(searchTerm)) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        }
+        
+        function clearSearch() {
+            document.getElementById('apiSearchInput').value = '';
+            filterApiCalls('');
+        }
+        
+        function updateSearchStatus() {
+            const statusElement = document.getElementById('searchResults');
+            if (!statusElement) return;
+            
+            if (!currentSearchTerm) {
+                statusElement.textContent = `Showing all ${apiCalls.length} API calls`;
+                return;
+            }
+            
+            const visibleCount = document.querySelectorAll('.api-item:not(.filtered-hidden)').length;
+            statusElement.textContent = `Found ${visibleCount} of ${apiCalls.length} API calls`;
+        }
+
         // --- HTML Templates ---
         function getApiItemTemplate(api, idx) {
             const method = api.method || 'GET';
@@ -366,16 +609,52 @@
             });
             const customHeadersStr = customHeadersArray.join('\n');
             
+            // Generate variables HTML for drag and drop
+            const variablesHtml = variables.length > 0 ? `
+                <div class="col-12 mb-3">
+                    <label class="form-label">Available Variables (Drag to URL or Body fields):</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        ${variables.map(v => `
+                            <span
+                                class="badge bg-secondary"
+                                draggable="true"
+                                ondragstart="variableDragStart(event, '${escapeHtml(v.name)}')"
+                                style="cursor:grab; user-select:none;"
+                                title="Drag this variable into URL or Body fields"
+                            >
+                                ${escapeHtml(v.name)}
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : '';
+            
             return `
                 <li class="list-group-item api-item-editing">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 text-light">Editing: ${escapeHtml(apiName)}</h6>
+                        </div>
+                        <div class="ms-auto">
+                            <button class="btn btn-success btn-sm me-2" onclick="saveEdit(${idx})" title="Save Changes">
+                                <i class="bi bi-check-lg"></i>
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="cancelEdit()" title="Cancel">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div class="row g-3">
+                        ${variablesHtml}
                         <div class="col-12">
                             <label class="form-label">Name:</label>
                             <input type="text" id="editApiName_${idx}" class="form-control" value="${escapeHtml(apiName)}">
                         </div>
                         <div class="col-12">
                             <label class="form-label">URL:</label>
-                            <input type="text" id="editApiUrl_${idx}" class="form-control" value="${escapeHtml(url)}">
+                            <input type="text" id="editApiUrl_${idx}" class="form-control" value="${escapeHtml(url)}"
+                                   ondrop="handleVariableDropEdit(event, 'editApiUrl_${idx}')" ondragover="allowDrop(event)"
+                                   title="You can drag variables here">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Method:</label>
@@ -401,24 +680,21 @@
                                 <option value="application/json" ${contentType === 'application/json' ? 'selected' : ''}>application/json</option>
                                 <option value="application/x-www-form-urlencoded" ${contentType === 'application/x-www-form-urlencoded' ? 'selected' : ''}>application/x-www-form-urlencoded</option>
                                 <option value="text/plain" ${contentType === 'text/plain' ? 'selected' : ''}>text/plain</option>
+                                <option value="text/xml" ${contentType === 'text/xml' ? 'selected' : ''}>text/xml</option>
                                 <option value="multipart/form-data" ${contentType === 'multipart/form-data' ? 'selected' : ''}>multipart/form-data</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Custom Headers:</label>
-                            <textarea id="editApiCustomHeaders_${idx}" class="form-control" rows="3">${escapeHtml(customHeadersStr)}</textarea>
+                            <textarea id="editApiCustomHeaders_${idx}" class="form-control" rows="3"
+                                      ondrop="handleVariableDropEdit(event, 'editApiCustomHeaders_${idx}')" ondragover="allowDrop(event)"
+                                      title="You can drag variables here">${escapeHtml(customHeadersStr)}</textarea>
                         </div>
                         <div class="col-12">
                             <label class="form-label">Body:</label>
-                            <textarea id="editApiBody_${idx}" class="form-control" rows="3">${escapeHtml(body)}</textarea>
-                        </div>
-                        <div class="col-12">
-                            <button class="btn btn-success me-2" onclick="saveEdit(${idx})">
-                                <i class="bi bi-check-lg"></i> Save
-                            </button>
-                            <button class="btn btn-secondary" onclick="cancelEdit()">
-                                <i class="bi bi-x-lg"></i> Cancel
-                            </button>
+                            <textarea id="editApiBody_${idx}" class="form-control" rows="3"
+                                      ondrop="handleVariableDropEdit(event, 'editApiBody_${idx}')" ondragover="allowDrop(event)"
+                                      title="You can drag variables here">${escapeHtml(body)}</textarea>
                         </div>
                     </div>
                 </li>
@@ -454,7 +730,10 @@
 
         function editApi(idx) {
             editingIdx = idx;
-            renderApiList();
+            // Refresh variables to ensure they're available for drag and drop
+            loadVariables().then(() => {
+                renderApiList();
+            });
         }
 
         function cancelEdit() {
@@ -547,6 +826,7 @@
             } finally {
                 renderVariables();
             }
+            return variables; // Return the variables for promise chaining
         }
 
         async function saveApiCalls() {
@@ -605,6 +885,7 @@
 
             if (apiCalls.length === 0) {
                 container.innerHTML = '<div class="alert alert-info">No API calls added yet. Click "Add API" to get started.</div>';
+                updateSearchStatus();
                 return;
             }
 
@@ -617,6 +898,13 @@
             }).join('');
 
             container.innerHTML = `<ul class="list-group">${listItems}</ul>`;
+            
+            // Reapply search filter if there's an active search
+            if (currentSearchTerm) {
+                filterApiCalls(currentSearchTerm);
+            } else {
+                updateSearchStatus();
+            }
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
