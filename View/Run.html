@@ -185,7 +185,6 @@
         function renderApiList() {
             const container = document.getElementById('apiListContainer');
             const countBadge = document.getElementById('apiCount');
-            
             countBadge.textContent = apiCalls.length;
 
             if (apiCalls.length === 0) {
@@ -199,54 +198,82 @@
                 return;
             }
 
-            const html = apiCalls.map((api, idx) => {
-                const method = api.method || 'GET';
-                const url = api.url || '';
-                const outputFileName = api.outputFileName || `api-${idx}`;
-                const apiName = api.name || `API Call ${idx + 1}`;
-                const isChecked = api.checked === true;
-                
-                return `
-                    <div class="card mb-2 ${isChecked ? 'border-primary' : ''}" style="transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.3)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">
-                        <div class="card-body p-3">
-                            <div class="d-flex align-items-start">
-                                <div class="form-check me-3">
-                                    <input class="form-check-input" type="checkbox" id="api_${idx}" 
-                                           ${isChecked ? 'checked' : ''} onchange="toggleApiSelection(${idx}, this.checked)">
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <h6 class="mb-0 me-2 text-light">${escapeHtml(apiName)}</h6>
-                                        <span class="badge bg-${getMethodColor(method)} me-2">${method}</span>
-                                        <span class="badge bg-secondary me-2 small">
-                                            <i class="bi bi-file-earmark-text"></i> ${outputFileName}.json
-                                        </span>
-                                        <div class="ms-auto">
-                                            <button class="btn btn-outline-primary btn-sm" onclick="testSingleApi(${idx})" title="Test this API">
-                                                <i class="bi bi-play"></i>
-                                            </button>
+            // Group APIs by category (default to 'Uncategorized' if missing)
+            const grouped = {};
+            apiCalls.forEach((api, idx) => {
+                const cat = api.category && api.category.trim() ? api.category.trim() : 'Uncategorized';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push({ api, idx });
+            });
+
+            // Build accordions for each category
+            let html = `<div class="accordion" id="apiCategoryAccordion">`;
+            let catIdx = 0;
+            for (const [cat, apis] of Object.entries(grouped)) {
+                const collapseId = `collapseCat${catIdx}`;
+                html += `
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading${catIdx}">
+                            <button class="accordion-button${catIdx > 0 ? ' collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}" aria-expanded="${catIdx === 0 ? 'true' : 'false'}" aria-controls="${collapseId}">
+                                <span class="fw-bold">${escapeHtml(cat)}</span>
+                                <span class="badge bg-secondary ms-2">${apis.length}</span>
+                            </button>
+                        </h2>
+                        <div id="${collapseId}" class="accordion-collapse collapse${catIdx === 0 ? ' show' : ''}" aria-labelledby="heading${catIdx}" data-bs-parent="#apiCategoryAccordion">
+                            <div class="accordion-body p-2">
+                                ${apis.map(({ api, idx }) => {
+                                    const method = api.method || 'GET';
+                                    const url = api.url || '';
+                                    const outputFileName = api.outputFileName || `api-${idx}`;
+                                    const apiName = api.name || `API Call ${idx + 1}`;
+                                    const isChecked = api.checked === true;
+                                    return `
+                                        <div class="card mb-2 ${isChecked ? 'border-primary' : ''}" style="transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.3)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">
+                                            <div class="card-body p-3">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="form-check me-3">
+                                                        <input class="form-check-input" type="checkbox" id="api_${idx}" 
+                                                               ${isChecked ? 'checked' : ''} onchange="toggleApiSelection(${idx}, this.checked)">
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <h6 class="mb-0 me-2 text-light">${escapeHtml(apiName)}</h6>
+                                                            <span class="badge bg-${getMethodColor(method)} me-2">${method}</span>
+                                                            <span class="badge bg-secondary me-2 small">
+                                                                <i class="bi bi-file-earmark-text"></i> ${outputFileName}.json
+                                                            </span>
+                                                            <div class="ms-auto">
+                                                                <button class="btn btn-outline-primary btn-sm" onclick="testSingleApi(${idx})" title="Test this API">
+                                                                    <i class="bi bi-play"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div class="small text-muted mb-1">
+                                                            <strong>URL:</strong> ${escapeHtml(url)}
+                                                        </div>
+                                                        ${api.headers && Object.keys(api.headers).length > 0 ? 
+                                                            `<div class="small text-muted mb-1">
+                                                                <strong>Headers:</strong> ${Object.keys(api.headers).length} item(s)
+                                                            </div>` : ''
+                                                        }
+                                                        ${api.body ? 
+                                                            `<div class="small text-muted">
+                                                                <strong>Body:</strong> ${api.body.length} characters
+                                                            </div>` : ''
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="small text-muted mb-1">
-                                        <strong>URL:</strong> ${escapeHtml(url)}
-                                    </div>
-                                    ${api.headers && Object.keys(api.headers).length > 0 ? 
-                                        `<div class="small text-muted mb-1">
-                                            <strong>Headers:</strong> ${Object.keys(api.headers).length} item(s)
-                                        </div>` : ''
-                                    }
-                                    ${api.body ? 
-                                        `<div class="small text-muted">
-                                            <strong>Body:</strong> ${api.body.length} characters
-                                        </div>` : ''
-                                    }
-                                </div>
+                                    `;
+                                }).join('')}
                             </div>
                         </div>
                     </div>
                 `;
-            }).join('');
-
+                catIdx++;
+            }
+            html += `</div>`;
             container.innerHTML = html;
         }
 

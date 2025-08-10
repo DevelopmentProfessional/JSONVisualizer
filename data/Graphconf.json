@@ -21,21 +21,31 @@
     "zoomValue": 1
   },
   "explorerControls": {
-    "nodeSpacing": 230,
-    "verticalSpacing": 20,
-    "textSize": 15,
+    "nodeSpacing": 300,
+    "verticalSpacing": 40,
+    "textSize": 14,
     "nodeSize": 6,
     "maxDepth": 6,
     "chartSize": 450,
     "orientation": "vertical",
-    "treeShape": "cluster",
-    "linkStyle": "elbow",
+    "treeShape": "tree",
+    "linkStyle": "curved",
     "showLabels": true,
-    "lastUpdated": "2025-08-08T18:38:20.756Z"
+    "lastUpdated": "2025-08-10T20:19:56.928Z"
   },
   "controlPanelState": {
     "width": "320px",
     "height": "600px",
     "collapsed": false
+  },
+  "calendar": {
+    "defaultView": "month",
+    "views": [
+      "week",
+      "month",
+      "year"
+    ],
+    "eventColor": "#1976d2",
+    "showToolbar": true
   }
 }

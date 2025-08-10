@@ -184,6 +184,17 @@ const builtInGraphs = [
             { role: 'label', name: 'Label', description: 'Text labels for bars' },
             { role: 'color', name: 'Color', description: 'Color value or category' }
         ]
+    },
+    {
+        type: 'calendar',
+        name: 'Calendar',
+        description: 'Event calendar visualization (week, month, year views)',
+        requiredInputs: [
+            { role: 'events', name: 'Events', description: 'Array of events with title, start, end', required: true }
+        ],
+        optionalInputs: [
+            { role: 'view', name: 'View', description: 'Calendar view: week, month, or year' }
+        ]
     }
 ];
 

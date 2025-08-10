@@ -13,6 +13,28 @@ const axios = require('axios');
 const https = require('https');
 const xml2js = require('xml2js');
 
+// Added helper to safely process error response bodies (JSON/XML/text)
+async function processErrorData(rawData, headers = {}) {
+  try {
+    if (rawData == null) return null;
+    if (typeof rawData === 'object') return rawData; // Already parsed
+    const contentType = (headers['content-type'] || headers['Content-Type'] || '').toLowerCase();
+    const str = typeof rawData === 'string' ? rawData : String(rawData);
+    if (contentType.includes('application/json') || contentType.includes('text/json')) {
+      try { return JSON.parse(str); } catch (_) { /* fallthrough */ }
+    }
+    if ((contentType.includes('application/xml') || contentType.includes('text/xml')) && str.trim().startsWith('<')) {
+      try { return await parseXmlToJson(str); } catch (_) { return { raw: str, parseError: 'xml parse failed' }; }
+    }
+    // Heuristic JSON detection
+    if ((str.trim().startsWith('{') && str.trim().endsWith('}')) || (str.trim().startsWith('[') && str.trim().endsWith(']'))) {
+      try { return JSON.parse(str); } catch (_) { /* ignore */ }
+    }
+    return { raw: str };
+  } catch (e) {
+    return { raw: String(rawData), processError: e.message };
+  }
+}
 
 // Run API Sequence endpoint
 app.post('/runApiSequence', async (req, res) => {
@@ -113,6 +135,13 @@ app.post('/runApiSequence', async (req, res) => {
                 }
             };
         } catch (err) {
+            const processedErrorData = await processErrorData(err.response?.data, err.response?.headers || {});
+            console.error('Login API error:', {
+              message: err.message,
+              status: err.response?.status,
+              headers: err.response?.headers,
+              processedErrorData
+            });
             loginResult = {
                 status: 'error',
                 error: err.message,
@@ -121,7 +150,8 @@ app.post('/runApiSequence', async (req, res) => {
                     code: err.code,
                     status: err.response?.status,
                     statusText: err.response?.statusText,
-                    responseData: err.response?.data || null
+                    responseData: err.response?.data || null,
+                    parsed: processedErrorData
                 },
                 request: {
                     method: loginApi.method,
@@ -135,7 +165,8 @@ app.post('/runApiSequence', async (req, res) => {
                     status: err.response.status,
                     statusText: err.response.statusText,
                     headers: err.response.headers,
-                    data: err.response.data
+                    data: err.response.data,
+                    parsedData: processedErrorData
                 } : null
             };
         }
@@ -199,6 +230,15 @@ app.post('/runApiSequence', async (req, res) => {
                 }
             });
         } catch (err) {
+            const processedErrorData = await processErrorData(err.response?.data, err.response?.headers || {});
+            console.error('API error:', {
+              url,
+              method: api.method,
+              message: err.message,
+              status: err.response?.status,
+              headers: err.response?.headers,
+              processedErrorData
+            });
             results.push({
                 status: 'error',
                 error: err.message,
@@ -207,7 +247,8 @@ app.post('/runApiSequence', async (req, res) => {
                     code: err.code,
                     status: err.response?.status,
                     statusText: err.response?.statusText,
-                    responseData: err.response?.data || null
+                    responseData: err.response?.data || null,
+                    parsed: processedErrorData
                 },
                 request: requestInfo,
                 variables: usedVariables,
@@ -215,7 +256,8 @@ app.post('/runApiSequence', async (req, res) => {
                     status: err.response.status,
                     statusText: err.response.statusText,
                     headers: err.response.headers,
-                    data: err.response.data
+                    data: err.response.data,
+                    parsedData: processedErrorData
                 } : null
             });
         }
@@ -519,6 +561,17 @@ app.get('/variables.json', (req, res) => {
         }
         res.type('application/json').send(data);
     });
+});
+
+// Serve AvailableCharts.json from data directory
+app.get('/view/data/AvailableCharts.json', (req, res) => {
+  const filePath = path.join(__dirname, 'data', 'AvailableCharts.json');
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      return res.status(404).json({ error: 'AvailableCharts.json not found' });
+    }
+    res.type('application/json').send(data);
+  });
 });
 
 app.get('/output.json', (req, res) => {
@@ -1514,6 +1567,7 @@ app.get('/data/ApiResponse', (req, res) => {
   
   try {
     if (!fs.existsSync(apiResponseDir)) {
+      fs.mkdirSync(apiResponseDir, { recursive: true });
       return res.json([]);
     }
     

@@ -17,6 +17,31 @@
       "name": "NewsAPI",
       "value": "pub_ba5cc484e4974aa9a80aefebf4008b99",
       "visible": false
+    },
+    {
+      "name": "RapidAPIKey",
+      "value": "b2097020cbmsh49a71e970565bd8p195dedjsn55561d24e5e2",
+      "visible": true
+    },
+    {
+      "name": "WeatherBermudaLatitude",
+      "value": "32.29837",
+      "visible": true
+    },
+    {
+      "name": "WeatherBermudaLongitude",
+      "value": "-64.779274",
+      "visible": true
+    },
+    {
+      "name": "WeatherLang",
+      "value": "EN",
+      "visible": true
+    },
+    {
+      "name": "WeatherForecastDays",
+      "value": "5",
+      "visible": true
     }
   ]
 }

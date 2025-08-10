@@ -27,6 +27,10 @@
         <button class="btn btn-outline-secondary btn-sm" onclick="clearSearchBox()"><i class="bi bi-x-circle"></i></button>
     </div>
 
+    <div class="btn-group-vertical position-fixed" style="top: 120px; left: 10px; z-index:1000;">
+        <button id="noPadModeBtn" class="btn btn-warning btn-sm" onclick="toggleNoPadMode()">No Pad</button>
+    </div>
+
     <div id="output-graph" class="position-fixed top-0 start-0 w-100 h-100 bg-dark" style="z-index: 1;"></div>
 
     <!-- Saved Visualizations Panel -->
@@ -62,6 +66,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://d3js.org/d3.v7.min.js"></script>
-<script src="view.js"></script>
+    <script src="view.js"></script>
 </body>
 </html>

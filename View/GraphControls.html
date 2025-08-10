@@ -96,10 +96,6 @@
                         <span class="input-group-text">Graph Type</span>
                         <select id="graphTypeSelector" class="form-select" onchange="selectGraphType()">
                             <option value="">-- Select Graph Type --</option>
-                            <option value="tree">Tree (Hierarchical)</option>
-                            <option value="force-directed">Force-Directed Network</option>
-                            <option value="bar-chart">Bar Chart</option>
-                            <option value="world-map">World Map</option>
                         </select>
                     </div>
 
@@ -255,6 +251,22 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
+        // Dynamically populate graphTypeSelector from AvailableCharts.json
+        async function populateGraphTypeSelector() {
+            try {
+                const resp = await fetch('data/AvailableCharts.json?_=' + Date.now());
+                if (!resp.ok) return;
+                const charts = await resp.json();
+                const sel = document.getElementById('graphTypeSelector');
+                sel.innerHTML = '<option value="">-- Select Graph Type --</option>';
+                charts.forEach(chart => {
+                    const opt = document.createElement('option');
+                    opt.value = chart.type;
+                    opt.textContent = chart.name;
+                    sel.appendChild(opt);
+                });
+            } catch {}
+        }
         // Global variables
         let currentApiData = null;
         let currentGraphType = null;
@@ -403,6 +415,7 @@
 
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
+            populateGraphTypeSelector();
             loadAvailableApiResponses();
             loadSavedConfiguration();
             loadExplorerControlsFromGraphconf();
@@ -1810,6 +1823,32 @@
                         { role: 'tooltip', name: 'Tooltip', description: 'Additional info on hover' }
                     ]
                 },
+                'calendar': {
+                    required: [
+                        { role: 'events', name: 'Events', description: 'Array of events with title, start, end' }
+                    ],
+                    optional: [
+                        { role: 'view', name: 'View', description: 'Calendar view: week, month, or year' },
+                        { role: 'date', name: 'Date/Time', description: 'Date/time for the event (e.g., dt_txt)' },
+                        { role: 'title', name: 'Title', description: 'Event title (e.g., weather[0].description or summery)' },
+                        { role: 'temperature', name: 'Temperature', description: 'Temperature (main.temprature)' },
+                        { role: 'temperature_feels_like', name: 'Feels Like', description: 'Feels like temperature (main.temprature_feels_like)' },
+                        { role: 'temperature_min', name: 'Min Temperature', description: 'Minimum temperature (main.temprature_min)' },
+                        { role: 'temperature_max', name: 'Max Temperature', description: 'Maximum temperature (main.temprature_max)' },
+                        { role: 'humidity', name: 'Humidity', description: 'Humidity (main.humidity)' },
+                        { role: 'rain', name: 'Rain Amount', description: 'Rain amount (rain.amount)' },
+                        { role: 'snow', name: 'Snow Amount', description: 'Snow amount (snow.amount)' },
+                        { role: 'wind_speed', name: 'Wind Speed', description: 'Wind speed (wind.speed)' },
+                        { role: 'wind_gust', name: 'Wind Gust', description: 'Wind gust speed (wind.gust_speed)' },
+                        { role: 'wind_direction', name: 'Wind Direction', description: 'Wind direction (wind.degrees)' },
+                        { role: 'cloudiness', name: 'Cloudiness', description: 'Cloudiness (clouds.cloudiness)' },
+                        { role: 'pressure', name: 'Pressure', description: 'Pressure (main.pressure)' },
+                        { role: 'visibility', name: 'Visibility', description: 'Visibility distance (visibility_distance)' },
+                        { role: 'pop', name: 'Probability of Precipitation', description: 'Probability of precipitation (probability_of_precipitation)' },
+                        { role: 'icon', name: 'Weather Icon', description: 'Weather icon (weather[0].icon)' },
+                        { role: 'part_of_day', name: 'Part of Day', description: 'Part of day (sys.part_of_day)' }
+                    ]
+                },
                 'world-map': {
                     required: [
                         { role: 'longitude', name: 'Longitude', description: 'Longitude coordinate' },
@@ -1833,77 +1872,142 @@
             }
             
             let html = '';
-            
-            // Add row path configuration first
+            // Add row path configuration first, with darker background
             html += `
-                <div class="mb-3" style="border: 2px solid #ffc107; border-radius: 6px; padding: 10px; background: #1a1a1a;">
-                    <h6 class="text-warning small mb-2">⚡ Data Source Configuration:</h6>
-                    <div class="mb-2">
-                        <div class="input-container">
-                            <input type="text" 
+                               <input type="text" 
                                    class="form-control" 
                                    data-role="rowPath"
                                    placeholder="Path to array containing row data (e.g., response.data.wb:countries.wb:country)"
-                                   style="background: #333; border-color: #ffc107;">
-                        </div>
-                        <small class="text-muted">
-                            <strong>Row Data Source</strong> <span class="text-warning">*</span>
-                            - Path to the array where each item becomes a data row
-                        </small>
-                    </div>
+                                   style="background: #222; border-color: #ffc107; color: #fff;">
+             `;
+            // Dynamic mapping fields UI (darker background)
+            html += `
+                <div id="dynamicMappingFields" class="mb-3" style="background: #18191b; border-radius: 6px; padding: 10px;">
+                     <div id="mappingFieldsContainer"></div>
+                    <button type="button" class="btn btn-outline-success btn-sm mt-2" id="addMappingFieldBtn"><i class="bi bi-plus-circle"></i> New Field</button>
                 </div>
             `;
-            
-            // Required inputs
-            if (requirements.required.length > 0) {
-                html += '<div class="required-inputs mb-3">';
-                html += '<h6 class="text-danger small">Required Fields (relative to each row):</h6>';
-                requirements.required.forEach(input => {
-                    html += createMappingInput(input, true);
-                });
-                html += '</div>';
-            }
-            
-            // Optional inputs
-            if (requirements.optional.length > 0) {
-                html += '<div class="optional-inputs mb-3">';
-                html += '<h6 class="text-info small">Optional Fields (relative to each row):</h6>';
-                requirements.optional.forEach(input => {
-                    html += createMappingInput(input, false);
-                });
-                html += '</div>';
-            }
-            
             container.innerHTML = html;
-            
-            // Add event listeners for input changes
-            container.querySelectorAll('.form-control').forEach(input => {
-                input.addEventListener('change', function() {
-                    const role = this.dataset.role;
-                    const path = this.value;
-                    graphMappings[role] = path || null;
-                    // Keep savedGraphMappings in sync for current graph type
-                    if (currentGraphType) {
-                        if (!savedGraphMappings[currentGraphType]) savedGraphMappings[currentGraphType] = { mappings: {} };
-                        savedGraphMappings[currentGraphType].mappings = { ...graphMappings };
-                    }
-                    updateRenderButtonState();
-                    updateVariablesPreview();
-                    scheduleMultiGraphSave();
-                });
-            });
-
+            // Helper to get all available roles for placeholder
+            const allRoles = [...requirements.required, ...requirements.optional].map(f => ({ role: f.role, name: f.name, description: f.description }));
             // Restore saved mappings for this graph type if present
+            let initialMappings = [];
             if (restoreExisting && savedGraphMappings[graphType] && savedGraphMappings[graphType].mappings) {
-                Object.entries(savedGraphMappings[graphType].mappings).forEach(([role, path]) => {
-                    graphMappings[role] = path;
-                    const input = container.querySelector(`[data-role="${role}"]`);
-                    if (input) input.value = path;
-                });
-                updateVariablesPreview();
+                initialMappings = Object.entries(savedGraphMappings[graphType].mappings).filter(([role]) => role !== 'rowPath');
             }
-            
-            // Enable drag from JSON explorer nodes (removed old timeout)
+            // Render mapping fields
+            function renderMappingFields() {
+                const container = document.getElementById('mappingFieldsContainer');
+                container.innerHTML = '';
+                // Use graphMappings for current state
+                // Show all possible roles (required + optional) as fields, even if not mapped yet
+                const allFieldRoles = allRoles.map(opt => opt.role);
+                // Possible data types for dropdown
+                const possibleTypes = ['string', 'number', 'boolean', 'object', 'array', 'date', 'any'];
+                allFieldRoles.forEach((role, idx) => {
+                    const path = graphMappings[role] || '';
+                    const fieldId = `mappingField_${idx}`;
+                    const roleObj = allRoles.find(opt => opt.role === role);
+                    const roleName = roleObj ? roleObj.name : role;
+                    // Default data type to string
+                    container.innerHTML += `
+                        <div class="mb-3 border rounded" data-field-idx="${idx}">
+                            <div class="d-flex align-items-center p-0 m-0">
+                                <span style="width:auto; min-width:90px; max-width:180px; border:none; background:none; padding:2px 8px 2px 0; margin:0; font-size:0.95em; color:#fff;" class="p-1">${roleName}</span>
+                                <select class="form-select mapping-datatype-input" style="width:90px; min-width:90px; max-width:90px; flex:0 0 90px; border:none; background:#222; color:#fff; padding:2px 6px; margin:0; font-size:0.95em; border-radius:0;" data-field-idx="${idx}">
+                                    ${possibleTypes.map(t => `<option value="${t}"${t==='string'?' selected':''}>${t.charAt(0).toUpperCase() + t.slice(1)}</option>`).join('')}
+                                </select>
+                                <button type="button" class="btn btn-outline-danger btn-sm remove-mapping-field-btn" data-field-idx="${idx}" title="Remove" style="width:32px; min-width:32px; max-width:32px; border:none; background:none; margin:0; padding:2px 6px;"><i class="bi bi-x"></i></button>
+                            </div>
+                            <input type="text" class="form-control mapping-path-input w-100 m-0" placeholder="Field path (relative to row)" value="${path||''}" data-field-idx="${idx}" style="margin-top:2px; border:none; border-top:1px solid #dee2e6; border-radius:0 0 .25rem .25rem;">
+                        </div>
+                    `;
+                });
+                // Render any additional custom fields (not in allRoles), but skip 'dataSource'
+                const customFields = Object.entries(graphMappings).filter(([role]) => role !== 'rowPath' && role !== 'dataSource' && !allFieldRoles.includes(role));
+                customFields.forEach(([role, path], idx) => {
+                    const fieldId = `mappingField_custom_${idx}`;
+                    // Use the same layout as the main mapping fields for consistency
+                    container.innerHTML += `
+                        <div class="mb-3 border rounded" data-field-idx="custom_${idx}" data-custom-role="${role}">
+                            <div class="d-flex align-items-center p-0 m-0">
+                                <span style="width:auto; min-width:90px; max-width:180px; border:none; background:none; padding:2px 8px 2px 0; margin:0; font-size:0.95em; color:#fff;" class="p-1">${role}</span>
+                                <select class="form-select mapping-datatype-input" style="width:90px; min-width:90px; max-width:90px; flex:0 0 90px; border:none; background:#222; color:#fff; padding:2px 6px; margin:0; font-size:0.95em; border-radius:0;" data-field-idx="custom_${idx}">
+                                    ${possibleTypes.map(t => `<option value="${t}"${t==='string'?' selected':''}>${t.charAt(0).toUpperCase() + t.slice(1)}</option>`).join('')}
+                                </select>
+                                <button type="button" class="btn btn-outline-danger btn-sm remove-mapping-field-btn" data-field-idx="custom_${idx}" data-custom-role="${role}" title="Remove" style="width:32px; min-width:32px; max-width:32px; border:none; background:none; margin:0; padding:2px 6px;"><i class="bi bi-x"></i></button>
+                            </div>
+                            <input type="text" class="form-control mapping-path-input w-100 m-0" placeholder="Field path (relative to row)" value="${path||''}" data-field-idx="custom_${idx}" style="margin-top:2px; border:none; border-top:1px solid #dee2e6; border-radius:0 0 .25rem .25rem;">
+                        </div>
+                    `;
+                });
+            }
+            // Initialize graphMappings with initialMappings or required fields
+            if (initialMappings.length) {
+                initialMappings.forEach(([role, path]) => { graphMappings[role] = path; });
+            } else {
+                // Add required fields as empty by default
+                requirements.required.forEach(f => { graphMappings[f.role] = graphMappings[f.role] || ''; });
+            }
+            renderMappingFields();
+            // Add event listeners for dynamic fields
+            document.getElementById('addMappingFieldBtn').onclick = function() {
+                // Add a new generic custom field (custom1, custom2, ...)
+                let customIdx = 1;
+                let newRole = `custom${customIdx}`;
+                while (graphMappings.hasOwnProperty(newRole)) {
+                    customIdx++;
+                    newRole = `custom${customIdx}`;
+                }
+                graphMappings[newRole] = '';
+                renderMappingFields();
+                updateRenderButtonState();
+                updateVariablesPreview();
+                scheduleMultiGraphSave();
+            };
+            // Delegate events for input/remove
+            document.getElementById('mappingFieldsContainer').addEventListener('input', function(e) {
+                const idx = e.target.dataset.fieldIdx;
+                if (e.target.classList.contains('mapping-path-input')) {
+                    // Changing the path
+                    const role = Object.keys(graphMappings).filter((r, i) => i == idx && r !== 'rowPath')[0];
+                    graphMappings[role] = e.target.value;
+                }
+                // Optionally handle data type input for reference (not enforced)
+                // Could store in a parallel object if needed
+                updateRenderButtonState();
+                updateVariablesPreview();
+                scheduleMultiGraphSave();
+            });
+            document.getElementById('mappingFieldsContainer').addEventListener('click', function(e) {
+                if (e.target.closest('.remove-mapping-field-btn')) {
+                    const btn = e.target.closest('.remove-mapping-field-btn');
+                    const idx = btn.dataset.fieldIdx;
+                    // For custom fields, use data-custom-role to identify the field
+                    let role;
+                    if (btn.hasAttribute('data-custom-role')) {
+                        role = btn.getAttribute('data-custom-role');
+                    } else {
+                        // Fallback for main fields
+                        role = Object.keys(graphMappings).filter((r, i) => i == idx && r !== 'rowPath')[0];
+                    }
+                    if (role && graphMappings.hasOwnProperty(role)) {
+                        delete graphMappings[role];
+                        renderMappingFields();
+                        updateRenderButtonState();
+                        updateVariablesPreview();
+                        scheduleMultiGraphSave();
+                    }
+                }
+            });
+            // RowPath input event
+            container.querySelector('[data-role="rowPath"]').addEventListener('change', function() {
+                graphMappings['rowPath'] = this.value;
+                updateRenderButtonState();
+                updateVariablesPreview();
+                scheduleMultiGraphSave();
+            });
+            updateVariablesPreview();
         }
 
         function createMappingInput(input, required) {

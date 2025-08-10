@@ -1,0 +1,23 @@
+{
+  "status": "error",
+  "error": "Invalid URL",
+  "errorDetails": {
+    "message": "Invalid URL",
+    "code": "ERR_INVALID_URL",
+    "responseData": null
+  },
+  "request": {
+    "method": "GET",
+    "originalUrl": "/fivedaysforcast?latitude=32.29837&longitude=-64.779274&lang=EN HTTP/1.1 X-Rapidapi-Key: {{RapidAPIKey}}",
+    "interpolatedUrl": "/fivedaysforcast?latitude=32.29837&longitude=-64.779274&lang=EN HTTP/1.1 X-Rapidapi-Key: b2097020cbmsh49a71e970565bd8p195dedjsn55561d24e5e2",
+    "headers": {
+      "X-Rapidapi-Host": "open-weather13.p.rapidapi.com",
+      "Host": "open-weather13.p.rapidapi.com"
+    },
+    "body": ""
+  },
+  "variables": {
+    "rapidapikey": "b2097020cbmsh49a71e970565bd8p195dedjsn55561d24e5e2"
+  },
+  "response": null
+}

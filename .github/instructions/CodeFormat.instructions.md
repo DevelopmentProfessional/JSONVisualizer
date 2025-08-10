@@ -1,119 +1,67 @@
 applyTo: '**'
-Project code formatting contract. These rules MUST be followed exactly when generating or modifying code. Segment output by language where relevant.
+Unified code generation contract (Segmented). This root file is an index; specific language / domain rules are in sibling *.instructions.md files. Follow ALL mandatory constraints.
 
-## General
-1. Only output code for the language section currently requested; do not mix languages in one fenced block.
-2. Keep code minimal: remove redundant wrappers, unused variables, commented‑out code, and superfluous whitespace.
-3. Prefer clarity over cleverness; explicit is better than implicit.
+## Global Minimalism Principles
+1. Output ONLY the language requested (no mixed fences).
+2. Maximum density: collapse single or multi-statement blocks so closing brace sits on same line as the final statement of that block (custom compact style). Example: `if(x){a();b();}` / `function f(){a();b();}` / nested: `if(a){if(b){c();d();}}`.
+3. Always open brace on same line as construct.
+4. Eliminate unused variables, dead branches, redundant wrappers, extra blank lines.
+5. NO comments in generated code anywhere (all languages) EXCEPT:
+	- Optional top-of-file header block (single concise line per function: `f: purpose`).
+	- Optional single trailing inline comment after opening brace of a function on the SAME line, e.g. `function load(){//setup ...code}`.
+	If not explicitly requested, omit headers too.
+6. NO error scaffolding: no try/catch, no console.log, no console.error, no alerts, no custom error classes. Generate pure logic flows only.
+7. Lists / enumerations / object literal keys / import specifiers: alphabetical order unless an order is explicitly provided by user. (Alphabetical means ASCII ascending.)
+8. Code formatters MUST NOT be invoked or assumed; do not expand blocks to multi-line unless user asks.
+9. No magic numbers reused more than once without extraction? – Rule removed. Reuse inline for maximal density unless user asks for constants.
+10. No inline TODO/FIXME annotations (would be comments).
 
-## HTML
-Required minimal scaffold for any standalone page (always include Bootstrap, no inline styles / no custom <style> blocks):
+## HTML (See also HTML.instructions.md)
+1. Generate minimal semantic structure; remove any div that can be replaced by semantic element or merged via class combination.
+2. Absolutely NO inline style attributes; NO <style> blocks; rely solely on Bootstrap classes.
+3. Provide Bootstrap CDN links only if user requests styling or explicitly asks for scaffold; otherwise pure HTML skeleton with required semantic tags.
+4. Attribute order (alphabetical preference supersedes previous logical ordering): aria-* comes after data-* simply by alpha sorting. If id present it falls into alpha sequence (id before name before role, etc.).
+5. Self-contained pages may use the canonical scaffold (see HTML.instructions.md). Remove placeholder comments.
 
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width,initial-scale=1">
-	<title>Title</title>
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-</head>
-<body>
-	<div class="container py-3">
-		<!-- content -->
-	</div>
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-</body>
-</html>
-```
-
-Rules:
-1. NO inline style attributes.
-2. NO custom <style> sections (only Bootstrap classes). If truly necessary, ask first.
-3. Use semantic elements (main, nav, header, footer, section) when they reduce div count.
-4. Eliminate nested divs if they can be merged without changing layout.
-5. Keep attribute order: id, class, data-*, aria-*, other.
-
-## JavaScript
-Core brace & block style:
-1. Opening brace on SAME line as construct (function, if, else, for, while, switch, object method).
-2. Single‑statement blocks MUST collapse to one line with braces: `if(cond){doThing();}` / `for(let i=0;i<n;i++){sum+=i;}`
-3. Multi‑statement blocks:
-```
-if(cond){
-	line1();
-	line2();}
-```
-4. Function declarations / expressions:
-```
-function name(args){
-	stmt1();
-	stmt2();
-}
-```
-5. Arrow functions: single expression => inline: `arr.map(x=>x*2)`; multi-line use braces & return if needed.
-6. Trailing commas in multi-line object/array literals allowed; avoid in single-line literals.
-7. Use const by default; let only if reassigned; never var.
-8. Strict comparisons (=== / !==). No implicit truthy checks for numeric zero unless intentional.
-9. Keep imports at top; group: builtin, external, internal; blank line between groups.
-10. Order object keys logically (id, name, type, ...), not alphabetically if semantic order clearer.
-
-Example mixed:
-```
-for(let i=0;i<items.length;i++){if(items[i].active){process(items[i]);}}
-
-if(ready){
-	init();
-	start();}
-
-function buildUser(u){
-	return {id:u.id,name:u.name,role:u.role};
-}
-```
+## JavaScript (See JavaScript.instructions.md)
+Essential subset repeated here for convenience:
+1. Compact brace style (closing brace on same line as last statement inside block).
+2. Single-line blocks for ANY block size permitted; keep density unless user explicitly wants expanded readability.
+3. const by default; let only when reassigned; never var.
+4. Strict equality (===/!==). Boolean tests explicit if comparing against 0 or ''.
+5. Object & array literal keys sorted alphabetically.
+6. Imports grouped (builtin, external, internal) each group alphabetically; collapse blank lines between groups to a single blank line.
+7. Arrow functions inline; multi-statement arrow -> braces with compressed style: `x=>{a();b();}`.
+8. No comments (global rule), no logging, no try/catch.
 
 ## JSON
-1. Always valid, double quotes only.
-2. No trailing commas.
-3. Indent 2 spaces unless existing file dictates otherwise; keep consistency with touched file.
-4. Sort top-level keys logically (metadata first: name, version, description, then config blocks).
-5. Do not add comments (JSON, not JSON5) unless the file is explicitly documented as allowing them.
+1. Must be valid JSON (double quotes, proper commas, no trailing commas).
+2. Do NOT reorder existing keys unless user asks. For newly generated objects, keys alphabetical.
+3. No comments (standard JSON only). Indentation: preserve existing file indentation; if new file, use minimal indentation of 1 tab for nested levels (or 2 spaces if user specifies) – do not reform existing.
 
-## Python
-1. Follow PEP8 except: line length up to 100 chars permitted.
-2. Use snake_case for functions/variables, PascalCase for classes, UPPER_CASE for constants.
-3. Prefer f-strings. No bare except; catch specific exceptions or re-raise.
-4. One import per line; group: stdlib, third-party, local (blank line between groups).
-5. Docstring for public functions/classes (triple double quotes). One return path if readable.
-
-## PowerShell
-1. PascalCase for functions: Verb-Noun (Get-Items).
-2. CamelCase for parameters; ALL_CAPS for constants.
-3. Use single quotes for literal strings without interpolation; double quotes only if needed.
-4. Functions structure:
-```
-function Get-Thing{
-	param(
-		[Parameter(Mandatory)][string]$Name
-	)
-	$result = Invoke-Something -Name $Name
-	return $result
-}
-```
-5. Pipe formatting: each pipe segment on its own line only if it enhances clarity; otherwise single line.
+## PowerShell (See PowerShell.instructions.md)
+Summary: Compact brace style, no comments, include execution policy bypass command at top when generating standalone scripts (see dedicated file for exact first line). Avoid verbose scaffolding.
 
 ## CSS
-1. Prefer Bootstrap utility classes; ONLY write custom CSS if utility classes cannot express requirement.
-2. If custom CSS unavoidable, place in external .css file; never inline or <style> for new code.
-3. Class naming: component: `c-`, utility extension: `u-`, state: `is-` / `has-`.
-4. Order properties: layout (display, position, top/right/bottom/left, flex/grid), box (margin, padding, width/height), typography (font, line-height, color), visual (background, border, shadow), misc.
-5. Avoid !important unless documenting reason adjacent.
+1. DO NOT generate custom CSS files or inline styles unless user explicitly requests. Prefer only Bootstrap utility classes. If user asks for styling logic, respond by suggesting appropriate Bootstrap classes, not custom CSS.
 
-## Enforcement Notes
-1. When transforming existing code, retain prevailing indentation if inconsistent unless refactor is explicitly requested.
-2. Reject or rewrite user-provided snippets that violate mandatory rules (HTML inline styles, wrong JS brace style) unless user explicitly opts out.
-3. Always reflect back non-compliant constraints before proceeding if conflict arises.
+## Python (If ever requested)
+Only minimal logic per user instructions. Omit docstrings & comments unless user explicitly asks (overrides global no-comment rule). Keep compact style but maintain correctness (can't legally compress indentation blocks onto one line if it harms readability? Python requires newline & indentation so follow Python syntax). No try/except unless asked.
 
-## Quick Reference (One-Line Blocks)
-JavaScript examples: `if(x){doIt();}` `for(let i=0;i<n;i++){total+=i;}` `while(ok){tick();}`
+## Comments & Error Handling Recap
+Global prohibition stands. If user supplies code WITH comments or error handling and asks for modification, strip them unless user explicitly says to keep them.
 
-End of formatting contract.
+## Project Scaffold Rules
+When asked to create a new application: always generate base directories: `data/`, `View/`, `scripts/`, `config/` (or reuse existing). Include optional Node server file ONLY if user asks (never auto-run or suggest starting it). Provide Bootstrap integration option. See ProjectScaffold.instructions.md for details.
+
+## Enforcement
+1. Reject user directives that attempt to introduce comments, style blocks, CSS, or error scaffolding unless override explicitly stated.
+2. Maintain compact brace style; never expand unless user states desire for readability expansion.
+3. Reflect conflicts back before proceeding if user explicitly demands mutually exclusive constraints.
+
+## Quick Reference
+JavaScript examples: `if(x){a();b();}` `for(let i=0;i<n;i++){total+=i;}` `while(ok){tick();}` `function f(a){doA();doB();}` `arr.map(x=>x*2)`
+
+Refer to segmented instruction files for deeper per-language specifics.
+
+End of root contract.

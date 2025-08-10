@@ -31,7 +31,11 @@
             <div class="container-fluid px-4">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2">
                     <h1 class="h2">Manage API Calls</h1>
-                    <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-toolbar mb-2 mb-md-0 align-items-center gap-2">
+                        <input type="text" id="newCategoryInput" class="form-control form-control-sm" placeholder="Add new category..." style="width: 180px;">
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="addNewCategory()">
+                            <i class="bi bi-plus-circle"></i> Add Category
+                        </button>
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addApiModal">
                             <i class="bi bi-plus-circle"></i> Add API
                         </button>
@@ -91,6 +95,13 @@
                             <label for="apiNameInput" class="form-label">Name:</label>
                             <input type="text" id="apiNameInput" class="form-control" placeholder="API Call Name" 
                                    title="Descriptive name for this API call">
+                        </div>
+
+                        <!-- Category Input -->
+                        <div class="mb-3">
+                            <label for="apiCategoryInput" class="form-label">Category (Application):</label>
+                            <input type="text" id="apiCategoryInput" class="form-control" placeholder="e.g. Weather, News, Mirth, World Data" 
+                                   title="Group APIs by application or category">
                         </div>
 
                         <!-- URL Input -->
@@ -306,6 +317,7 @@
         // --- Add API from Modal ---
         function addApiFromModal() {
             const name = document.getElementById('apiNameInput').value.trim();
+            const category = document.getElementById('apiCategoryInput').value.trim();
             const url = document.getElementById('apiUrlInput').value.trim();
             const method = document.getElementById('apiMethodInput').value;
             const body = document.getElementById('apiBodyInput').value.trim();
@@ -325,12 +337,10 @@
 
             // Build headers object
             const headers = {};
-            
             // Add Content-Type if selected
             if (contentType) {
                 headers['Content-Type'] = contentType;
             }
-            
             // Parse and add custom headers
             if (customHeaders) {
                 const headerLines = customHeaders.split('\n');
@@ -352,6 +362,7 @@
             // Create the API object
             const newApi = {
                 name,
+                category,
                 url,
                 method,
                 body: body || '',
@@ -373,6 +384,7 @@
         // --- Reset Modal Form ---
         function resetModalForm() {
             document.getElementById('apiNameInput').value = '';
+            document.getElementById('apiCategoryInput').value = '';
             document.getElementById('apiUrlInput').value = '';
             document.getElementById('apiMethodInput').value = 'GET';
             document.getElementById('apiBodyInput').value = '';
@@ -469,14 +481,15 @@
             const body = api.body || '';
             const outputFileName = api.outputFileName || `api-${idx}`;
             const apiName = api.name || `API Call ${idx + 1}`;
-            
+            const category = api.category || '';
             return `
                 <li class="list-group-item d-flex align-items-center api-item">
                     <div class="flex-grow-1">
                         <div class="d-flex align-items-center mb-1">
                             <h6 class="mb-0 me-2 text-light">${escapeHtml(apiName)}</h6>
+                            ${category ? `<span class="badge bg-info me-2">${escapeHtml(category)}</span>` : ''}
                             <span class="badge bg-${getMethodColor(method)} me-2">${method}</span>
-                            <span class="badge bg-secondary me-2">→ ${outputFileName}.json</span>
+                            <span class="badge bg-secondary me-2">� ${outputFileName}.json</span>
                             <button class="btn btn-outline-secondary btn-sm ms-auto" onclick="editApi(${idx})" title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </button>
@@ -485,7 +498,7 @@
                             </button>
                         </div>
                         <div class="small text-muted">
-                            <div><strong>URL:</strong> ${escapeHtml(url)}</div>
+                            <div style="word-break: break-all;"><strong>URL:</strong> ${escapeHtml(url)}</div>
                             ${Object.keys(headers).length > 0 ? `<div><strong>Headers:</strong> ${Object.keys(headers).length} item(s)</div>` : ''}
                             ${body ? `<div><strong>Body:</strong> ${body.length} characters</div>` : ''}
                         </div>
@@ -502,7 +515,7 @@
             const outputFileName = api.outputFileName || `api-${idx}`;
             const apiName = api.name || `API Call ${idx + 1}`;
             const contentType = headers['Content-Type'] || '';
-            
+            const category = api.category || '';
             // Build custom headers string (excluding Content-Type)
             const customHeadersArray = [];
             Object.entries(headers).forEach(([key, value]) => {
@@ -511,7 +524,6 @@
                 }
             });
             const customHeadersStr = customHeadersArray.join('\n');
-            
             // Generate variables HTML for drag and drop
             const variablesHtml = variables.length > 0 ? `
                 <div class="col-12 mb-3">
@@ -531,7 +543,8 @@
                     </div>
                 </div>
             ` : '';
-            
+            // Build category dropdown options
+            const categoryOptions = getAllCategories().map(cat => `<option value="${escapeHtml(cat)}" ${cat === category ? 'selected' : ''}>${escapeHtml(cat)}</option>`).join('');
             return `
                 <li class="list-group-item border-start border-primary border-4 bg-primary bg-opacity-10">
                     <div class="d-flex align-items-start mb-3">
@@ -552,6 +565,12 @@
                         <div class="col-12">
                             <label class="form-label fw-bold text-primary small">Name:</label>
                             <input type="text" id="editApiName_${idx}" class="form-control" value="${escapeHtml(apiName)}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-primary small">Category (Application):</label>
+                            <select id="editApiCategory_${idx}" class="form-select">
+                                ${categoryOptions}
+                            </select>
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-bold text-primary small">URL:</label>
@@ -646,6 +665,7 @@
 
         function saveEdit(idx) {
             const name = document.getElementById(`editApiName_${idx}`).value.trim();
+            const category = document.getElementById(`editApiCategory_${idx}`).value.trim();
             const url = document.getElementById(`editApiUrl_${idx}`).value.trim();
             const method = document.getElementById(`editApiMethod_${idx}`).value;
             const body = document.getElementById(`editApiBody_${idx}`).value.trim();
@@ -665,12 +685,10 @@
 
             // Build headers object
             const headers = {};
-            
             // Add Content-Type if selected
             if (contentType) {
                 headers['Content-Type'] = contentType;
             }
-            
             // Parse and add custom headers
             if (customHeaders) {
                 const headerLines = customHeaders.split('\n');
@@ -690,6 +708,7 @@
             apiCalls[idx] = {
                 ...apiCalls[idx],
                 name,
+                category,
                 url,
                 method,
                 body: body || '',
@@ -700,9 +719,34 @@
             saveApiCalls();
             editingIdx = null;
             renderApiList();
+
+            // If new category, add to category list
+            if (category && !getAllCategories().includes(category)) {
+                categories.push(category);
+            }
         }
 
-        // --- Data Loading and Saving ---
+        // --- Category Management ---
+        let categories = [];
+        function getAllCategories() {
+            // Gather all unique categories from apiCalls and categories array
+            const set = new Set(categories);
+            apiCalls.forEach(api => {
+                if (api.category && api.category.trim()) set.add(api.category.trim());
+            });
+            return Array.from(set).sort();
+        }
+
+        function addNewCategory() {
+            const input = document.getElementById('newCategoryInput');
+            const val = input.value.trim();
+            if (val && !categories.includes(val)) {
+                categories.push(val);
+                input.value = '';
+                renderApiList();
+            }
+    }
+    // --- Data Loading and Saving ---
         async function loadApiCalls() {
             try {
                 const res = await fetch(apiFile);

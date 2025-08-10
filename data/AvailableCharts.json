@@ -1,0 +1,27 @@
+[
+  {
+    "type": "tree",
+    "name": "Tree (Hierarchical)",
+    "file": "tree.js"
+  },
+  {
+    "type": "force-directed",
+    "name": "Force-Directed Network",
+    "file": "force-directed.js"
+  },
+  {
+    "type": "bar-chart",
+    "name": "Bar Chart",
+    "file": "bar-chart.js"
+  },
+  {
+    "type": "calendar",
+    "name": "Calendar (Week/Month/Year)",
+    "file": "calendar-chart.js"
+  },
+  {
+    "type": "world-map",
+    "name": "World Map",
+    "file": "world-map.js"
+  }
+]

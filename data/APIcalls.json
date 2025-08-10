@@ -2,6 +2,7 @@
   "apiCalls": [
     {
       "name": "Mirth Login",
+      "category": "Mirth",
       "url": "{{MirthBaseURL}}/users/_login",
       "method": "POST",
       "body": "username={{MirthDevUsername}}&password={{MirthDevPassword}}",
@@ -14,13 +15,14 @@
         "Username",
         "Password"
       ],
-      "checked": true,
+      "checked": false,
       "isLogin": true,
       "loginVar": "sessionId",
       "outputFileName": "mirth-login"
     },
     {
       "name": "Mirth Channel Groups",
+      "category": "Mirth",
       "url": "{{MirthBaseURL}}/channelgroups",
       "method": "GET",
       "headers": {
@@ -34,6 +36,7 @@
     },
     {
       "name": "Mirth Channels",
+      "category": "Mirth",
       "url": "{{MirthBaseURL}}/channels",
       "method": "GET",
       "variables": [
@@ -49,6 +52,7 @@
     },
     {
       "name": "Mirth Channel Ports",
+      "category": "Mirth",
       "url": "{{MirthBaseURL}}/channels/portsInUse",
       "method": "GET",
       "variables": [
@@ -58,12 +62,13 @@
         "accept": "application/xml",
         "X-Requested-With": "OpenAPI"
       },
-      "checked": true,
+      "checked": false,
       "body": "",
       "outputFileName": "mirth-channel-ports"
     },
     {
       "name": "Mirth Get All Channels",
+      "category": "Mirth",
       "url": " {{MirthBaseURL}}/channels/_getChannels",
       "method": "POST",
       "headers": {
@@ -76,6 +81,7 @@
     },
     {
       "name": "Test Products",
+      "category": "Test",
       "url": "https://api.restful-api.dev/objects",
       "method": "GET",
       "headers": {
@@ -88,6 +94,7 @@
     },
     {
       "name": "Countries of the world",
+      "category": "World Data",
       "url": "https://api.worldbank.org/v2/country",
       "method": "GET",
       "checked": false,
@@ -99,6 +106,7 @@
     },
     {
       "name": "News API : Newest News",
+      "category": "News",
       "url": "https://newsdata.io/api/1/latest?apikey={{NewsAPI}}",
       "method": "GET",
       "body": "",
@@ -110,11 +118,25 @@
     },
     {
       "name": "World Data : Meat Consumption",
+      "category": "World Data",
       "url": "https://ourworldindata.org/grapher/meat-consumption-vs-gdp-per-capita.metadata.json?v=1&csvType=full&useColumnShortNames=true",
       "method": "GET",
       "body": "",
       "headers": {},
       "outputFileName": "Meat-Consumption"
+    },
+    {
+      "name": "Rapid API : Weather : Bermuda",
+      "category": "Weather",
+      "url": "https://weather-api180.p.rapidapi.com/weather/weather/32.29837/-64.779274/forecast/5",
+      "method": "GET",
+      "headers": {
+        "x-rapidapi-key": "b2097020cbmsh49a71e970565bd8p195dedjsn55561d24e5e2",
+        "x-rapidapi-host": "weather-api180.p.rapidapi.com"
+      },
+      "body": "",
+      "checked": true,
+      "outputFileName": "weather-bermuda"
     }
   ]
 }

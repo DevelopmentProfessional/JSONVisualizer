@@ -26,29 +26,26 @@
   <!-- Compact Top Control Bar -->
   <div id="controlBar" class="position-fixed top-0 start-50 translate-middle-x bg-dark bg-opacity-75 border-bottom border-secondary w-100" style="padding-top:60px; z-index: 998;">
     <div class="container-fluid py-2">
-      <div class="d-flex flex-wrap justify-content-center gap-2 align-items-end">
-        <div>
-          <label class="form-label small mb-1">Data Source</label>
-          <select id="dsSelect" class="form-select form-select-sm"></select>
+      <div class="d-flex flex-row flex-wrap justify-content-center gap-3 align-items-end">
+        <!-- Group 1: Data Source + Mappings Table -->
+        <div class="input-group input-group-sm align-items-end" style="min-width:260px;max-width:340px;">
+          <span class="input-group-text">Data Source</span>
+          <select id="dsSelect" class="form-select"></select>
+          <button id="toggleMappingTable" type="button" class="btn btn-outline-secondary" title="Show/Hide Mappings Table"><i id="mappingTableIcon" class="bi bi-table"></i></button>
         </div>
-        <div>
-          <label class="form-label small mb-1">Mapping</label>
-          <select id="mappingSelect" class="form-select form-select-sm" disabled></select>
+        <!-- Group 2: Mapping + Data Table -->
+        <div class="input-group input-group-sm align-items-end" style="min-width:260px;max-width:340px;">
+          <span class="input-group-text">Mapping</span>
+          <select id="mappingSelect" class="form-select" disabled></select>
+          <button id="toggleDataTable" type="button" class="btn btn-outline-secondary" title="Show/Hide Data Table"><i id="dataTableIcon" class="bi bi-table"></i></button>
         </div>
-        <div class="d-flex flex-column">
-          <label class="form-label small mb-1">Charts</label>
-          <div class="d-flex gap-2">
-            <button id="openChartPicker" type="button" class="btn btn-sm btn-outline-secondary">Select…</button>
-            <select id="chartTypeSelect" class="form-select form-select-sm d-none" disabled></select>
-          </div>
+        <!-- Group 3: Charts + Search -->
+        <div class="input-group input-group-sm align-items-end" style="min-width:320px;max-width:420px;">
+          <span class="input-group-text">Charts</span>
+          <button id="openChartPicker" type="button" class="btn btn-outline-secondary">Select…</button>
+          <input id="chartSearch" type="text" class="form-control" placeholder="Filter charts" oninput="filterCharts()" />
         </div>
-        <div>
-          <label class="form-label small mb-1">Search</label>
-          <input id="chartSearch" type="text" class="form-control form-control-sm" placeholder="Filter charts" oninput="filterCharts()" />
-        </div>
-        <div class="align-self-center">
-          <span class="badge bg-secondary" id="mappingStatus"></span>
-        </div>
+        <span class="badge bg-secondary align-self-center" id="mappingStatus"></span>
       </div>
     </div>
   </div>
@@ -70,6 +67,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.2.1/dist/css/tabulator_midnight.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.2.1/dist/js/tabulator.min.js"></script>
   <!-- Local offline D3 & geo-projection vendored in /vendor (see scripts/copy-d3.js) -->
   <script src="../vendor/d3/d3.min.js"></script>
   <script src="../vendor/d3-geo-projection/d3-geo-projection.min.js"></script>
@@ -88,7 +87,8 @@
       'Analysis': [ 'Moving average','Bollinger bands','Box plot','Histogram','Kernel density estimation','Density contours','Volcano contours','Contours','Hexbin','Hexbin (area)','Hexbin map','Q–Q plot','Normal quantile plot','Parallel sets' ],
       'Hierarchies': [ 'Treemap','Cascaded treemap','Nested treemap','Circle packing','Indented tree','Tidy tree','Radial tidy tree','Cluster dendrogram','Radial dendrogram','Sunburst','Icicle','Tangled tree visualization','Phylogenetic tree','Force-directed tree' ],
       'Networks': [ 'Force-directed graph','Disjoint force-directed graph','Mobile patent suits','Arc diagram','Sankey diagram','Hierarchical edge bundling','Chord diagram','Directed chord diagram','Chord dependency diagram' ],
-      'Bars': [ 'Bar chart','Horizontal bar chart','Diverging bar chart','Stacked bar chart','Stacked horizontal bar chart','Stacked normalized horizontal bar chart','Grouped bar chart','Diverging stacked bar chart','Marimekko chart','World history timeline','Calendar','The impact of vaccines','Electricity usage 2019','Revenue by music format 1973–2018' ],
+      'Bars': [ 'Bar chart','Horizontal bar chart','Diverging bar chart','Stacked bar chart','Stacked horizontal bar chart','Stacked normalized horizontal bar chart','Grouped bar chart','Diverging stacked bar chart','Marimekko chart','World history timeline','The impact of vaccines','Electricity usage 2019','Revenue by music format 1973–2018' ],
+      'Calendars': [ 'Calendar' ],
       'Lines': [ 'Line chart','Line with missing data','Multi-line chart','Change line chart','Slope chart','Slope chart II','Marey’s trains','Candlestick chart','Variable-color line','Gradient encoding','Threshold encoding','Parallel coordinates','Inequality in American cities','New Zealand tourists 1921–2018','Sea ice extent 1978–2017' ],
       'Areas': [ 'Area chart','Area with missing data','Stacked area chart','Normalized stacked area chart','U.S. population by state 1790–1990','Streamgraph','Difference chart','Band chart','Ridgeline (joy) plot','Horizon chart','Realtime horizon chart' ],
       'Dots': [ 'Scatterplot','Scatterplot with shapes','Scatterplot matrix','Dot plot','Global temperature trends','Bubble map','Spike map','Bubble chart','Beeswarm','Mirrored beeswarm','Hertzsprung–Russell diagram' ],
@@ -231,6 +231,14 @@
     return (def.requiredInputs||[]).filter(i=>i.required && !activeGenericMapping[i.role]).map(i=>i.role);
   }
 
+    // List of chart slugs that have a complete JS implementation and can render
+    const implementedCharts = new Set([
+      'tree',
+      'force-directed',
+      'bar-chart',
+      'calendar'
+    ]);
+
     function buildChartAccordion(){
       const panel = document.getElementById('chartCategoriesAccordion');
       if(!panel) return;
@@ -244,11 +252,16 @@
         const catSlug = 'cat-' + slugify(cat);
         let itemsHtml = '';
         let catVisible = false;
+        let catComplete = 0;
         charts.forEach(ch => {
           const slug = slugify(ch);
+          const isImplemented = implementedCharts.has(slug) || (alias[slug] && implementedCharts.has(alias[slug]));
+          if(isImplemented) catComplete++;
           if(!searchVal || ch.toLowerCase().includes(searchVal)) {
             catVisible = true; visibleCharts++;
-            itemsHtml += `<button type="button" class="list-group-item list-group-item-action py-1 px-2 small chart-item" data-slug="${slug}">${ch}</button>`;
+            // Add check mark if implemented
+            const checkHtml = isImplemented ? '<i class="bi bi-check-circle-fill text-success me-1"></i>' : '';
+            itemsHtml += `<button type="button" class="list-group-item list-group-item-action py-1 px-2 small chart-item" data-slug="${slug}">${checkHtml}${ch}</button>`;
           }
         });
         if(!catVisible) return; // skip category with no visible charts under search
@@ -257,7 +270,10 @@
         item.innerHTML = `
           <h2 class="accordion-header" id="heading-${catSlug}">
             <button class="accordion-button collapsed py-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${catSlug}" aria-expanded="false" aria-controls="collapse-${catSlug}">
-              <span class="small">${cat}</span>
+              <span class="d-flex w-100 align-items-center justify-content-between">
+                <span class="small flex-grow-1 text-start" style="min-width:0;">${cat}</span>
+                <span class="text-secondary small flex-shrink-0 text-end" style="width:56px;">(${catComplete}/${charts.length})</span>
+              </span>
             </button>
           </h2>
           <div id="collapse-${catSlug}" class="accordion-collapse collapse" data-bs-parent="#chartCategoriesAccordion">
@@ -418,6 +434,214 @@
     #chartPickerPanel .list-group-item { background:transparent; color:#ddd; border:none; border-radius:0; }
     #chartPickerPanel .list-group-item:hover { background:#343a40; }
     #chartPickerPanel .list-group-item.active { background:#495057; color:#fff; }
+    /* Evenly align category names and ratios in accordion headers */
+    #chartCategoriesAccordion .accordion-button .d-flex { width: 100%; }
+    #chartCategoriesAccordion .accordion-button .flex-grow-1 { flex: 1 1 0%; min-width: 0; }
+    #chartCategoriesAccordion .accordion-button .flex-shrink-0 { flex-shrink: 0; text-align: right; }
+    #chartCategoriesAccordion .accordion-button .text-end { text-align: right !important; }
   </style>
+  <!-- Mapping Table Popup -->
+  <div id="mappingTablePanel" class="card shadow border-secondary d-none" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:min(700px,90%); height:82vh; overflow:hidden; z-index:1999; background:#1a1d21;">
+    <div class="card-header py-2 d-flex justify-content-between align-items-center">
+      <strong class="small">Mappings</strong>
+      <div class="d-flex gap-2">
+        <button id="transposeMappingTable" type="button" class="btn btn-sm btn-outline-warning" title="Transpose Table"><i class="bi bi-arrow-left-right"></i></button>
+        <button id="exportMappingCsv" type="button" class="btn btn-sm btn-outline-light" title="Export CSV"><i class="bi bi-download"></i></button>
+        <button id="closeMappingTable" type="button" class="btn btn-sm btn-outline-light"><i class="bi bi-x"></i></button>
+      </div>
+    </div>
+    <div class="card-body p-0" style="height:100%; display:flex; flex-direction:column;">
+      <div class="p-2"><input id="mappingGlobalSearch" type="text" class="form-control form-control-sm" placeholder="Search mappings"></div>
+      <div id="mappingTable" style="flex:1; overflow:auto;"></div>
+      <div class="p-2 small text-secondary" id="mappingTableStatus"></div>
+    </div>
+  </div>
+  <!-- Data Table Popup -->
+  <div id="dataTablePanel" class="card shadow border-secondary d-none" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:min(900px,95%); height:82vh; overflow:hidden; z-index:1999; background:#1a1d21;">
+    <div class="card-header py-2 d-flex justify-content-between align-items-center">
+      <strong class="small">Data Fields</strong>
+      <div class="d-flex gap-2">
+        <button id="closeDataTable" type="button" class="btn btn-sm btn-outline-light"><i class="bi bi-x"></i></button>
+      </div>
+    </div>
+    <div class="card-body p-0" style="height:100%; display:flex; flex-direction:column;">
+      <div class="p-2 d-flex gap-2 align-items-center">
+        <input id="mappingDataSearch" type="text" class="form-control form-control-sm" placeholder="Search data">
+        <span class="small text-secondary" id="mappingDataStatus"></span>
+      </div>
+      <div id="mappingDataTable" style="flex:1; overflow:auto;"></div>
+    </div>
+  </div>
+  <script>
+  let mappingTableInstance=null; let mappingDataTableInstance=null;
+    function buildMappingRows(){
+      const rows=[]; if(!dataSourceMappings) return rows; const ds=document.getElementById('dsSelect').value; if(!ds||!dataSourceMappings[ds]) return rows; const maps=dataSourceMappings[ds].mappings||{}; Object.entries(maps).forEach(([mName,mDef])=>{const graphs=mDef.graphs||{}; Object.entries(graphs).forEach(([gName,gObj])=>{const mm=gObj.mappings||{}; Object.keys(mm).sort((a,b)=>a.localeCompare(b)).forEach(k=>{rows.push({mapping:mName,graph:gName,role:k,value:mm[k]});});});}); return rows; }
+  // --- Mapping Table State ---
+  let mappingTableTransposed = false;
+  let mappingTableColumnOrder = null;
+  function initOrRefreshMappingTable(){
+    const panel=document.getElementById('mappingTablePanel');
+    if(panel.classList.contains('d-none')) return;
+    let data=buildMappingRows();
+    const status=document.getElementById('mappingTableStatus');
+    status.textContent=data.length+' rows';
+    const tableEl=document.getElementById('mappingTable');
+    let cols=[
+      {title:"Mapping",field:"mapping",headerFilter:true, sorter:"string"},
+      {title:"Graph",field:"graph",headerFilter:true, sorter:"string"},
+      {title:"Role",field:"role",headerFilter:true, sorter:"string"},
+      {title:"Value",field:"value",headerFilter:true, sorter:"string"}
+    ];
+    // Apply saved column order if present
+    if (mappingTableColumnOrder && Array.isArray(mappingTableColumnOrder)) {
+      cols = mappingTableColumnOrder.map(f => cols.find(c => c.field === f)).filter(Boolean);
+    }
+    // Transpose logic: swap rows/columns (simple demo: swap role/value as columns/rows)
+    if (mappingTableTransposed) {
+      // For demo: show roles as columns, mappings as rows
+      // Build unique roles and mappings
+      const roles = Array.from(new Set(data.map(r=>r.role)));
+      const mappings = Array.from(new Set(data.map(r=>r.mapping)));
+      // Build transposed data
+      const tData = mappings.map(m => {
+        const row = { mapping: m };
+        roles.forEach(r => {
+          const found = data.find(d => d.mapping === m && d.role === r);
+          row[r] = found ? found.value : '';
+        });
+        return row;
+      });
+      cols = [{title:'Mapping', field:'mapping', headerFilter:true, sorter:'string'}].concat(
+        roles.map(r => ({ title: r, field: r, headerFilter:true, sorter:'string', movable:true }))
+      );
+      data = tData;
+    }
+    if(!mappingTableInstance){
+      mappingTableInstance=new Tabulator(tableEl,{
+        data:data,
+        layout:"fitDataFill",
+        pagination:"local",
+        paginationSize:1000,
+        paginationSizeSelector:[10,25,50,100],
+        columns:cols,
+        placeholder:"No mappings",
+        movableColumns:true,
+        rowFormatter:function(row){
+          const p=row.getPrevRow(); if(!p) return; const d=row.getData(); const pd=p.getData();
+          if(d.mapping===pd.mapping){ row.getCell('mapping').getElement().innerHTML=''; }
+          if(d.graph===pd.graph && d.mapping===pd.mapping && row.getCell('graph')){ row.getCell('graph').getElement().innerHTML=''; }
+        },
+        columnMoved:function(column, columns){
+          // Save new column order
+          mappingTableColumnOrder = columns.map(c => c.getField());
+          // TODO: persist this order with mapping config
+        }
+      });
+      const searchInput=document.getElementById('mappingGlobalSearch');
+      searchInput.addEventListener('input',()=>{
+        const v=searchInput.value.toLowerCase();
+        mappingTableInstance.setFilter(function(r){ const d=r.getData(); return !v || Object.values(d).some(val=> String(val).toLowerCase().includes(v)); });
+        adjustMappingTablePagination();
+      });
+    } else {
+      mappingTableInstance.setColumns(cols);
+      mappingTableInstance.replaceData(data);
+    }
+    setTimeout(adjustMappingTablePagination,30);
+  }
+  function buildMappingDataRows(){ const rows=[]; const ds=document.getElementById('dsSelect').value; if(!ds||!activeGenericMapping) return rows; return rows; }
+  async function refreshMappingDataTable(){ const panel=document.getElementById('dataTablePanel'); if(panel.classList.contains('d-none')) return; const ds=document.getElementById('dsSelect').value; if(!ds||!activeGenericMapping){ if(mappingDataTableInstance) mappingDataTableInstance.clearData(); return; } try { const resp=await fetch('../data/ApiResponse/'+ds+'?_='+Date.now()); if(!resp.ok) return; const raw=await resp.json(); const rowPath=activeGenericMapping.rowPath; let rows=rowPath?extractRows(raw,rowPath): (Array.isArray(raw)?raw:[]); if(!Array.isArray(rows)) rows=[]; const roles=Object.keys(activeGenericMapping).filter(k=>!k.endsWith('_fallback')&&k!=='rowPath'); function getVal(obj,path){ if(!path) return ''; const segs=path.split('.'); let ref=obj; for(const s of segs){ if(ref==null) return ''; if(Object.prototype.hasOwnProperty.call(ref,s)) ref=ref[s]; else if(s.includes(':')){ const alt=s.split(':').pop(); if(Object.prototype.hasOwnProperty.call(ref,alt)) ref=ref[alt]; else return ''; } else return ''; } return typeof ref==='object'? JSON.stringify(ref): ref; } const data=rows.slice(0,500).map(r=>{ const o={}; roles.forEach(role=>{ o[role]=getVal(r,activeGenericMapping[role]); }); return o; }); const status=document.getElementById('mappingDataStatus'); status.textContent=data.length+' rows'; const tableEl=document.getElementById('mappingDataTable'); if(!mappingDataTableInstance){ const cols=roles.map(r=>({title:r, field:r, sorter:'string', headerFilter:true})); mappingDataTableInstance=new Tabulator(tableEl,{ data:data, layout:'fitDataFill', pagination:'local', paginationSize:1000, columns:cols, placeholder:'No data' }); const search=document.getElementById('mappingDataSearch'); search.addEventListener('input',()=>{ const v=search.value.toLowerCase(); mappingDataTableInstance.setFilter(function(row){ const d=row.getData(); return !v || Object.values(d).some(val=> String(val).toLowerCase().includes(v)); }); }); } else { const existingCols=mappingDataTableInstance.getColumns().map(c=>c.getField()); const newRoles=roles.filter(r=>!existingCols.includes(r)); if(newRoles.length){ mappingDataTableInstance.setColumns(roles.map(r=>({title:r, field:r, sorter:'string', headerFilter:true}))); } mappingDataTableInstance.replaceData(data); } } catch(e){} }
+async function refreshMappingDataTable(){
+  const panel=document.getElementById('dataTablePanel');
+  if(panel.classList.contains('d-none')) return;
+  const ds=document.getElementById('dsSelect').value;
+  if(!ds||!activeGenericMapping){ if(mappingDataTableInstance) mappingDataTableInstance.clearData(); return; }
+  try {
+    const resp=await fetch('../data/ApiResponse/'+ds+'?_='+Date.now());
+    if(!resp.ok) return;
+    const raw=await resp.json();
+    const rowPath=activeGenericMapping.rowPath;
+    let rows=rowPath?extractRows(raw,rowPath):(Array.isArray(raw)?raw:[]);
+    // Fallback: try response.data.rowPath if no rows
+    if((!rows||!rows.length) && rowPath && raw.response && raw.response.data){
+      const prefixed = 'response.data.' + rowPath;
+      rows = extractRows(raw, prefixed);
+    }
+    if(!Array.isArray(rows)) rows=[];
+    const roles=Object.keys(activeGenericMapping).filter(k=>!k.endsWith('_fallback')&&k!=='rowPath');
+    function getVal(obj,path){
+      if(!path) return '';
+      const segs=path.split('.');
+      let ref=obj;
+      for(const s of segs){
+        if(ref==null) return '';
+        if(Object.prototype.hasOwnProperty.call(ref,s)) ref=ref[s];
+        else if(s.includes(':')){
+          const alt=s.split(':').pop();
+          if(Object.prototype.hasOwnProperty.call(ref,alt)) ref=ref[alt];
+          else return '';
+        } else return '';
+      }
+      return typeof ref==='object'? JSON.stringify(ref): ref;
+    }
+    const data=rows.slice(0,500).map(r=>{
+      const o={};
+      roles.forEach(role=>{ o[role]=getVal(r,activeGenericMapping[role]); });
+      return o;
+    });
+    const status=document.getElementById('mappingDataStatus');
+    status.textContent=data.length+' rows';
+    const tableEl=document.getElementById('mappingDataTable');
+    if(!mappingDataTableInstance){
+      const cols=roles.map(r=>({title:r, field:r, sorter:'string', headerFilter:true}));
+      mappingDataTableInstance=new Tabulator(tableEl,{ data:data, layout:'fitDataFill', pagination:'local', paginationSize:1000, columns:cols, placeholder:'No data' });
+      const search=document.getElementById('mappingDataSearch');
+      search.addEventListener('input',()=>{
+        const v=search.value.toLowerCase();
+        mappingDataTableInstance.setFilter(function(row){
+          const d=row.getData();
+          return !v || Object.values(d).some(val=> String(val).toLowerCase().includes(v));
+        });
+      });
+    } else {
+      const existingCols=mappingDataTableInstance.getColumns().map(c=>c.getField());
+      const newRoles=roles.filter(r=>!existingCols.includes(r));
+      if(newRoles.length){ mappingDataTableInstance.setColumns(roles.map(r=>({title:r, field:r, sorter:'string', headerFilter:true}))); }
+      mappingDataTableInstance.replaceData(data);
+    }
+  } catch(e){}
+}
+  function adjustMappingTablePagination(){ if(!mappingTableInstance) return; const panel=document.getElementById('mappingTablePanel'); const status=document.getElementById('mappingTableStatus'); const footer=panel.querySelector('#mappingTable .tabulator-footer'); const topBlock=document.getElementById('mappingGlobalSearch').parentElement; const availLeft=panel.clientHeight - topBlock.offsetHeight - status.offsetHeight - 32; mappingTableInstance.setHeight(availLeft+'px'); const total=mappingTableInstance.getDataCount(); const approx=30; if(total*approx>availLeft){ const ps=total>25?25:total; mappingTableInstance.setPageSize(ps||1); if(footer) footer.style.display='block'; } else { mappingTableInstance.setPageSize(total||1); if(footer) footer.style.display='none'; } if(mappingDataTableInstance){ const search2=document.getElementById('mappingDataSearch').parentElement; const availRight=panel.clientHeight - search2.offsetHeight - 32; mappingDataTableInstance.setHeight(availRight+'px'); const footer2=panel.querySelector('#mappingDataTable .tabulator-footer'); const total2=mappingDataTableInstance.getDataCount(); if(total2*approx>availRight){ const ps2=total2>25?25:total2; mappingDataTableInstance.setPageSize(ps2||1); if(footer2) footer2.style.display='block'; } else { mappingDataTableInstance.setPageSize(total2||1); if(footer2) footer2.style.display='none'; } }
+  }
+  document.addEventListener('DOMContentLoaded',()=>{
+    // Mapping Table
+    const mappingBtn=document.getElementById('toggleMappingTable');
+    const mappingIcon=document.getElementById('mappingTableIcon');
+    const mappingPanel=document.getElementById('mappingTablePanel');
+    const mappingCloseBtn=document.getElementById('closeMappingTable');
+    const exportBtn=document.getElementById('exportMappingCsv');
+    const transposeBtn=document.getElementById('transposeMappingTable');
+    mappingBtn.addEventListener('click',()=>{ const hidden=mappingPanel.classList.toggle('d-none'); mappingIcon.className= hidden ? 'bi bi-table' : 'bi bi-table'; if(!hidden){ initOrRefreshMappingTable(); } });
+    mappingCloseBtn.addEventListener('click',()=>{ mappingPanel.classList.add('d-none'); mappingIcon.className='bi bi-table'; });
+    exportBtn.addEventListener('click',()=>{ if(!mappingTableInstance){return;} const rows=mappingTableInstance.getData(); const csvData=rows.map(r=>[r.mapping,r.graph,r.role,r.value].map(s=> '"'+String(s).replace(/"/g,'""')+'"').join(',')).join('\n'); fetch('/SaveTableExport',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ name:'Mappings_'+(document.getElementById('dsSelect').value||'data'), csv:'mapping,graph,role,value\n'+csvData }) }).then(r=>r.json()).then(j=>{ const s=document.getElementById('mappingTableStatus'); if(j.success){ s.textContent='Saved '+j.file; } else { s.textContent='Export failed'; } }); });
+    // Transpose button
+    transposeBtn.addEventListener('click',()=>{
+      mappingTableTransposed = !mappingTableTransposed;
+      initOrRefreshMappingTable();
+      // TODO: persist transposed state with mapping config
+    });
+    // Data Table
+    const dataBtn=document.getElementById('toggleDataTable');
+    const dataIcon=document.getElementById('dataTableIcon');
+    const dataPanel=document.getElementById('dataTablePanel');
+    const dataCloseBtn=document.getElementById('closeDataTable');
+    dataBtn.addEventListener('click',()=>{ const hidden=dataPanel.classList.toggle('d-none'); dataIcon.className= hidden ? 'bi bi-table' : 'bi bi-table'; if(!hidden){ refreshMappingDataTable(); } });
+    dataCloseBtn.addEventListener('click',()=>{ dataPanel.classList.add('d-none'); dataIcon.className='bi bi-table'; });
+    // Escape closes both
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(!mappingPanel.classList.contains('d-none')){ mappingPanel.classList.add('d-none'); mappingIcon.className='bi bi-table'; } if(!dataPanel.classList.contains('d-none')){ dataPanel.classList.add('d-none'); dataIcon.className='bi bi-table'; } } });
+    window.addEventListener('resize',adjustMappingTablePagination);
+  });
+  document.addEventListener('change',e=>{ if(e.target && (e.target.id==='dsSelect'||e.target.id==='mappingSelect')){ if(mappingTableInstance){ initOrRefreshMappingTable(); } if(mappingDataTableInstance){ refreshMappingDataTable(); } }});
+  </script>
 </body>
 </html>
